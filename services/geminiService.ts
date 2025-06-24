@@ -1,25 +1,11 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { GeneratedLearningContent } from '../types';
 
-const API_KEY = process.env.API_KEY;
-
-// Initial check during module load
-if (!API_KEY) {
-  console.error("API_KEY environment variable not set at module load. The application cannot function.");
-  // This will prevent 'ai' from being initialized correctly if API_KEY is missing from the start.
-}
-
-// Initialize AI, defaulting to a placeholder if API_KEY was somehow not set or became unset.
-// This placeholder will cause errors if used, which is intended.
-const ai = new GoogleGenAI({ apiKey: API_KEY || "MISSING_API_KEY_AT_INIT" }); 
-
-export const generateLearningPlan = async (topic: string): Promise<GeneratedLearningContent> => {
-  // Re-check API_KEY at the time of function call for robustness, though App.tsx also checks.
-  if (!process.env.API_KEY || process.env.API_KEY === "MISSING_API_KEY_AT_INIT") {
-    // This specific error message indicates a fundamental configuration problem.
+export const generateLearningPlan = async (topic: string, apiKey: string): Promise<GeneratedLearningContent> => {
+  if (!apiKey) {
     throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
   }
-  
+  const ai = new GoogleGenAI({ apiKey });
   const model = 'gemini-2.5-flash-preview-04-17';
 
   const prompt = `
@@ -111,6 +97,9 @@ export const generateLearningPlan = async (topic: string): Promise<GeneratedLear
       },
     });
 
+    if (!response.text) {
+      throw new Error("AI 回傳內容為空，請重試或檢查 API 金鑰。");
+    }
     let jsonStr = response.text.trim();
     const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
     const match = jsonStr.match(fenceRegex);
@@ -126,7 +115,6 @@ export const generateLearningPlan = async (topic: string): Promise<GeneratedLear
             jsonStr = jsonStr.substring(jsonStart, jsonEnd + 1);
         }
     }
-
 
     const parsedData = JSON.parse(jsonStr) as GeneratedLearningContent;
     return parsedData;
