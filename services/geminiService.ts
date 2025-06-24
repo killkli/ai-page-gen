@@ -1,18 +1,32 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { GeneratedLearningContent } from '../types';
 
-export const generateLearningPlan = async (topic: string, apiKey: string): Promise<GeneratedLearningContent> => {
-  if (!apiKey) {
-    throw new Error("Gemini API 金鑰未設定。無法產生內容。");
-  }
+const API_KEY = process.env.API_KEY;
 
-  const ai = new GoogleGenAI({ apiKey });
+// Initial check during module load
+if (!API_KEY) {
+  console.error("API_KEY environment variable not set at module load. The application cannot function.");
+  // This will prevent 'ai' from being initialized correctly if API_KEY is missing from the start.
+}
+
+// Initialize AI, defaulting to a placeholder if API_KEY was somehow not set or became unset.
+// This placeholder will cause errors if used, which is intended.
+const ai = new GoogleGenAI({ apiKey: API_KEY || "MISSING_API_KEY_AT_INIT" }); 
+
+export const generateLearningPlan = async (topic: string): Promise<GeneratedLearningContent> => {
+  // Re-check API_KEY at the time of function call for robustness, though App.tsx also checks.
+  if (!process.env.API_KEY || process.env.API_KEY === "MISSING_API_KEY_AT_INIT") {
+    // This specific error message indicates a fundamental configuration problem.
+    throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
+  }
+  
   const model = 'gemini-2.5-flash-preview-04-17';
 
   const prompt = `
     Please generate a comprehensive learning plan for the topic: "${topic}".
     The output MUST be a valid JSON object matching the following structure. Do NOT include any explanatory text before or after the JSON block.
-    All text content, including objectives, breakdown, points, activities, and all quiz elements (questions, options, answers, statements) MUST be in the primary language of the input topic "${topic}". If the topic appears to be in Chinese, generate content in Traditional Chinese. If English, generate English content.
+    All text content for objectives, breakdown, points, activities, and quizzes MUST be in the primary language of the input topic "${topic}". If the topic appears to be in Chinese, generate content in Traditional Chinese. If English, generate English content.
+    The "englishConversation" section MUST be in English, regardless of the topic's primary language.
 
     {
       "learningObjectives": ["Objective 1...", "Objective 2...", "Objective 3... (minimum 3)"],
@@ -71,15 +85,21 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
             { "originalSentence": "Unscrambling this hard sentence concerning '${topic}' is a challenge.", "scrambledWords": ["sentence", "challenge", "hard", "is", "a", "Unscrambling", "this", "concerning", "'${topic}'"] }
           ]
         }
-      }
+      },
+      "englishConversation": [
+        { "speaker": "Speaker A", "line": "Hello! Let's talk about ${topic}." },
+        { "speaker": "Speaker B", "line": "Great idea! What's the first thing we should discuss regarding ${topic}?" },
+        { "speaker": "Speaker A", "line": "Perhaps we can start with..." }
+      ]
     }
 
     Ensure each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble) has at least 1-2 questions for each difficulty level (easy, normal, hard).
-    For True/False questions, the 'statement' MUST be a clear assertion related to the learning topic '${topic}'. 'isTrue' is a boolean. 'explanation' is optional and provides context for the answer.
+    For True/False questions, the 'statement' MUST be a clear assertion related to the learning topic '${topic}'. 'isTrue' is a boolean. 'explanation' is optional.
     For multipleChoice, 'correctAnswerIndex' is the 0-based index of the correct option.
     For fillInTheBlanks, use '____' to denote the blank.
     For sentenceScramble, 'scrambledWords' should be an array of strings.
     Classroom activities should be engaging, interactive, and if possible, incorporate elements of game design or playful learning.
+    The "englishConversation" should be a short dialogue in ENGLISH with at least two speakers, relevant to the '${topic}'. Provide at least 3 lines.
   `;
 
   try {
@@ -91,9 +111,6 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
       },
     });
 
-    if (!response.text) {
-      throw new Error("AI 回傳內容為空，請重試。");
-    }
     let jsonStr = response.text.trim();
     const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
     const match = jsonStr.match(fenceRegex);
@@ -101,13 +118,15 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
       jsonStr = match[2].trim();
     }
     
-    if (jsonStr.startsWith("Sure, here is the JSON") || jsonStr.startsWith("Here is the JSON")) {
+    // Improved logic to remove potential non-JSON prefixes
+    if (!jsonStr.startsWith("{") && jsonStr.includes("{") && jsonStr.includes("}")) {
         const jsonStart = jsonStr.indexOf("{");
         const jsonEnd = jsonStr.lastIndexOf("}");
         if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
             jsonStr = jsonStr.substring(jsonStart, jsonEnd + 1);
         }
     }
+
 
     const parsedData = JSON.parse(jsonStr) as GeneratedLearningContent;
     return parsedData;
@@ -118,14 +137,15 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
     if (error instanceof Error) {
       errorMessage += ` 詳細資料： ${error.message}`;
     }
+    // Attempt to provide more specific error messages based on common API issues
     if (error && typeof error === 'object' && 'message' in error) {
         const typedError = error as { message: string, toString: () => string };
-        if (typedError.message.includes("API key not valid")) {
+        if (typedError.message.includes("API key not valid") || typedError.message.includes("API_KEY_INVALID")) {
              errorMessage = "Gemini API 金鑰無效。請檢查您的設定。";
-        } else if (typedError.message.includes("quota")) {
+        } else if (typedError.message.includes("quota") || typedError.message.includes("RESOURCE_EXHAUSTED")) {
             errorMessage = "已超出 API 配額。請稍後再試。";
-        } else if (typedError.message.includes("JSON")) {
-             errorMessage = "AI 模型傳回無效的 JSON 格式。請嘗試修改您的主題或重試。";
+        } else if (typedError.message.toLowerCase().includes("json") || typedError.message.includes("Unexpected token")) {
+             errorMessage = "AI 模型傳回的資料格式無法解析 (可能不是有效的 JSON)。請嘗試修改您的主題或重試。";
         }
     }
     throw new Error(errorMessage);

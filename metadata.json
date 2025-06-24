@@ -1,6 +1,7 @@
-
 {
-  "name": "AI Learning Page Generator",
-  "description": "An application that generates a structured learning webpage with objectives, content breakdown, common pitfalls, activities, and interactive quizzes based on a user-provided topic. Uses Gemini API for content generation."
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "name": "AI 學習產生器",
+  "description": ""
 }
-    

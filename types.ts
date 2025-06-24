@@ -20,14 +20,16 @@ export interface SentenceScrambleQuestion {
   scrambledWords: string[]; // An array of words from the original sentence, in scrambled order
 }
 
-// SpellingQuestion is removed
+export interface DialogueLine {
+  speaker: string; // e.g., "A", "B", "Learner"
+  line: string;    // The text of the dialogue line
+}
 
 export interface QuizDifficultyContent {
   trueFalse: TrueFalseQuestion[];
   multipleChoice: MultipleChoiceQuestion[];
   fillInTheBlanks: FillBlankQuestion[];
   sentenceScramble: SentenceScrambleQuestion[];
-  // spelling: SpellingQuestion[]; // Removed
 }
 
 export interface OnlineInteractiveQuiz {
@@ -52,6 +54,7 @@ export interface GeneratedLearningContent {
   confusingPoints: ConfusingPointItem[];
   classroomActivities: string[];
   onlineInteractiveQuiz: OnlineInteractiveQuiz;
+  englishConversation?: DialogueLine[]; // Added for English conversation practice
 }
 
 export enum QuizDifficulty {
