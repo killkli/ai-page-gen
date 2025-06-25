@@ -39,7 +39,7 @@ jobs:
         run: pnpm install
 
       - name: Create .env file
-        run: echo "VITE_JSONBIN_API_KEY=${{ vars.VITE_JSONBIN_API_KEY }}" > .env
+        run: echo "VITE_JSONBIN_API_KEY=${{ secrets.VITE_JSONBIN_API_KEY }}" > .env
 
       - name: Build
         run: pnpm run build
