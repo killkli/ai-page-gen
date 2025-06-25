@@ -117,17 +117,26 @@ const generateConfusingPoints = async (topic: string, apiKey: string, learningOb
 };
 
 // 4. 產生 classroomActivities
-const generateClassroomActivities = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<string[]> => {
+const generateClassroomActivities = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Suggest at least 3 (but more is better if appropriate) engaging, interactive classroom activities (preferably game-like) for the topic "${topic}".
-    Output MUST be a valid JSON array of strings, e.g.:
+    For each activity, provide the following fields:
+      - title: The name of the activity
+      - description: A brief description of how the activity works
+      - objective: The main learning goal or purpose of the activity
+      - materials: What materials or props are needed (if any)
+      - environment: Any special environment or space requirements (e.g., classroom, outdoors, online, etc.)
+    Output MUST be a valid JSON array of objects, e.g.:
     [
-      "遊戲化活動1：描述...",
-      "互動活動2：描述...",
-      "小組競賽3：描述...",
-      "角色扮演4：描述...",
-      //...or more items
+      {
+        "title": "遊戲化活動1",
+        "description": "活動1的玩法簡述...",
+        "objective": "活動1的學習目標...",
+        "materials": "所需教材或道具...",
+        "environment": "教室/戶外/線上等需求..."
+      },
+      // ... more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;

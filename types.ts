@@ -54,11 +54,19 @@ export interface ConfusingPointItem {
   clarification: string;
 }
 
+export interface ClassroomActivity {
+  title: string;
+  description: string;
+  objective?: string;
+  materials?: string;
+  environment?: string;
+}
+
 export interface GeneratedLearningContent {
   learningObjectives: string[];
   contentBreakdown: ContentBreakdownItem[];
   confusingPoints: ConfusingPointItem[];
-  classroomActivities: string[];
+  classroomActivities: ClassroomActivity[];
   onlineInteractiveQuiz: OnlineInteractiveQuiz;
   englishConversation?: DialogueLine[]; // Added for English conversation practice
 }

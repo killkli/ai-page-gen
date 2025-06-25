@@ -1,4 +1,3 @@
-
 import { GeneratedLearningContent, QuizDifficulty, QuizDifficultyContent, TrueFalseQuestion, MultipleChoiceQuestion, FillBlankQuestion, SentenceScrambleQuestion, DialogueLine } from '../types';
 
 const generateInteractiveQuizHtml = (quizDataJson: string): string => {
@@ -49,7 +48,15 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
     : '<p>沒有提供易混淆點。</p>';
 
   const classroomActivitiesHtml = content.classroomActivities && content.classroomActivities.length > 0
-    ? `<ul>${content.classroomActivities.map(activity => `<li>${activity}</li>`).join('')}</ul>`
+    ? content.classroomActivities.map(activity => `
+        <div class="activity-item" style="border:1px solid #e0e7ef; border-radius:6px; padding:12px; margin-bottom:16px; background:#f8fafc;">
+          <h3 style="color:#2563eb; margin-bottom:6px;">${activity.title}</h3>
+          <p style="margin-bottom:6px;">${activity.description}</p>
+          ${activity.objective ? `<p style="margin-bottom:4px;"><strong>活動目標：</strong>${activity.objective}</p>` : ''}
+          ${activity.materials ? `<p style="margin-bottom:4px;"><strong>所需教材：</strong>${activity.materials}</p>` : ''}
+          ${activity.environment ? `<p style="margin-bottom:0;"><strong>環境需求：</strong>${activity.environment}</p>` : ''}
+        </div>
+      `).join('')
     : '<p>沒有提供課堂活動。</p>';
 
   const englishConversationHtml = content.englishConversation && content.englishConversation.length > 0
@@ -183,7 +190,7 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
           const normalizeText = (str) => {
             if (typeof str !== 'string') return '';
             // Corrected regex for multiple spaces: \s+ instead of \\s+
-            return str.toLowerCase().replace(/[.,!?;:'"‘’“”]/g, '').replace(/\s+/g, ' ').trim();
+            return str.toLowerCase().replace(/[.,!?;:'"‘'""]/g, '').replace(/\s+/g, ' ').trim();
           };
 
           const renderQuizzesForDifficulty = (difficulty) => {
