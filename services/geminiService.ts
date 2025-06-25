@@ -10,6 +10,7 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
 
   const prompt = `
     Please generate a comprehensive learning plan for the topic: "${topic}".
+    The learning plan and all supporting content should be based on the principles of "Scaffolding Theory" and "Gamification". Complex knowledge should be broken down into micro-units, and engaging interactive designs should be used to help students build confidence in a stress-free environment.
     The output MUST be a valid JSON object matching the following structure. Do NOT include any explanatory text before or after the JSON block.
     All text content for objectives, breakdown, points, activities, and quizzes MUST be in the primary language of the input topic "${topic}". If the topic appears to be in Chinese, generate content in Traditional Chinese. If English, generate English content.
     The "englishConversation" section MUST be in English, regardless of the topic's primary language.
