@@ -141,3 +141,10 @@ interface Window {
     SpeechRecognitionEvent: typeof SpeechRecognitionEvent;
     SpeechRecognitionErrorEvent: typeof SpeechRecognitionErrorEvent; // Ensure this is also available if needed directly
 }
+
+declare interface ImportMeta {
+  env: {
+    BASE_URL: string;
+    [key: string]: any;
+  };
+}

@@ -6,6 +6,7 @@ import ConversationPractice from './ConversationPractice';
 import { AcademicCapIcon, BookOpenIcon, LightbulbIcon, BeakerIcon, ClipboardIcon, ChatBubbleLeftRightIcon } from './icons';
 import { exportLearningContentToHtml } from '../utils/exportHtmlUtil'; // Import the new utility
 import Tabs from './Tabs';
+import { saveLearningContent } from '../services/jsonbinService';
 
 interface LearningContentDisplayProps {
   content: GeneratedLearningContent;
@@ -25,6 +26,9 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
   const [copySuccess, setCopySuccess] = React.useState('');
   const [exportMessage, setExportMessage] = React.useState('');
   const [currentTab, setCurrentTab] = React.useState(tabDefs[0].key);
+  const [shareLoading, setShareLoading] = React.useState(false);
+  const [shareError, setShareError] = React.useState('');
+  const [shareUrl, setShareUrl] = React.useState('');
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify(content, null, 2))
@@ -50,6 +54,22 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
       setTimeout(() => setExportMessage(''), 3000);
     }
   };
+
+  const handleShare = async () => {
+    setShareLoading(true);
+    setShareError('');
+    setShareUrl('');
+    try {
+      const binId = await saveLearningContent(content);
+      // 這裡請根據你的實際 domain 修改
+      const url = `${window.location.origin}/share?binId=${binId}`;
+      setShareUrl(url);
+    } catch (e: any) {
+      setShareError(e.message || '分享失敗');
+    } finally {
+      setShareLoading(false);
+    }
+  };
   
   return (
     <div className="mt-8">
@@ -71,8 +91,35 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
           </svg>
           匯出為 HTML
         </button>
+        <button
+          onClick={handleShare}
+          className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors flex items-center text-sm disabled:opacity-60"
+          aria-label="分享教學方案"
+          disabled={shareLoading}
+        >
+          {shareLoading ? (
+            <span className="flex items-center"><span className="animate-spin mr-2">⏳</span> 分享中...</span>
+          ) : (
+            <span>分享</span>
+          )}
+        </button>
         {copySuccess && <span className="text-sm text-green-600">{copySuccess}</span>}
         {exportMessage && <span className="text-sm text-blue-600">{exportMessage}</span>}
+        {shareError && <span className="text-sm text-red-600">{shareError}</span>}
+        {shareUrl && (
+          <span className="text-sm text-purple-700 flex items-center gap-2">
+            分享連結：
+            <button
+              className="underline hover:text-purple-900"
+              onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+              }}
+            >
+              {shareUrl}
+            </button>
+            <span className="ml-1 text-xs text-gray-400">(點擊可複製)</span>
+          </span>
+        )}
       </div>
       <Tabs
         tabs={tabDefs}
