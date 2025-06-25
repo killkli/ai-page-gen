@@ -98,6 +98,16 @@ const App: React.FC = () => {
         <p className="mt-3 text-lg text-slate-600 max-w-2xl mx-auto">
           輸入一個主題，讓 AI 為您打造包含互動測驗的結構化學習計劃！
         </p>
+        <div className="mt-6 max-w-2xl mx-auto bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 text-left shadow-sm">
+          <div className="flex items-start mb-2">
+            <svg className="w-6 h-6 text-yellow-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+            <span className="font-semibold text-yellow-800 text-base">使用注意事項</span>
+          </div>
+          <ul className="list-disc pl-8 text-yellow-900 text-sm space-y-1">
+            <li>內容審查：請在分享AI生成內容給學生前仔細檢查，確保內容適合且無誤</li>
+            <li>隱私保護：請勿輸入學生個人識別資訊</li>
+          </ul>
+        </div>
       </header>
 
       <main className="max-w-4xl mx-auto">
