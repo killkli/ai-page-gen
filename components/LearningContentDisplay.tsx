@@ -5,15 +5,26 @@ import QuizView from './QuizView';
 import ConversationPractice from './ConversationPractice';
 import { AcademicCapIcon, BookOpenIcon, LightbulbIcon, BeakerIcon, ClipboardIcon, ChatBubbleLeftRightIcon } from './icons';
 import { exportLearningContentToHtml } from '../utils/exportHtmlUtil'; // Import the new utility
+import Tabs from './Tabs';
 
 interface LearningContentDisplayProps {
   content: GeneratedLearningContent;
   topic: string; // Added topic prop
 }
 
+const tabDefs = [
+  { key: 'objectives', label: '教學目標' },
+  { key: 'breakdown', label: '分解內容' },
+  { key: 'confusing', label: '易混淆點' },
+  { key: 'activities', label: '課堂活動' },
+  { key: 'conversation', label: '對話練習' },
+  { key: 'quiz', label: '互動測驗' },
+];
+
 const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content, topic }) => {
   const [copySuccess, setCopySuccess] = React.useState('');
   const [exportMessage, setExportMessage] = React.useState('');
+  const [currentTab, setCurrentTab] = React.useState(tabDefs[0].key);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify(content, null, 2))
@@ -41,7 +52,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
   };
   
   return (
-    <div className="mt-8 space-y-6">
+    <div className="mt-8">
       <div className="flex flex-wrap justify-end items-center gap-2 mb-4">
         <button
           onClick={copyToClipboard}
@@ -63,54 +74,64 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         {copySuccess && <span className="text-sm text-green-600">{copySuccess}</span>}
         {exportMessage && <span className="text-sm text-blue-600">{exportMessage}</span>}
       </div>
-
-      <SectionCard title="教學目標設定" icon={<AcademicCapIcon className="w-7 h-7"/>}>
-        {content.learningObjectives && content.learningObjectives.length > 0 ? (
-          <ul className="list-disc list-inside space-y-1 pl-2">
-            {content.learningObjectives.map((obj, index) => (
-              <li key={index}>{obj}</li>
-            ))}
-          </ul>
-        ) : <p>沒有提供教學目標。</p>}
-      </SectionCard>
-
-      <SectionCard title="分解學習內容" icon={<BookOpenIcon className="w-7 h-7"/>}>
-        {content.contentBreakdown && content.contentBreakdown.length > 0 ? (
-          content.contentBreakdown.map((item, index) => (
-            <div key={index} className="mb-3 pb-3 border-b border-slate-200 last:border-b-0 last:pb-0">
-              <h4 className="font-semibold text-lg text-sky-800">{item.topic}</h4>
-              <p className="text-sm_ text-slate-600">{item.details}</p>
-            </div>
-          ))
-        ) : <p>沒有提供內容分解。</p>}
-      </SectionCard>
-
-      <SectionCard title="易混淆點識別" icon={<LightbulbIcon className="w-7 h-7"/>}>
-         {content.confusingPoints && content.confusingPoints.length > 0 ? (
-          content.confusingPoints.map((item, index) => (
-            <div key={index} className="mb-3 pb-3 border-b border-slate-200 last:border-b-0 last:pb-0">
-              <h4 className="font-semibold text-lg text-red-700">{item.point}</h4>
-              <p className="text-sm_ text-slate-600">{item.clarification}</p>
-            </div>
-          ))
-         ) : <p>沒有提供易混淆點。</p>}
-      </SectionCard>
-
-      <SectionCard title="課堂活動與遊戲設計" icon={<BeakerIcon className="w-7 h-7"/>}>
-        {content.classroomActivities && content.classroomActivities.length > 0 ? (
-          <ul className="list-disc list-inside space-y-1 pl-2">
-            {content.classroomActivities.map((activity, index) => (
-              <li key={index}>{activity}</li>
-            ))}
-          </ul>
-        ) : <p>沒有提供課堂活動。</p>}
-      </SectionCard>
-
-      {content.englishConversation && content.englishConversation.length > 0 && (
-        <ConversationPractice dialogue={content.englishConversation} />
-      )}
-
-      <QuizView quizzes={content.onlineInteractiveQuiz} />
+      <Tabs
+        tabs={tabDefs}
+        current={currentTab}
+        onChange={setCurrentTab}
+      >
+        {/* 教學目標 */}
+        <SectionCard title="教學目標設定" icon={<AcademicCapIcon className="w-7 h-7"/>}>
+          {content.learningObjectives && content.learningObjectives.length > 0 ? (
+            <ul className="list-disc list-inside space-y-1 pl-2">
+              {content.learningObjectives.map((obj, index) => (
+                <li key={index}>{obj}</li>
+              ))}
+            </ul>
+          ) : <p>沒有提供教學目標。</p>}
+        </SectionCard>
+        {/* 分解內容 */}
+        <SectionCard title="分解學習內容" icon={<BookOpenIcon className="w-7 h-7"/>}>
+          {content.contentBreakdown && content.contentBreakdown.length > 0 ? (
+            content.contentBreakdown.map((item, index) => (
+              <div key={index} className="mb-3 pb-3 border-b border-slate-200 last:border-b-0 last:pb-0">
+                <h4 className="font-semibold text-lg text-sky-800">{item.topic}</h4>
+                <p className="text-sm_ text-slate-600">{item.details}</p>
+              </div>
+            ))
+          ) : <p>沒有提供內容分解。</p>}
+        </SectionCard>
+        {/* 易混淆點 */}
+        <SectionCard title="易混淆點識別" icon={<LightbulbIcon className="w-7 h-7"/>}>
+          {content.confusingPoints && content.confusingPoints.length > 0 ? (
+            content.confusingPoints.map((item, index) => (
+              <div key={index} className="mb-3 pb-3 border-b border-slate-200 last:border-b-0 last:pb-0">
+                <h4 className="font-semibold text-lg text-red-700">{item.point}</h4>
+                <p className="text-sm_ text-slate-600">{item.clarification}</p>
+              </div>
+            ))
+          ) : <p>沒有提供易混淆點。</p>}
+        </SectionCard>
+        {/* 課堂活動 */}
+        <SectionCard title="課堂活動與遊戲設計" icon={<BeakerIcon className="w-7 h-7"/>}>
+          {content.classroomActivities && content.classroomActivities.length > 0 ? (
+            <ul className="list-disc list-inside space-y-1 pl-2">
+              {content.classroomActivities.map((activity, index) => (
+                <li key={index}>{activity}</li>
+              ))}
+            </ul>
+          ) : <p>沒有提供課堂活動。</p>}
+        </SectionCard>
+        {/* 對話練習 */}
+        {content.englishConversation && content.englishConversation.length > 0 ? (
+          <ConversationPractice dialogue={content.englishConversation} />
+        ) : (
+          <SectionCard title="對話練習" icon={<ChatBubbleLeftRightIcon className="w-7 h-7"/>}>
+            <p>沒有提供對話練習。</p>
+          </SectionCard>
+        )}
+        {/* 互動測驗 */}
+        <QuizView quizzes={content.onlineInteractiveQuiz} />
+      </Tabs>
     </div>
   );
 };

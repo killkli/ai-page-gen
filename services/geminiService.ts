@@ -14,7 +14,18 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
     The output MUST be a valid JSON object matching the following structure. Do NOT include any explanatory text before or after the JSON block.
     All text content for objectives, breakdown, points, activities, and quizzes MUST be in the primary language of the input topic "${topic}". If the topic appears to be in Chinese, generate content in Traditional Chinese. If English, generate English content.
     The "englishConversation" section MUST be in English, regardless of the topic's primary language.
-
+    
+    For the "englishConversation" section:
+    - If the topic is not in English, translate the topic to English and use the English translation in the conversation lines.
+    - The conversation should sound natural and contextually appropriate, as if two native speakers are discussing the topic.
+    - Do NOT use the raw non-English topic in the conversation lines.
+    - Example: If the topic is "英文不定詞", use "English infinitives" in the conversation, e.g.,
+      [
+        { "speaker": "Speaker A", "line": "Hi! Let's talk about English infinitives." },
+        { "speaker": "Speaker B", "line": "Sure! What should we discuss first about English infinitives?" },
+        { "speaker": "Speaker A", "line": "Maybe we can start with their basic usage." }
+      ]
+    
     {
       "learningObjectives": ["Objective 1...", "Objective 2...", "Objective 3... (minimum 3)"],
       "contentBreakdown": [
@@ -86,7 +97,7 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
     For fillInTheBlanks, use '____' to denote the blank.
     For sentenceScramble, 'scrambledWords' should be an array of strings.
     Classroom activities should be engaging, interactive, and if possible, incorporate elements of game design or playful learning.
-    The "englishConversation" should be a short dialogue in ENGLISH with at least two speakers, relevant to the '${topic}'. Provide at least 3 lines.
+    The "englishConversation" should be a short dialogue in ENGLISH with at least two speakers, relevant to the '${topic}' (using the English translation if needed). Provide at least 3 lines.
   `;
 
   try {
