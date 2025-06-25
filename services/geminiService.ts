@@ -84,13 +84,12 @@ const generateLearningObjectives = async (topic: string, apiKey: string): Promis
 const generateContentBreakdown = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units. For each, provide a sub-topic and a brief explanation.
+    Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units. For each, provide a sub-topic, a brief explanation, and a concrete teaching example (such as a sample sentence, scenario, or application).
     Output MUST be a valid JSON array of objects, e.g.:
     [
-      { "topic": "子主題A", "details": "子主題A的簡要說明..." },
-      { "topic": "子主題B", "details": "子主題B的簡要說明..." },
-      { "topic": "子主題C", "details": "子主題C的簡要說明..." },
-      { "topic": "子主題D", "details": "子主題D的簡要說明..." },
+      { "topic": "子主題A", "details": "子主題A的簡要說明...", "teachingExample": "子主題A的教學示例..." },
+      { "topic": "子主題B", "details": "子主題B的簡要說明...", "teachingExample": "子主題B的教學示例..." },
+      { "topic": "子主題C", "details": "子主題C的簡要說明...", "teachingExample": "子主題C的教學示例..." },
       //...or more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
@@ -102,13 +101,12 @@ const generateContentBreakdown = async (topic: string, apiKey: string, learningO
 const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    List at least 3 (but more is better if appropriate) common misconceptions or difficulties students may have with "${topic}", and provide a clarification for each.
+    List at least 3 (but more is better if appropriate) common misconceptions or difficulties students may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
     Output MUST be a valid JSON array of objects, e.g.:
     [
-      { "point": "常見誤區X", "clarification": "詳細說明..." },
-      { "point": "潛在困難Y", "clarification": "如何克服..." },
-      { "point": "誤解Z", "clarification": "澄清說明..." },
-      { "point": "挑戰W", "clarification": "解決方法..." },
+      { "point": "常見誤區X", "clarification": "詳細說明...", "teachingExample": "誤區X的教學示例..." },
+      { "point": "潛在困難Y", "clarification": "如何克服...", "teachingExample": "困難Y的教學示例..." },
+      { "point": "誤解Z", "clarification": "澄清說明...", "teachingExample": "誤解Z的教學示例..." },
       //...or more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.

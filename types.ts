@@ -47,11 +47,13 @@ export interface OnlineInteractiveQuiz {
 export interface ContentBreakdownItem {
   topic: string;
   details: string;
+  teachingExample?: string;
 }
 
 export interface ConfusingPointItem {
   point: string;
   clarification: string;
+  teachingExample?: string;
 }
 
 export interface ClassroomActivity {

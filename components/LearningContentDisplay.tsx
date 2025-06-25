@@ -93,9 +93,15 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         <SectionCard title="分解學習內容" icon={<BookOpenIcon className="w-7 h-7"/>}>
           {content.contentBreakdown && content.contentBreakdown.length > 0 ? (
             content.contentBreakdown.map((item, index) => (
-              <div key={index} className="mb-3 pb-3 border-b border-slate-200 last:border-b-0 last:pb-0">
-                <h4 className="font-semibold text-lg text-sky-800">{item.topic}</h4>
-                <p className="text-sm_ text-slate-600">{item.details}</p>
+              <div key={index} className="mb-4 pb-4 border-b border-slate-200 last:border-b-0 last:pb-0">
+                <h4 className="font-semibold text-lg text-sky-800 mb-1">{item.topic}</h4>
+                <p className="text-slate-700 mb-2">{item.details}</p>
+                {item.teachingExample && (
+                  <div className="bg-sky-50 border-l-4 border-sky-400 p-3 rounded-md mt-2">
+                    <span className="block text-xs font-semibold text-sky-700 mb-1">教學示例</span>
+                    <span className="text-sky-900 text-sm">{item.teachingExample}</span>
+                  </div>
+                )}
               </div>
             ))
           ) : <p>沒有提供內容分解。</p>}
@@ -104,9 +110,15 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         <SectionCard title="易混淆點識別" icon={<LightbulbIcon className="w-7 h-7"/>}>
           {content.confusingPoints && content.confusingPoints.length > 0 ? (
             content.confusingPoints.map((item, index) => (
-              <div key={index} className="mb-3 pb-3 border-b border-slate-200 last:border-b-0 last:pb-0">
-                <h4 className="font-semibold text-lg text-red-700">{item.point}</h4>
-                <p className="text-sm_ text-slate-600">{item.clarification}</p>
+              <div key={index} className="mb-4 pb-4 border-b border-slate-200 last:border-b-0 last:pb-0">
+                <h4 className="font-semibold text-lg text-red-700 mb-1">{item.point}</h4>
+                <p className="text-slate-700 mb-2">{item.clarification}</p>
+                {item.teachingExample && (
+                  <div className="bg-red-50 border-l-4 border-red-400 p-3 rounded-md mt-2">
+                    <span className="block text-xs font-semibold text-red-700 mb-1">教學示例</span>
+                    <span className="text-red-900 text-sm">{item.teachingExample}</span>
+                  </div>
+                )}
               </div>
             ))
           ) : <p>沒有提供易混淆點。</p>}
