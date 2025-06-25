@@ -25,11 +25,17 @@ export interface DialogueLine {
   line: string;    // The text of the dialogue line
 }
 
+export interface MemoryCardGameQuestion {
+  pairs: { question: string; answer: string }[]; // Each pair is a card match (e.g., word/definition, term/translation)
+  instructions?: string; // Optional instructions for the memory game
+}
+
 export interface QuizDifficultyContent {
   trueFalse: TrueFalseQuestion[];
   multipleChoice: MultipleChoiceQuestion[];
   fillInTheBlanks: FillBlankQuestion[];
   sentenceScramble: SentenceScrambleQuestion[];
+  memoryCardGame?: MemoryCardGameQuestion[]; // Optional: memory card game questions
 }
 
 export interface OnlineInteractiveQuiz {

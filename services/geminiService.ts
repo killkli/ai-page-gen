@@ -53,6 +53,14 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
           ],
           "sentenceScramble": [
             { "originalSentence": "This is an easy sentence related to '${topic}'.", "scrambledWords": ["an", "is", "sentence", "This", "easy", "related", "to", "'${topic}'"] }
+          ],
+          "memoryCardGame": [
+            { "pairs": [
+                { "question": "Card 1 front (e.g., word, concept, question)", "answer": "Card 1 back (e.g., definition, translation, answer)" },
+                { "question": "Card 2 front", "answer": "Card 2 back" }
+              ],
+              "instructions": "Match each card pair related to '${topic}'."
+            }
           ]
         },
         "normal": {
@@ -67,6 +75,14 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
           ],
           "sentenceScramble": [
             { "originalSentence": "This normal sentence regarding '${topic}' needs unscrambling.", "scrambledWords": ["sentence", "needs", "unscrambling", "This", "normal", "regarding", "'${topic}'"] }
+          ],
+          "memoryCardGame": [
+            { "pairs": [
+                { "question": "Normal card 1 front", "answer": "Normal card 1 back" },
+                { "question": "Normal card 2 front", "answer": "Normal card 2 back" }
+              ],
+              "instructions": "Match each card pair related to '${topic}' (normal difficulty)."
+            }
           ]
         },
         "hard": {
@@ -81,6 +97,14 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
           ],
           "sentenceScramble": [
             { "originalSentence": "Unscrambling this hard sentence concerning '${topic}' is a challenge.", "scrambledWords": ["sentence", "challenge", "hard", "is", "a", "Unscrambling", "this", "concerning", "'${topic}'"] }
+          ],
+          "memoryCardGame": [
+            { "pairs": [
+                { "question": "Hard card 1 front", "answer": "Hard card 1 back" },
+                { "question": "Hard card 2 front", "answer": "Hard card 2 back" }
+              ],
+              "instructions": "Match each card pair related to '${topic}' (hard difficulty)."
+            }
           ]
         }
       },
@@ -91,11 +115,12 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
       ]
     }
 
-    Ensure each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble) has at least 1-2 questions for each difficulty level (easy, normal, hard).
+    Ensure each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble, memoryCardGame) has at least 1-2 questions for each difficulty level (easy, normal, hard).
     For True/False questions, the 'statement' MUST be a clear assertion related to the learning topic '${topic}'. 'isTrue' is a boolean. 'explanation' is optional.
     For multipleChoice, 'correctAnswerIndex' is the 0-based index of the correct option.
     For fillInTheBlanks, use '____' to denote the blank.
     For sentenceScramble, 'scrambledWords' should be an array of strings.
+    For memoryCardGame, provide at least 2 pairs per question. Each pair should be a related concept, word/definition, Q&A, or translation relevant to '${topic}'.
     Classroom activities should be engaging, interactive, and if possible, incorporate elements of game design or playful learning.
     The "englishConversation" should be a short dialogue in ENGLISH with at least two speakers, relevant to the '${topic}' (using the English translation if needed). Provide at least 3 lines.
   `;

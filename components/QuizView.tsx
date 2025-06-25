@@ -5,6 +5,7 @@ import MultipleChoiceQuizItem from './quizTypes/MultipleChoiceQuizItem';
 import FillBlankQuizItem from './quizTypes/FillBlankQuizItem';
 import SentenceScrambleQuizItem from './quizTypes/SentenceScrambleQuizItem';
 // import SpellingQuizItem from './quizTypes/SpellingQuizItem'; // Removed import
+import MemoryCardGameQuizItem from './quizTypes/MemoryCardGameQuizItem';
 import { PuzzlePieceIcon } from './icons';
 import SectionCard from './SectionCard';
 
@@ -32,6 +33,7 @@ const QuizView: React.FC<QuizViewProps> = ({ quizzes }) => {
     multipleChoice: "選擇題",
     fillInTheBlanks: "填空題",
     sentenceScramble: "句子重組",
+    memoryCardGame: "翻卡牌記憶遊戲",
     // spelling: "拼字測驗", // Removed label
   };
 
@@ -85,6 +87,9 @@ const QuizView: React.FC<QuizViewProps> = ({ quizzes }) => {
               ))}
               {quizType === 'sentenceScramble' && questions.map((q, i) => (
                 <SentenceScrambleQuizItem key={`${selectedDifficulty}-ss-${i}`} question={q as any} itemNumber={i + 1} />
+              ))}
+              {quizType === 'memoryCardGame' && questions.map((q, i) => (
+                <MemoryCardGameQuizItem key={`${selectedDifficulty}-mcg-${i}`} question={q as any} itemNumber={i + 1} />
               ))}
               {/* Rendering for spelling removed */}
             </div>
