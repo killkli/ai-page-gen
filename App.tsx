@@ -105,7 +105,7 @@ const App: React.FC = () => {
       setCopySuccess('請先設定 API 金鑰');
       return;
     }
-    const url = `${window.location.origin}${window.location.pathname}?apikey=${encodeURIComponent(apiKey)}`;
+    const url = `${window.location.origin}${import.meta.env.BASE_URL}${window.location.pathname}?apikey=${encodeURIComponent(apiKey)}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopySuccess('已複製分享連結！');
@@ -116,10 +116,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <Router basename={(typeof import.meta.env !== 'undefined' && import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : '/'}>
+    <Router>
       <Routes>
-        <Route path="share" element={<SharePage />} />
-        <Route path="/" element={
+        <Route path={import.meta.env.BASE_URL + "/share"} element={<SharePage />} />
+        <Route path={import.meta.env.BASE_URL + "/"} element={
           <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
             <header className="text-center mb-10">
@@ -151,7 +151,7 @@ const App: React.FC = () => {
 
               {error && !isLoading && (
                 <div className="my-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-md">
-                   <h3 className="font-bold text-lg mb-2 flex items-center"><LightbulbIcon className="w-6 h-6 mr-2 text-red-600" />產生內容時發生錯誤</h3>
+                  <h3 className="font-bold text-lg mb-2 flex items-center"><LightbulbIcon className="w-6 h-6 mr-2 text-red-600" />產生內容時發生錯誤</h3>
                   <p>{error}</p>
                   <p className="mt-2 text-sm">請嘗試修改您的主題或重試。如果問題持續存在，AI 模型可能暫時不可用，或者 API 金鑰可能存在問題。</p>
                 </div>
