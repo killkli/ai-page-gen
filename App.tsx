@@ -105,7 +105,7 @@ const App: React.FC = () => {
       setCopySuccess('請先設定 API 金鑰');
       return;
     }
-    const url = `${window.location.origin}${import.meta.env.BASE_URL}${window.location.pathname}?apikey=${encodeURIComponent(apiKey)}`;
+    const url = `${window.location.origin}${import.meta.env.BASE_URL}share?binId=${encodeURIComponent(apiKey)}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopySuccess('已複製分享連結！');
@@ -116,10 +116,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route path={import.meta.env.BASE_URL + "/share"} element={<SharePage />} />
-        <Route path={import.meta.env.BASE_URL + "/"} element={
+        <Route path="share" element={<SharePage />} />
+        <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
             <header className="text-center mb-10">
