@@ -62,7 +62,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
     try {
       const binId = await saveLearningContent(content);
       // 這裡請根據你的實際 domain 修改
-      const url = `${window.location.origin}/share?binId=${binId}`;
+      const url = `${window.location.origin}${import.meta.env.BASE_URL}share?binId=${binId}`;
       setShareUrl(url);
     } catch (e: any) {
       setShareError(e.message || '分享失敗');
@@ -70,7 +70,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
       setShareLoading(false);
     }
   };
-  
+
   return (
     <div className="mt-8">
       <div className="flex flex-wrap justify-end items-center gap-2 mb-4">
@@ -127,7 +127,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         onChange={setCurrentTab}
       >
         {/* 教學目標 */}
-        <SectionCard title="教學目標設定" icon={<AcademicCapIcon className="w-7 h-7"/>}>
+        <SectionCard title="教學目標設定" icon={<AcademicCapIcon className="w-7 h-7" />}>
           {content.learningObjectives && content.learningObjectives.length > 0 ? (
             <ul className="list-disc list-inside space-y-1 pl-2">
               {content.learningObjectives.map((obj, index) => (
@@ -137,7 +137,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
           ) : <p>沒有提供教學目標。</p>}
         </SectionCard>
         {/* 分解內容 */}
-        <SectionCard title="分解學習內容" icon={<BookOpenIcon className="w-7 h-7"/>}>
+        <SectionCard title="分解學習內容" icon={<BookOpenIcon className="w-7 h-7" />}>
           {content.contentBreakdown && content.contentBreakdown.length > 0 ? (
             content.contentBreakdown.map((item, index) => (
               <div key={index} className="mb-4 pb-4 border-b border-slate-200 last:border-b-0 last:pb-0">
@@ -154,7 +154,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
           ) : <p>沒有提供內容分解。</p>}
         </SectionCard>
         {/* 易混淆點 */}
-        <SectionCard title="易混淆點識別" icon={<LightbulbIcon className="w-7 h-7"/>}>
+        <SectionCard title="易混淆點識別" icon={<LightbulbIcon className="w-7 h-7" />}>
           {content.confusingPoints && content.confusingPoints.length > 0 ? (
             content.confusingPoints.map((item, index) => (
               <div key={index} className="mb-4 pb-4 border-b border-slate-200 last:border-b-0 last:pb-0">
@@ -171,7 +171,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
           ) : <p>沒有提供易混淆點。</p>}
         </SectionCard>
         {/* 課堂活動 */}
-        <SectionCard title="課堂活動與遊戲設計" icon={<BeakerIcon className="w-7 h-7"/>}>
+        <SectionCard title="課堂活動與遊戲設計" icon={<BeakerIcon className="w-7 h-7" />}>
           {content.classroomActivities && content.classroomActivities.length > 0 ? (
             <div className="space-y-4">
               {content.classroomActivities.map((activity, index) => (
@@ -190,7 +190,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         {content.englishConversation && content.englishConversation.length > 0 ? (
           <ConversationPractice dialogue={content.englishConversation} />
         ) : (
-          <SectionCard title="對話練習" icon={<ChatBubbleLeftRightIcon className="w-7 h-7"/>}>
+          <SectionCard title="對話練習" icon={<ChatBubbleLeftRightIcon className="w-7 h-7" />}>
             <p>沒有提供對話練習。</p>
           </SectionCard>
         )}

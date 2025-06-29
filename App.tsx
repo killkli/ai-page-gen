@@ -105,8 +105,7 @@ const App: React.FC = () => {
       setCopySuccess('請先設定 API 金鑰');
       return;
     }
-    const base_url= import.meta.env.BASE_URL;
-    const url = `${window.location.origin}${base_url}share?binId=${encodeURIComponent(apiKey)}`;
+    const url = `${window.location.origin}${import.meta.env.BASE_URL}?apikey=${encodeURIComponent(apiKey)}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopySuccess('已複製分享連結！');
