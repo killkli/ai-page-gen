@@ -4,7 +4,7 @@ import { GeneratedLearningContent } from '../types';
 // 單一欄位生成工具
 const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
   const ai = new GoogleGenAI({ apiKey });
-  const model = 'gemini-2.5-flash-preview-04-17';
+  const model = 'gemini-2.5-flash';
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: model,
