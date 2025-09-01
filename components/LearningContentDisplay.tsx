@@ -1,21 +1,23 @@
 import React from 'react';
-import { GeneratedLearningContent, LearningLevel, VocabularyLevel, QuizCustomConfig, DEFAULT_QUIZ_CONFIG, QUIZ_TYPE_LIMITS } from '../types';
+import { GeneratedLearningContent, ExtendedLearningContent, LearningLevel, VocabularyLevel, QuizCustomConfig, DEFAULT_QUIZ_CONFIG, QUIZ_TYPE_LIMITS } from '../types';
 import SectionCard from './SectionCard';
 import QuizView from './QuizView';
 import ConversationPractice from './ConversationPractice';
+import WritingPracticeView from './WritingPracticeView';
 import { AcademicCapIcon, BookOpenIcon, LightbulbIcon, BeakerIcon, ClipboardIcon, ChatBubbleLeftRightIcon } from './icons';
 import { exportLearningContentToHtml } from '../utils/exportHtmlUtil'; // Import the new utility
 import Tabs from './Tabs';
-import { saveLearningContent, saveQuizContent } from '../services/jsonbinService';
+import { saveLearningContent, saveQuizContent, saveWritingPracticeContent } from '../services/jsonbinService';
 import { regenerateQuizWithConfig } from '../services/geminiService';
 import QuizConfigPanel from './QuizConfigPanel';
 
 interface LearningContentDisplayProps {
-  content: GeneratedLearningContent;
+  content: ExtendedLearningContent;
   topic: string; // Added topic prop
   selectedLevel?: LearningLevel | null; // Added selected learning level
   selectedVocabularyLevel?: VocabularyLevel | null; // Added selected vocabulary level
-  onContentUpdate?: (newContent: GeneratedLearningContent) => void; // Callback for content updates
+  apiKey?: string; // Added API key for writing practice AI feedback
+  onContentUpdate?: (newContent: ExtendedLearningContent) => void; // Callback for content updates
 }
 
 const tabDefs = [
@@ -24,10 +26,11 @@ const tabDefs = [
   { key: 'confusing', label: '易混淆點' },
   { key: 'activities', label: '課堂活動' },
   { key: 'conversation', label: '對話練習' },
+  { key: 'writing', label: '寫作練習' },
   { key: 'quiz', label: '互動測驗' },
 ];
 
-const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content, topic, selectedLevel, selectedVocabularyLevel, onContentUpdate }) => {
+const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content, topic, selectedLevel, selectedVocabularyLevel, apiKey, onContentUpdate }) => {
   const [copySuccess, setCopySuccess] = React.useState('');
   const [exportMessage, setExportMessage] = React.useState('');
   const [currentTab, setCurrentTab] = React.useState(tabDefs[0].key);
@@ -39,6 +42,11 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
   const [quizShareLoading, setQuizShareLoading] = React.useState(false);
   const [quizShareError, setQuizShareError] = React.useState('');
   const [quizShareUrl, setQuizShareUrl] = React.useState('');
+  
+  // Writing practice sharing states
+  const [writingShareLoading, setWritingShareLoading] = React.useState(false);
+  const [writingShareError, setWritingShareError] = React.useState('');
+  const [writingShareUrl, setWritingShareUrl] = React.useState('');
   
   // Quiz configuration states
   const [quizConfig, setQuizConfig] = React.useState<QuizCustomConfig>(DEFAULT_QUIZ_CONFIG);
@@ -114,6 +122,37 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
       setQuizShareError(e.message || '分享測驗失敗');
     } finally {
       setQuizShareLoading(false);
+    }
+  };
+
+  const handleWritingShare = async () => {
+    setWritingShareLoading(true);
+    setWritingShareError('');
+    setWritingShareUrl('');
+    
+    if (!content.writingPractice) {
+      setWritingShareError('沒有可分享的寫作練習內容');
+      setWritingShareLoading(false);
+      return;
+    }
+    
+    try {
+      const binId = await saveWritingPracticeContent({
+        writingPractice: content.writingPractice,
+        topic: topic,
+        metadata: {
+          selectedLevel: selectedLevel?.name,
+          selectedVocabularyLevel: selectedVocabularyLevel?.name,
+          createdAt: new Date().toISOString()
+        }
+      });
+      
+      const url = `${window.location.origin}${import.meta.env.BASE_URL}writing?binId=${binId}`;
+      setWritingShareUrl(url);
+    } catch (e: any) {
+      setWritingShareError(e.message || '分享寫作練習失敗');
+    } finally {
+      setWritingShareLoading(false);
     }
   };
 
@@ -538,6 +577,69 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
           <SectionCard title="對話練習" icon={<ChatBubbleLeftRightIcon className="w-7 h-7" />}>
             <p>沒有提供對話練習。</p>
           </SectionCard>
+        )}
+        {/* 寫作練習 */}
+        {content.writingPractice ? (
+          <div>
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={handleWritingShare}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm"
+                disabled={writingShareLoading}
+              >
+                {writingShareLoading ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    分享中...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
+                    </svg>
+                    分享寫作練習
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {writingShareError && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{writingShareError}</div>}
+            
+            {writingShareUrl && (
+              <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <p className="text-sm text-purple-700 mb-2">寫作練習分享連結已生成：</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={writingShareUrl}
+                    readOnly
+                    className="flex-1 px-3 py-2 bg-white border border-purple-300 rounded text-sm"
+                    onClick={() => navigator.clipboard.writeText(writingShareUrl)}
+                  />
+                  <button
+                    onClick={() => navigator.clipboard.writeText(writingShareUrl)}
+                    className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+                  >
+                    複製
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <WritingPracticeView
+              content={content.writingPractice}
+              apiKey={apiKey}
+              vocabularyLevel={selectedVocabularyLevel || undefined}
+            />
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center border border-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-gray-400 mx-auto mb-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+            </svg>
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">沒有提供寫作練習</h4>
+            <p className="text-gray-500">此主題沒有生成寫作練習內容</p>
+          </div>
         )}
         {/* 互動測驗 */}
         <div>

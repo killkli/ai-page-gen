@@ -180,3 +180,59 @@ export const QUIZ_TYPE_LIMITS: Record<QuizContentKey, number> = {
   sentenceScramble: 10,
   memoryCardGame: 2
 };
+
+// Writing and sentence practice types
+export interface SentencePracticePrompt {
+  id: string;
+  instruction: string;        // 造句指示
+  keywords: string[];         // 必須使用的關鍵詞
+  exampleSentence?: string;   // 範例句子
+  hints?: string[];          // 提示要點
+  difficulty: 'easy' | 'normal' | 'hard';
+}
+
+export interface WritingPracticePrompt {
+  id: string;
+  title: string;              // 寫作題目
+  instruction: string;        // 寫作指示
+  structure: string[];        // 建議結構（段落安排）
+  keywords?: string[];        // 建議使用詞彙
+  minLength: number;          // 最少字數
+  maxLength: number;          // 最多字數
+  exampleOutline?: string;    // 範例大綱
+  difficulty: 'easy' | 'normal' | 'hard';
+}
+
+export interface AIFeedback {
+  score: number;              // 分數 (0-100)
+  strengths: string[];        // 優點
+  improvements: string[];     // 改進建議
+  grammarCorrections?: {      // 語法修正
+    original: string;
+    corrected: string;
+    explanation: string;
+  }[];
+  vocabularyTips?: string[];  // 詞彙建議
+  structureFeedback?: string; // 結構回饋
+  overallComment: string;     // 整體評語
+}
+
+export interface StudentSubmission {
+  id: string;
+  promptId: string;           // 對應的題目ID
+  studentWork: string;        // 學生作品
+  submittedAt: string;        // 提交時間
+  aiFeedback?: AIFeedback;    // AI批改結果
+  teacherFeedback?: string;   // 教師額外回饋
+}
+
+export interface WritingPracticeContent {
+  sentencePractice: SentencePracticePrompt[];
+  writingPractice: WritingPracticePrompt[];
+  instructions: string;       // 使用說明
+}
+
+// Extended learning content with writing practice
+export interface ExtendedLearningContent extends GeneratedLearningContent {
+  writingPractice?: WritingPracticeContent;
+}

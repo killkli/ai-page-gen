@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { GeneratedLearningContent, LearningLevelSuggestions, LearningLevel, VocabularyLevel } from './types';
+import { ExtendedLearningContent, LearningLevelSuggestions, LearningLevel, VocabularyLevel } from './types';
 import { generateLearningPlan, generateLearningLevelSuggestions, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel, isEnglishRelatedTopic } from './services/geminiService';
 import InputBar from './components/InputBar';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -11,13 +11,14 @@ import ApiKeyModal from './components/ApiKeyModal';
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import { getLearningContent } from './services/jsonbinService';
 import QuizPage from './components/QuizPage';
+import StudentWritingPage from './components/StudentWritingPage';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
 
 const SharePage: React.FC = () => {
   const [params] = useSearchParams();
   const binId = params.get('binId');
-  const [content, setContent] = React.useState<GeneratedLearningContent | null>(null);
+  const [content, setContent] = React.useState<ExtendedLearningContent | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
 
@@ -41,7 +42,7 @@ const SharePage: React.FC = () => {
 
 const App: React.FC = () => {
   const [topic, setTopic] = useState<string>('');
-  const [generatedContent, setGeneratedContent] = useState<GeneratedLearningContent | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<ExtendedLearningContent | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -218,6 +219,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="share" element={<SharePage />} />
         <Route path="quiz" element={<QuizPage />} />
+        <Route path="writing" element={<StudentWritingPage />} />
         <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
@@ -290,6 +292,7 @@ const App: React.FC = () => {
                   topic={topic}
                   selectedLevel={selectedLevel}
                   selectedVocabularyLevel={selectedVocabularyLevel}
+                  apiKey={apiKey || undefined}
                   onContentUpdate={setGeneratedContent}
                 />
               )}
