@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { GeneratedLearningContent } from './types';
-import { generateLearningPlan } from './services/geminiService';
+import { GeneratedLearningContent, LearningLevelSuggestions, LearningLevel } from './types';
+import { generateLearningPlan, generateLearningLevelSuggestions, generateLearningPlanWithLevel } from './services/geminiService';
 import InputBar from './components/InputBar';
 import LoadingSpinner from './components/LoadingSpinner';
 import LearningContentDisplay from './components/LearningContentDisplay';
+import LearningLevelSelector from './components/LearningLevelSelector';
 import { LightbulbIcon } from './components/icons';
 import ApiKeyModal from './components/ApiKeyModal';
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
@@ -44,6 +45,11 @@ const App: React.FC = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
+  
+  // 新增：程度建議相關狀態
+  const [learningLevels, setLearningLevels] = useState<LearningLevelSuggestions | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<LearningLevel | null>(null);
+  const [showingLevelSelection, setShowingLevelSelection] = useState<boolean>(false);
 
   React.useEffect(() => {
     // 1. 先檢查 URL 參數
@@ -73,6 +79,62 @@ const App: React.FC = () => {
     setShowApiKeyModal(false);
   };
 
+  // 第一階段：產生程度建議
+  const handleGenerateLevelSuggestions = useCallback(async () => {
+    if (!topic.trim()) {
+      setError('請輸入學習主題。');
+      return;
+    }
+    if (!apiKey) {
+      setError('尚未設定 Gemini API 金鑰。');
+      setShowApiKeyModal(true);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setLearningLevels(null);
+    setGeneratedContent(null);
+    setSelectedLevel(null);
+
+    try {
+      const levels = await generateLearningLevelSuggestions(topic, apiKey);
+      setLearningLevels(levels);
+      setShowingLevelSelection(true);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || '產生學習程度建議時發生未知錯誤。');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [topic, apiKey]);
+
+  // 第二階段：根據選定程度產生完整內容
+  const handleGenerateContentWithLevel = useCallback(async (level: LearningLevel) => {
+    if (!apiKey) {
+      setError('尚未設定 Gemini API 金鑰。');
+      setShowApiKeyModal(true);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setSelectedLevel(level);
+    setGeneratedContent(null);
+
+    try {
+      const content = await generateLearningPlanWithLevel(topic, level, apiKey);
+      setGeneratedContent(content);
+      setShowingLevelSelection(false);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || '產生學習內容時發生未知錯誤。');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [topic, apiKey]);
+
+  // 保留原來的函數作為快速生成選項
   const handleGenerateContent = useCallback(async () => {
     if (!topic.trim()) {
       setError('請輸入學習主題。');
@@ -87,6 +149,7 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setGeneratedContent(null);
+    setShowingLevelSelection(false);
 
     try {
       const content = await generateLearningPlan(topic, apiKey);
@@ -146,6 +209,7 @@ const App: React.FC = () => {
                 topic={topic}
                 setTopic={setTopic}
                 onGenerate={handleGenerateContent}
+                onGenerateWithLevels={handleGenerateLevelSuggestions}
                 isLoading={isLoading}
               />
 
@@ -163,8 +227,20 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              {generatedContent && !isLoading && !error && (
-                <LearningContentDisplay content={generatedContent} topic={('topic' in generatedContent && typeof generatedContent.topic === 'string') ? generatedContent.topic : ''} />
+              {/* 顯示學習程度選擇 */}
+              {showingLevelSelection && learningLevels && !isLoading && !error && (
+                <LearningLevelSelector
+                  learningLevels={learningLevels}
+                  onLevelSelect={setSelectedLevel}
+                  onGenerateWithLevel={handleGenerateContentWithLevel}
+                  selectedLevelId={selectedLevel?.id}
+                  isLoading={isLoading}
+                />
+              )}
+
+              {/* 顯示生成的完整內容 */}
+              {generatedContent && !isLoading && !error && !showingLevelSelection && (
+                <LearningContentDisplay content={generatedContent} topic={topic} />
               )}
             </main>
 

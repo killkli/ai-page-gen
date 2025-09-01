@@ -71,6 +71,19 @@ export interface GeneratedLearningContent {
   classroomActivities: ClassroomActivity[];
   onlineInteractiveQuiz: OnlineInteractiveQuiz;
   englishConversation?: DialogueLine[]; // Added for English conversation practice
+  learningLevels?: LearningLevelSuggestions; // Added for automatic learning level suggestions
+}
+
+export interface LearningLevel {
+  id: string;
+  name: string;
+  description: string;
+  order: number; // For sorting the levels
+}
+
+export interface LearningLevelSuggestions {
+  suggestedLevels: LearningLevel[];
+  defaultLevelId: string; // Which level to select by default
 }
 
 export enum QuizDifficulty {

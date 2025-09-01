@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { GeneratedLearningContent } from '../types';
+import { GeneratedLearningContent, LearningLevelSuggestions } from '../types';
 
 // 單一欄位生成工具
 const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
@@ -210,21 +210,195 @@ const generateEnglishConversation = async (topic: string, apiKey: string, learni
   return await callGemini(prompt, apiKey);
 };
 
-// 主函式：介面不變
-export const generateLearningPlan = async (topic: string, apiKey: string): Promise<GeneratedLearningContent> => {
+// 針對特定程度的內容生成函數
+const generateLearningObjectivesForLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<string[]> => {
+  const prompt = `
+    Based on the topic "${topic}" and the selected learning level "${selectedLevel.name}" (${selectedLevel.description}),
+    please generate at least 3 specific learning objectives that are appropriate for this level.
+    The objectives should be tailored to the learner's level and capabilities described in: "${selectedLevel.description}".
+    
+    Output MUST be a valid JSON array of strings, e.g.:
+    [
+      "能夠理解${topic}在${selectedLevel.name}程度的核心概念",
+      "能夠應用${topic}的${selectedLevel.name}級技能",
+      "能夠識別${topic}在此程度的重要特點"
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateContentBreakdownForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+  const prompt = `
+    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
+    and learning objectives: ${JSON.stringify(learningObjectives)}
+    
+    Please break down the topic into at least 3 micro-units appropriate for "${selectedLevel.name}" level learners.
+    The content depth and complexity should match the level description: "${selectedLevel.description}".
+    
+    Output MUST be a valid JSON array of objects, e.g.:
+    [
+      { "topic": "適合${selectedLevel.name}的子主題A", "details": "針對${selectedLevel.name}程度的詳細說明...", "teachingExample": "適合此程度的教學示例..." },
+      { "topic": "適合${selectedLevel.name}的子主題B", "details": "針對${selectedLevel.name}程度的詳細說明...", "teachingExample": "適合此程度的教學示例..." }
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+  const prompt = `
+    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
+    and learning objectives: ${JSON.stringify(learningObjectives)}
+    
+    Please identify at least 3 confusing points that learners at "${selectedLevel.name}" level typically encounter.
+    Focus on confusion points that are relevant to their current learning stage: "${selectedLevel.description}".
+    
+    Output MUST be a valid JSON array of objects, e.g.:
+    [
+      { "point": "對${selectedLevel.name}學習者常見的困惑點A", "clarification": "針對此程度的澄清說明...", "teachingExample": "適合此程度的教學示例..." }
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+  const prompt = `
+    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
+    and learning objectives: ${JSON.stringify(learningObjectives)}
+    
+    Please design at least 2 classroom activities suitable for "${selectedLevel.name}" level learners.
+    Activities should match the complexity and capabilities described in: "${selectedLevel.description}".
+    
+    Output MUST be a valid JSON array of objects, e.g.:
+    [
+      { 
+        "title": "適合${selectedLevel.name}的活動標題", 
+        "description": "針對此程度設計的活動描述...", 
+        "objective": "符合${selectedLevel.name}能力的活動目標",
+        "materials": "此程度所需的教材",
+        "environment": "適合的環境需求"
+      }
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any> => {
+  const prompt = `
+    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
+    and learning objectives: ${JSON.stringify(learningObjectives)}
+    
+    Please generate interactive quiz questions appropriate for "${selectedLevel.name}" level learners.
+    Question difficulty and complexity should match: "${selectedLevel.description}".
+    
+    Output MUST be a valid JSON object with this structure:
+    {
+      "easy": { /* questions for warm-up */ },
+      "normal": { /* questions matching the selected level */ },
+      "hard": { /* challenging questions for this level */ }
+    }
+    
+    Each difficulty should contain: trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble arrays.
+    Adjust complexity appropriately for "${selectedLevel.name}" learners.
+    
+    Do NOT include any explanation or extra text. Only output the JSON object.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateEnglishConversationForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+  const prompt = `
+    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
+    and learning objectives: ${JSON.stringify(learningObjectives)}
+    
+    Please generate an English conversation about "${topic}" appropriate for "${selectedLevel.name}" level learners.
+    Language complexity and vocabulary should match: "${selectedLevel.description}".
+    
+    Output MUST be a valid JSON array, e.g.:
+    [
+      { "speaker": "Speaker A", "line": "English suitable for ${selectedLevel.name} level..." },
+      { "speaker": "Speaker B", "line": "Response appropriate for this level..." }
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+// 7. 產生 learningLevels (學習程度建議)
+const generateLearningLevels = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<LearningLevelSuggestions> => {
+  const prompt = `
+    Based on the topic "${topic}" and learning objectives: ${JSON.stringify(learningObjectives)}
+    Please generate 3-4 learning levels that are specific to this topic. Each level should have a unique name, description, and order.
+    The levels should progress from basic understanding to advanced mastery, tailored specifically to the subject matter.
+    
+    Output MUST be a valid JSON object with this exact structure:
+    {
+      "suggestedLevels": [
+        {
+          "id": "beginner",
+          "name": "初學者",
+          "description": "適合首次接觸${topic}的學習者，著重基礎概念理解",
+          "order": 1
+        },
+        {
+          "id": "intermediate", 
+          "name": "進階者",
+          "description": "已具備基礎知識，能進行${topic}的實際應用",
+          "order": 2
+        },
+        {
+          "id": "advanced",
+          "name": "專精者", 
+          "description": "深度掌握${topic}，能分析複雜情況並提供解決方案",
+          "order": 3
+        }
+      ],
+      "defaultLevelId": "beginner"
+    }
+    
+    Make sure to:
+    1. Create level names and descriptions that are specific to the topic (not generic)
+    2. Use appropriate terminology for the subject area
+    3. Ensure descriptions explain what learners at each level can do
+    4. Use the primary language of the topic for names and descriptions
+    
+    Do NOT include any explanation or extra text. Only output the JSON object.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+// 第一階段：僅產生學習程度建議
+export const generateLearningLevelSuggestions = async (topic: string, apiKey: string): Promise<LearningLevelSuggestions> => {
   if (!apiKey) {
     throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
   }
-  // 1. 先產生 learningObjectives
-  const learningObjectives = await generateLearningObjectives(topic, apiKey);
-  // 2. 其他部分並行產生
+  
+  // 先產生基本的學習目標來輔助程度建議
+  const basicObjectives = await generateLearningObjectives(topic, apiKey);
+  return await generateLearningLevels(topic, apiKey, basicObjectives);
+};
+
+// 第二階段：根據選定的程度產生完整學習內容
+export const generateLearningPlanWithLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<GeneratedLearningContent> => {
+  if (!apiKey) {
+    throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
+  }
+  
+  // 1. 根據選定程度重新產生更精確的學習目標
+  const learningObjectives = await generateLearningObjectivesForLevel(topic, selectedLevel, apiKey);
+  
+  // 2. 其他部分並行產生，都會考慮選定的程度
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation] = await Promise.all([
-    generateContentBreakdown(topic, apiKey, learningObjectives),
-    generateConfusingPoints(topic, apiKey, learningObjectives),
-    generateClassroomActivities(topic, apiKey, learningObjectives),
-    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives),
-    generateEnglishConversation(topic, apiKey, learningObjectives)
+    generateContentBreakdownForLevel(topic, selectedLevel, apiKey, learningObjectives),
+    generateConfusingPointsForLevel(topic, selectedLevel, apiKey, learningObjectives),
+    generateClassroomActivitiesForLevel(topic, selectedLevel, apiKey, learningObjectives),
+    generateOnlineInteractiveQuizForLevel(topic, selectedLevel, apiKey, learningObjectives),
+    generateEnglishConversationForLevel(topic, selectedLevel, apiKey, learningObjectives)
   ]);
+  
   return {
     learningObjectives,
     contentBreakdown,
@@ -232,5 +406,32 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
     classroomActivities,
     onlineInteractiveQuiz,
     englishConversation
+  };
+};
+
+// 原本的主函式保持兼容性
+export const generateLearningPlan = async (topic: string, apiKey: string): Promise<GeneratedLearningContent> => {
+  if (!apiKey) {
+    throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
+  }
+  // 1. 先產生 learningObjectives
+  const learningObjectives = await generateLearningObjectives(topic, apiKey);
+  // 2. 其他部分並行產生
+  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, learningLevels] = await Promise.all([
+    generateContentBreakdown(topic, apiKey, learningObjectives),
+    generateConfusingPoints(topic, apiKey, learningObjectives),
+    generateClassroomActivities(topic, apiKey, learningObjectives),
+    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives),
+    generateEnglishConversation(topic, apiKey, learningObjectives),
+    generateLearningLevels(topic, apiKey, learningObjectives)
+  ]);
+  return {
+    learningObjectives,
+    contentBreakdown,
+    confusingPoints,
+    classroomActivities,
+    onlineInteractiveQuiz,
+    englishConversation,
+    learningLevels
   };
 };

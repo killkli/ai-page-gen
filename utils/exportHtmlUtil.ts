@@ -66,6 +66,21 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
         </div>`).join('') + '<p><small><em>注意：互動式語音朗讀和練習功能僅在線上應用程式中提供。</em></small></p>'
     : '<p>沒有提供英文對話內容。</p>';
   
+  const learningLevelsHtml = content.learningLevels && content.learningLevels.suggestedLevels && content.learningLevels.suggestedLevels.length > 0
+    ? content.learningLevels.suggestedLevels
+        .sort((a, b) => a.order - b.order)
+        .map(level => `
+          <div class="level-item" style="border:1px solid #e0e7ef; border-radius:8px; padding:16px; margin-bottom:12px; background:${level.id === content.learningLevels.defaultLevelId ? '#eff8ff' : '#f8fafc'}; border-left: 4px solid ${level.id === content.learningLevels.defaultLevelId ? '#0ea5e9' : '#e2e8f0'};">
+            <div style="display:flex; align-items:center; margin-bottom:8px;">
+              <div style="width:32px; height:32px; border-radius:50%; background-color:${level.id === content.learningLevels.defaultLevelId ? '#0ea5e9' : '#94a3b8'}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:12px;">${level.order}</div>
+              <h3 style="margin:0; color:${level.id === content.learningLevels.defaultLevelId ? '#0c4a6e' : '#334155'};">${level.name}</h3>
+              ${level.id === content.learningLevels.defaultLevelId ? '<span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; font-size:0.8em; margin-left:8px;">預設</span>' : ''}
+            </div>
+            <p style="margin:0; color:#64748b; line-height:1.5;">${level.description}</p>
+          </div>
+        `).join('')
+    : '<p>沒有提供學習程度建議。</p>';
+
   const quizDataJson = JSON.stringify(content.onlineInteractiveQuiz || {});
   const interactiveQuizzesHtml = generateInteractiveQuizHtml(quizDataJson);
 
@@ -146,6 +161,11 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
     <body>
       <div class="container">
         <h1>學習計畫：${topic}</h1>
+
+        <div class="section">
+          <h2>學習程度建議</h2>
+          ${learningLevelsHtml}
+        </div>
 
         <div class="section">
           <h2>教學目標設定</h2>
