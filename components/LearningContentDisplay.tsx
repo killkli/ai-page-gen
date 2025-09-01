@@ -183,11 +183,57 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
             <div className="space-y-4">
               {content.classroomActivities.map((activity, index) => (
                 <div key={index} className="p-4 border border-slate-200 rounded-md bg-slate-50">
-                  <h4 className="font-bold text-lg text-sky-700 mb-1">{activity.title}</h4>
-                  <p className="mb-1 text-slate-700">{activity.description}</p>
-                  {activity.objective && <p className="text-sm text-sky-900 mb-1"><span className="font-semibold">活動目標：</span>{activity.objective}</p>}
-                  {activity.materials && <p className="text-sm text-sky-900 mb-1"><span className="font-semibold">所需教材：</span>{activity.materials}</p>}
-                  {activity.environment && <p className="text-sm text-sky-900"><span className="font-semibold">環境需求：</span>{activity.environment}</p>}
+                  <h4 className="font-bold text-lg text-sky-700 mb-2">{activity.title}</h4>
+                  <p className="mb-3 text-slate-700">{activity.description}</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    {activity.objective && (
+                      <div className="text-sm text-sky-900">
+                        <span className="font-semibold">學習目標：</span>
+                        <p className="mt-1">{activity.objective}</p>
+                      </div>
+                    )}
+                    {activity.timing && (
+                      <div className="text-sm text-sky-900">
+                        <span className="font-semibold">使用時機：</span>
+                        <p className="mt-1">{activity.timing}</p>
+                      </div>
+                    )}
+                    {activity.materials && (
+                      <div className="text-sm text-sky-900">
+                        <span className="font-semibold">所需教具：</span>
+                        <p className="mt-1">{activity.materials}</p>
+                      </div>
+                    )}
+                    {activity.environment && (
+                      <div className="text-sm text-sky-900">
+                        <span className="font-semibold">環境要求：</span>
+                        <p className="mt-1">{activity.environment}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {activity.steps && activity.steps.length > 0 && (
+                    <div className="mb-3">
+                      <span className="font-semibold text-sm text-sky-900">活動步驟：</span>
+                      <ol className="list-decimal list-inside mt-2 space-y-1">
+                        {activity.steps.map((step, stepIndex) => (
+                          <li key={stepIndex} className="text-sm text-slate-700">{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                  
+                  {activity.assessmentPoints && activity.assessmentPoints.length > 0 && (
+                    <div>
+                      <span className="font-semibold text-sm text-sky-900">評估重點：</span>
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        {activity.assessmentPoints.map((point, pointIndex) => (
+                          <li key={pointIndex} className="text-sm text-slate-700">{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

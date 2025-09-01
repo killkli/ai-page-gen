@@ -49,12 +49,48 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
 
   const classroomActivitiesHtml = content.classroomActivities && content.classroomActivities.length > 0
     ? content.classroomActivities.map(activity => `
-        <div class="activity-item" style="border:1px solid #e0e7ef; border-radius:6px; padding:12px; margin-bottom:16px; background:#f8fafc;">
-          <h3 style="color:#2563eb; margin-bottom:6px;">${activity.title}</h3>
-          <p style="margin-bottom:6px;">${activity.description}</p>
-          ${activity.objective ? `<p style="margin-bottom:4px;"><strong>活動目標：</strong>${activity.objective}</p>` : ''}
-          ${activity.materials ? `<p style="margin-bottom:4px;"><strong>所需教材：</strong>${activity.materials}</p>` : ''}
-          ${activity.environment ? `<p style="margin-bottom:0;"><strong>環境需求：</strong>${activity.environment}</p>` : ''}
+        <div class="activity-item" style="border:1px solid #e0e7ef; border-radius:6px; padding:16px; margin-bottom:16px; background:#f8fafc;">
+          <h3 style="color:#2563eb; margin-bottom:8px; font-size:1.2em;">${activity.title}</h3>
+          <p style="margin-bottom:12px; color:#475569;">${activity.description}</p>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            ${activity.objective ? `
+              <div>
+                <strong style="color:#0f172a;">學習目標：</strong>
+                <p style="margin:4px 0 0 0; font-size:0.9em;">${activity.objective}</p>
+              </div>` : ''}
+            ${activity.timing ? `
+              <div>
+                <strong style="color:#0f172a;">使用時機：</strong>
+                <p style="margin:4px 0 0 0; font-size:0.9em;">${activity.timing}</p>
+              </div>` : ''}
+            ${activity.materials ? `
+            <div>
+              <strong style="color:#0f172a;">所需教具：</strong>
+              <p style="margin:4px 0 0 0; font-size:0.9em;">${activity.materials}</p>
+            </div>` : ''}
+            ${activity.environment ? `
+            <div>
+              <strong style="color:#0f172a;">環境要求：</strong>
+              <p style="margin:4px 0 0 0; font-size:0.9em;">${activity.environment}</p>
+            </div>` : ''}
+          </div>
+          
+          ${activity.steps && activity.steps.length > 0 ? `
+            <div style="margin-bottom:12px;">
+              <strong style="color:#0f172a;">活動步驟：</strong>
+              <ol style="margin:8px 0 0 20px; padding:0;">
+                ${activity.steps.map(step => `<li style="margin-bottom:4px; font-size:0.9em;">${step}</li>`).join('')}
+              </ol>
+            </div>` : ''}
+          
+          ${activity.assessmentPoints && activity.assessmentPoints.length > 0 ? `
+            <div>
+              <strong style="color:#0f172a;">評估重點：</strong>
+              <ul style="margin:8px 0 0 20px; padding:0;">
+                ${activity.assessmentPoints.map(point => `<li style="margin-bottom:4px; font-size:0.9em;">${point}</li>`).join('')}
+              </ul>
+            </div>` : ''}
         </div>
       `).join('')
     : '<p>沒有提供課堂活動。</p>';

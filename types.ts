@@ -63,11 +63,14 @@ export interface ConfusingPointItem {
 }
 
 export interface ClassroomActivity {
-  title: string;
-  description: string;
-  objective?: string;
-  materials?: string;
-  environment?: string;
+  title: string;                    // 活動名稱/主題
+  description: string;              // 活動的標題或核心概念
+  objective?: string;               // 學習目標
+  timing?: string;                  // 使用時機 - 適合在課程哪個階段使用
+  materials?: string;               // 所需教具 - 進行活動需要的工具或教材
+  environment?: string;             // 環境要求 - 座位安排、空間需求或設備條件
+  steps?: string[];                 // 活動步驟 - 條列式流程，教師與學生的互動方式
+  assessmentPoints?: string[];      // 評估重點 - 學生學習成效的觀察面向與評估標準
 }
 
 export interface GeneratedLearningContent {
