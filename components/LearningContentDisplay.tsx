@@ -6,7 +6,7 @@ import ConversationPractice from './ConversationPractice';
 import { AcademicCapIcon, BookOpenIcon, LightbulbIcon, BeakerIcon, ClipboardIcon, ChatBubbleLeftRightIcon } from './icons';
 import { exportLearningContentToHtml } from '../utils/exportHtmlUtil'; // Import the new utility
 import Tabs from './Tabs';
-import { saveLearningContent } from '../services/jsonbinService';
+import { saveLearningContent, saveQuizContent } from '../services/jsonbinService';
 
 interface LearningContentDisplayProps {
   content: GeneratedLearningContent;
@@ -31,6 +31,11 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
   const [shareLoading, setShareLoading] = React.useState(false);
   const [shareError, setShareError] = React.useState('');
   const [shareUrl, setShareUrl] = React.useState('');
+  
+  // Quiz sharing states
+  const [quizShareLoading, setQuizShareLoading] = React.useState(false);
+  const [quizShareError, setQuizShareError] = React.useState('');
+  const [quizShareUrl, setQuizShareUrl] = React.useState('');
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify(content, null, 2))
@@ -73,6 +78,37 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
     }
   };
 
+  const handleQuizShare = async () => {
+    setQuizShareLoading(true);
+    setQuizShareError('');
+    setQuizShareUrl('');
+    
+    if (!content.onlineInteractiveQuiz) {
+      setQuizShareError('沒有可分享的測驗內容');
+      setQuizShareLoading(false);
+      return;
+    }
+    
+    try {
+      const binId = await saveQuizContent({
+        quiz: content.onlineInteractiveQuiz,
+        topic: topic,
+        metadata: {
+          selectedLevel: selectedLevel?.name,
+          selectedVocabularyLevel: selectedVocabularyLevel?.name,
+          createdAt: new Date().toISOString()
+        }
+      });
+      
+      const url = `${window.location.origin}${import.meta.env.BASE_URL}quiz?binId=${binId}`;
+      setQuizShareUrl(url);
+    } catch (e: any) {
+      setQuizShareError(e.message || '分享測驗失敗');
+    } finally {
+      setQuizShareLoading(false);
+    }
+  };
+
   return (
     <div className="mt-8">
       <div className="flex flex-wrap justify-end items-center gap-2 mb-4">
@@ -102,15 +138,33 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
           {shareLoading ? (
             <span className="flex items-center"><span className="animate-spin mr-2">⏳</span> 分享中...</span>
           ) : (
-            <span>分享</span>
+            <span>分享方案</span>
+          )}
+        </button>
+        <button
+          onClick={handleQuizShare}
+          className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors flex items-center text-sm disabled:opacity-60"
+          aria-label="分享測驗給學生"
+          disabled={quizShareLoading}
+        >
+          {quizShareLoading ? (
+            <span className="flex items-center"><span className="animate-spin mr-2">⏳</span> 分享中...</span>
+          ) : (
+            <span className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+              </svg>
+              分享測驗
+            </span>
           )}
         </button>
         {copySuccess && <span className="text-sm text-green-600">{copySuccess}</span>}
         {exportMessage && <span className="text-sm text-blue-600">{exportMessage}</span>}
         {shareError && <span className="text-sm text-red-600">{shareError}</span>}
+        {quizShareError && <span className="text-sm text-red-600">{quizShareError}</span>}
         {shareUrl && (
           <span className="text-sm text-purple-700 flex items-center gap-2">
-            分享連結：
+            方案分享連結：
             <button
               className="underline hover:text-purple-900"
               onClick={() => {
@@ -118,6 +172,20 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
               }}
             >
               {shareUrl}
+            </button>
+            <span className="ml-1 text-xs text-gray-400">(點擊可複製)</span>
+          </span>
+        )}
+        {quizShareUrl && (
+          <span className="text-sm text-orange-700 flex items-center gap-2">
+            測驗分享連結：
+            <button
+              className="underline hover:text-orange-900"
+              onClick={() => {
+                navigator.clipboard.writeText(quizShareUrl);
+              }}
+            >
+              {quizShareUrl}
             </button>
             <span className="ml-1 text-xs text-gray-400">(點擊可複製)</span>
           </span>

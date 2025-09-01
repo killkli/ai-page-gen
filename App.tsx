@@ -10,6 +10,7 @@ import { LightbulbIcon } from './components/icons';
 import ApiKeyModal from './components/ApiKeyModal';
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import { getLearningContent } from './services/jsonbinService';
+import QuizPage from './components/QuizPage';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
 
@@ -216,6 +217,7 @@ const App: React.FC = () => {
     <Router basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="share" element={<SharePage />} />
+        <Route path="quiz" element={<QuizPage />} />
         <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
