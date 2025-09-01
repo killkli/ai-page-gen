@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ExtendedLearningContent, WritingPracticeContent } from '../types';
-import { getSharedContent } from '../services/jsonbinService';
+import { getWritingPracticeContent } from '../services/jsonbinService';
+import { extractApiKeyFromParams } from '../utils/cryptoUtils';
 import WritingPracticeView from './WritingPracticeView';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -11,6 +12,7 @@ const StudentWritingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
+  const [apiKeySource, setApiKeySource] = useState<'url' | 'localStorage' | 'manual'>('manual');
 
   const binId = searchParams.get('binId');
 
@@ -24,15 +26,22 @@ const StudentWritingPage: React.FC = () => {
 
       try {
         setLoading(true);
-        const sharedContent = await getSharedContent(binId) as ExtendedLearningContent;
+        // 使用新的寫作練習專用分享服務
+        const data = await getWritingPracticeContent(binId);
+        setContent(data.writingPractice);
         
-        if (!sharedContent.writingPractice) {
-          setError('此分享連結不包含寫作練習內容');
-          setLoading(false);
-          return;
+        // 檢查是否有來自 URL 的加密 API Key
+        try {
+          const urlApiKey = await extractApiKeyFromParams(searchParams);
+          if (urlApiKey) {
+            setApiKey(urlApiKey);
+            setApiKeySource('url');
+            localStorage.setItem('geminiApiKey', urlApiKey);
+            console.log('使用 URL 中的 API Key 進行 AI 批改');
+          }
+        } catch (error) {
+          console.warn('解析 URL API Key 失敗:', error);
         }
-
-        setContent(sharedContent.writingPractice);
       } catch (err) {
         console.error('載入分享內容失敗:', err);
         setError('載入分享內容失敗，請檢查連結是否正確');
@@ -42,14 +51,18 @@ const StudentWritingPage: React.FC = () => {
     };
 
     loadContent();
-  }, [binId]);
+  }, [binId, searchParams]);
 
   useEffect(() => {
-    const savedApiKey = localStorage.getItem('geminiApiKey');
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
+    // 只有在沒有從 URL 獲取到 API Key 時才從 localStorage 載入
+    if (!apiKey) {
+      const savedApiKey = localStorage.getItem('geminiApiKey');
+      if (savedApiKey) {
+        setApiKey(savedApiKey);
+        setApiKeySource('localStorage');
+      }
     }
-  }, []);
+  }, []); // 只在組件掛載時執行一次
 
   const handleApiKeySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +70,7 @@ const StudentWritingPage: React.FC = () => {
     if (trimmedKey) {
       localStorage.setItem('geminiApiKey', trimmedKey);
       setApiKey(trimmedKey);
+      setApiKeySource('manual');
     }
   };
 
@@ -150,12 +164,27 @@ const StudentWritingPage: React.FC = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                   </svg>
-                  <span className="text-sm font-medium">API Key 已設定，可以使用 AI 批改功能</span>
+                  <div>
+                    <span className="text-sm font-medium">API Key 已設定，可以使用 AI 批改功能</span>
+                    {apiKeySource === 'url' && (
+                      <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                        <span>🔗</span>
+                        <span>來自分享連結 - 老師已為您配置好 AI 功能</span>
+                      </div>
+                    )}
+                    {apiKeySource === 'localStorage' && (
+                      <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                        <span>💾</span>
+                        <span>來自本地存儲</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => {
                     localStorage.removeItem('geminiApiKey');
                     setApiKey('');
+                    setApiKeySource('manual');
                   }}
                   className="text-sm text-green-600 hover:text-green-800 underline"
                 >

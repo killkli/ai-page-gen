@@ -21,6 +21,8 @@ const SharePage: React.FC = () => {
   const [content, setContent] = React.useState<ExtendedLearningContent | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [apiKey, setApiKey] = React.useState<string | null>(null);
+  const [showApiKeyModal, setShowApiKeyModal] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (!binId) {
@@ -33,6 +35,22 @@ const SharePage: React.FC = () => {
       .catch(e => setError(e.message || '讀取失敗'))
       .finally(() => setLoading(false));
   }, [binId]);
+
+  // 載入 API Key
+  React.useEffect(() => {
+    const storedKey = localStorage.getItem(LOCALSTORAGE_KEY);
+    if (storedKey) {
+      setApiKey(storedKey);
+    } else {
+      setShowApiKeyModal(true);
+    }
+  }, []);
+
+  const handleSaveApiKey = (key: string) => {
+    localStorage.setItem(LOCALSTORAGE_KEY, key);
+    setApiKey(key);
+    setShowApiKeyModal(false);
+  };
 
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -52,12 +70,37 @@ const SharePage: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+      <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
       <div className="max-w-4xl mx-auto">
+        {/* API Key 提示區域 */}
+        {!apiKey && !showApiKeyModal && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-yellow-600 mt-0.5 flex-shrink-0">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 0c.652-.286 1.323-.443 2.25-.443 1.38 0 2.652.24 3.75.697v-6a6 6 0 0 0-6 2.243M12 15.75V21m0-5.25c1.38 0 2.652-.24 3.75-.697v6a6 6 0 0 1-3.75-2.243M12 15.75L9 12" />
+                </svg>
+                <div>
+                  <p className="text-yellow-800 font-medium text-sm">需要設定 API Key 以使用分享功能</p>
+                  <p className="text-yellow-700 text-xs mt-1">設定後可分享測驗和寫作練習給學生，包含 AI 功能</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowApiKeyModal(true)}
+                className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+              >
+                設定 API Key
+              </button>
+            </div>
+          </div>
+        )}
+        
         <LearningContentDisplay 
           content={content} 
           topic={content.topic || ''}
           selectedLevel={content.selectedLevel || null}
           selectedVocabularyLevel={content.selectedVocabularyLevel || null}
+          apiKey={apiKey || undefined}
         />
       </div>
     </div>

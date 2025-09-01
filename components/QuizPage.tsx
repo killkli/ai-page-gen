@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getQuizContent } from '../services/jsonbinService';
+import { extractApiKeyFromParams } from '../utils/cryptoUtils';
 import StudentQuizView from './StudentQuizView';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -20,17 +21,37 @@ const QuizPage: React.FC = () => {
       return;
     }
     
-    setLoading(true);
-    getQuizContent(binId)
-      .then(data => {
+    const loadQuizData = async () => {
+      setLoading(true);
+      try {
+        // 載入測驗資料
+        const data = await getQuizContent(binId);
         setQuiz(data.quiz);
         setTopic(data.topic);
-        setApiKey(data.apiKey || '');
-        setSupportsDiagnostic(data.supportsDiagnostic || false);
-      })
-      .catch(e => setError(e.message || '載入測驗失敗'))
-      .finally(() => setLoading(false));
-  }, [binId]);
+        
+        // 首先嘗試從 URL 參數獲取加密的 API Key
+        let finalApiKey = data.apiKey || '';
+        try {
+          const urlApiKey = await extractApiKeyFromParams(params);
+          if (urlApiKey) {
+            finalApiKey = urlApiKey;
+            console.log('使用 URL 中的 API Key 進行學習診斷');
+          }
+        } catch (error) {
+          console.warn('解析 URL API Key 失敗:', error);
+        }
+        
+        setApiKey(finalApiKey);
+        setSupportsDiagnostic(!!finalApiKey);
+      } catch (e: any) {
+        setError(e.message || '載入測驗失敗');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadQuizData();
+  }, [binId, params]);
 
   if (loading) {
     return (

@@ -6,6 +6,7 @@ import ConversationPractice from './ConversationPractice';
 import WritingPracticeView from './WritingPracticeView';
 import { AcademicCapIcon, BookOpenIcon, LightbulbIcon, BeakerIcon, ClipboardIcon, ChatBubbleLeftRightIcon } from './icons';
 import { exportLearningContentToHtml } from '../utils/exportHtmlUtil'; // Import the new utility
+import { generateEncryptedApiKeyParam } from '../utils/cryptoUtils'; // Import crypto utilities
 import Tabs from './Tabs';
 import { saveLearningContent, saveQuizContent, saveWritingPracticeContent } from '../services/jsonbinService';
 import { regenerateQuizWithConfig } from '../services/geminiService';
@@ -125,7 +126,17 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         }
       });
       
-      const url = `${window.location.origin}${import.meta.env.BASE_URL}quiz?binId=${binId}`;
+      // 生成包含加密 API Key 的 URL（如果有 API Key 的話）
+      let url = `${window.location.origin}${import.meta.env.BASE_URL}quiz?binId=${binId}`;
+      if (apiKey) {
+        try {
+          const encryptedApiKeyParam = await generateEncryptedApiKeyParam(apiKey);
+          url += `&${encryptedApiKeyParam}`;
+        } catch (error) {
+          console.warn('加密 API Key 失敗，將不包含 API Key:', error);
+        }
+      }
+      
       setQuizShareUrl(url);
     } catch (e: any) {
       setQuizShareError(e.message || '分享測驗失敗');
@@ -156,7 +167,17 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         }
       });
       
-      const url = `${window.location.origin}${import.meta.env.BASE_URL}writing?binId=${binId}`;
+      // 生成包含加密 API Key 的 URL（如果有 API Key 的話）
+      let url = `${window.location.origin}${import.meta.env.BASE_URL}writing?binId=${binId}`;
+      if (apiKey) {
+        try {
+          const encryptedApiKeyParam = await generateEncryptedApiKeyParam(apiKey);
+          url += `&${encryptedApiKeyParam}`;
+        } catch (error) {
+          console.warn('加密 API Key 失敗，將不包含 API Key:', error);
+        }
+      }
+      
       setWritingShareUrl(url);
     } catch (e: any) {
       setWritingShareError(e.message || '分享寫作練習失敗');
@@ -305,7 +326,14 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
       {/* Unified Share URL Display - Quiz */}
       {quizShareUrl && (
         <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-          <p className="text-sm text-orange-700 mb-2">測驗分享連結已生成：</p>
+          <div className="flex items-center gap-2 mb-2">
+            <p className="text-sm text-orange-700">測驗分享連結已生成：</p>
+            {apiKey && (
+              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                含 AI 診斷
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -321,6 +349,11 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
               複製
             </button>
           </div>
+          {apiKey && (
+            <p className="text-xs text-orange-600 mt-2">
+              💡 此連結包含您的 API Key，學生可直接使用 AI 學習診斷功能
+            </p>
+          )}
         </div>
       )}
       
@@ -680,7 +713,14 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
             
             {writingShareUrl && (
               <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                <p className="text-sm text-purple-700 mb-2">寫作練習分享連結已生成：</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm text-purple-700">寫作練習分享連結已生成：</p>
+                  {apiKey && (
+                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                      含 AI 批改
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -696,6 +736,11 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
                     複製
                   </button>
                 </div>
+                {apiKey && (
+                  <p className="text-xs text-purple-600 mt-2">
+                    💡 此連結包含您的 API Key，學生可直接使用 AI 批改功能
+                  </p>
+                )}
               </div>
             )}
             
