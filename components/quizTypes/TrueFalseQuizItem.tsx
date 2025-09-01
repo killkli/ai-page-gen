@@ -36,7 +36,7 @@ const TrueFalseQuizItem: React.FC<TrueFalseQuizItemProps> = ({ question, itemNum
   return (
     <div className="p-4 border border-slate-200 rounded-lg bg-slate-50 mb-3">
       <p className="font-medium text-slate-700 mb-2">
-        {itemNumber}. {question.statement}
+        {itemNumber}. {question.statement || '題目載入中...'}
       </p>
       <div className="flex space-x-3 mb-3">
         <button

@@ -24,7 +24,7 @@ const MultipleChoiceQuizItem: React.FC<MultipleChoiceQuizItemProps> = ({ questio
     const isCorrect = selectedOption === question.correctAnswerIndex;
     setFeedback({
       isCorrect,
-      message: isCorrect ? '答對了！' : `答錯了。正確答案是： ${question.options[question.correctAnswerIndex]}`,
+      message: isCorrect ? '答對了！' : `答錯了。正確答案是： ${(question.options || [])[question.correctAnswerIndex] || '未知'}`,
     });
   };
 
@@ -34,7 +34,7 @@ const MultipleChoiceQuizItem: React.FC<MultipleChoiceQuizItemProps> = ({ questio
         {itemNumber}. {question.question}
       </p>
       <div className="space-y-2 mb-3">
-        {question.options.map((option, index) => (
+        {(question.options || []).map((option, index) => (
           <label key={index} className={`flex items-center p-2 border rounded-md cursor-pointer hover:bg-sky-50 transition-colors ${selectedOption === index ? 'bg-sky-100 border-sky-500' : 'border-slate-300'} ${feedback !== null ? 'cursor-not-allowed opacity-70' : ''}`}>
             <input
               type="radio"

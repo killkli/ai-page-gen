@@ -92,5 +92,18 @@ export enum QuizDifficulty {
   Hard = "hard",
 }
 
+// Vocabulary level for English-related topics
+export interface VocabularyLevel {
+  id: string;
+  name: string;
+  wordCount: number;
+  description: string;
+}
+
+export interface VocabularyLevelSuggestions {
+  suggestedLevels: VocabularyLevel[];
+  defaultLevelId: string;
+}
+
 // Helper type for quiz section props
 export type QuizContentKey = keyof QuizDifficultyContent;

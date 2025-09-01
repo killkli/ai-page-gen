@@ -31,7 +31,7 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
 
   useEffect(() => {
     let id = 0;
-    const cardList: CardData[] = question.pairs.flatMap((pair, idx) => [
+    const cardList: CardData[] = (question.pairs || []).flatMap((pair, idx) => [
       { id: id++, content: pair.question, pairId: idx, isFlipped: false, isMatched: false },
       { id: id++, content: pair.answer, pairId: idx, isFlipped: false, isMatched: false },
     ]);
@@ -70,7 +70,7 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
     }
   };
 
-  const allMatched = matchedCount === question.pairs.length;
+  const allMatched = matchedCount === (question.pairs || []).length;
 
   return (
     <div className="mb-4 p-4 border rounded bg-slate-50">

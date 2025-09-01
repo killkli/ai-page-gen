@@ -375,3 +375,84 @@ docs: Update development guide with new testing patterns
 - **Mobile Experience**: Fully functional on all screen sizes
 
 Remember: You're building tools for educators and learners. Every decision should consider how it impacts the teaching and learning experience. Maintain the high standards established in this codebase while being open to improvements that enhance educational outcomes.
+
+## CRITICAL: AI Prompt Maintenance Guidelines
+
+### ⚠️ **NEVER SIMPLIFY PROMPTS - THEY ARE THE SYSTEM CORE**
+
+The AI prompts in `geminiService.ts` are the **operational core** of this application. Any simplification can break content generation functionality completely.
+
+#### **Prompt Modification Rules**:
+1. **🚫 NEVER Remove Details**: Every example, every structure description, every "at least X (but more is better)" clause serves a purpose
+2. **🚫 NEVER Translate to Pure Chinese**: Use English instructions + Chinese examples (proven working pattern)  
+3. **🚫 NEVER Remove JSON Structure Examples**: AI needs exact format specifications
+4. **🚫 NEVER Remove Quantity Requirements**: "at least 5 questions", "at least 3 micro-units" are essential
+5. **🚫 NEVER Remove Field Descriptions**: Every JSON field must be explained with examples
+
+#### **Historical Issues That Must Be Avoided**:
+- **Issue**: Simplified `generateOnlineInteractiveQuizForLevel` prompt → No quiz generation
+- **Issue**: Removed detailed JSON structure → Malformed data → Component crashes
+- **Issue**: Removed memoryCardGame examples → No card games generated
+- **Issue**: Changed to pure Chinese prompts → Content became all English (opposite intent)
+
+#### **Prompt Maintenance Best Practices**:
+
+##### ✅ **Working Pattern** (DO THIS):
+```javascript
+const prompt = `
+  Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+  Please generate quiz content for "${topic}" in the following JSON structure (no explanation, no extra text):
+  {
+    "easy": {
+      "trueFalse": [
+        { "statement": "簡單判斷題1...", "isTrue": true, "explanation": "可選說明1" },
+        { "statement": "簡單判斷題2...", "isTrue": false, "explanation": "可選說明2" }
+        // ... 至少 5 題，若有更多更好
+      ],
+      "multipleChoice": [
+        { "question": "簡單選擇題1...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 0 }
+        // ... 至少 5 題，若有更多更好
+      ],
+      // ... complete structure with all quiz types
+    },
+    "normal": { /* same structure as easy */ },
+    "hard": { /* same structure as easy */ }
+  }
+  For each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble), generate at least 5 questions per difficulty level.
+  For memoryCardGame, generate ONLY 1 question per difficulty, but the "pairs" array inside must contain at least 5 pairs.
+  All text must be in the primary language of the topic. Only output the JSON object, no explanation or extra text.
+`;
+```
+
+##### ❌ **Broken Pattern** (NEVER DO THIS):
+```javascript  
+const prompt = `
+  請產生測驗內容。
+  輸出格式：{ "easy": {}, "normal": {}, "hard": {} }
+  請勿包含說明。
+`;
+```
+
+#### **When Modifying Prompts**:
+
+1. **Compare with Working Versions**: Always check `git show f83808d:services/geminiService.ts` for reference
+2. **Test Immediately**: Generate content after any prompt change to verify functionality
+3. **Maintain Structure**: Keep all examples, field descriptions, and quantity requirements
+4. **Add, Don't Remove**: If adding features (like vocabulary levels), add constraints but keep existing structure
+
+#### **Emergency Recovery**:
+If prompts are accidentally simplified and functionality breaks:
+1. `git show f83808d:services/geminiService.ts > working_version.ts`
+2. Compare current prompts with working version
+3. Restore missing details, examples, and structure requirements
+4. Test all quiz types and content generation
+
+#### **Key Success Factors**:
+- **Detailed JSON Examples**: AI learns format from examples
+- **English Instructions + Chinese Examples**: Proven working combination  
+- **Quantity Requirements**: "at least X" ensures sufficient content
+- **Complete Structure**: Every quiz type must have full specification
+- **Field Explanations**: Each JSON property needs purpose explanation
+
+### 🎯 **Remember**: 
+The difference between a working system and a broken one is often a single missing example or simplified instruction in the prompts. **Prompts are not documentation - they are executable specifications that directly control system behavior.**

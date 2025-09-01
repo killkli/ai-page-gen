@@ -14,7 +14,8 @@ const SentenceScrambleQuizItem: React.FC<SentenceScrambleQuizItemProps> = ({ que
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
 
   useEffect(() => {
-    setAvailableWords([...question.scrambledWords].sort(() => Math.random() - 0.5));
+    const words = question.scrambledWords || [];
+    setAvailableWords([...words].sort(() => Math.random() - 0.5));
     setConstructedSentence([]);
     setFeedback(null);
   }, [question]);
@@ -36,7 +37,8 @@ const SentenceScrambleQuizItem: React.FC<SentenceScrambleQuizItemProps> = ({ que
   };
   
   const clearSentence = () => {
-    setAvailableWords([...question.scrambledWords].sort(() => Math.random() - 0.5));
+    const words = question.scrambledWords || [];
+    setAvailableWords([...words].sort(() => Math.random() - 0.5));
     setConstructedSentence([]);
     if (feedback) setFeedback(null);
   }

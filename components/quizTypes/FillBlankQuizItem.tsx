@@ -29,7 +29,7 @@ const FillBlankQuizItem: React.FC<FillBlankQuizItemProps> = ({ question, itemNum
     });
   };
 
-  const parts = question.sentenceWithBlank.split('____');
+  const parts = question.sentenceWithBlank?.split('____') || ['', ''];
 
   return (
     <div className="p-4 border border-slate-200 rounded-lg bg-slate-50 mb-3">

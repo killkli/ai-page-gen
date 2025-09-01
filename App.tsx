@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { GeneratedLearningContent, LearningLevelSuggestions, LearningLevel } from './types';
-import { generateLearningPlan, generateLearningLevelSuggestions, generateLearningPlanWithLevel } from './services/geminiService';
+import { GeneratedLearningContent, LearningLevelSuggestions, LearningLevel, VocabularyLevel } from './types';
+import { generateLearningPlan, generateLearningLevelSuggestions, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel, isEnglishRelatedTopic } from './services/geminiService';
 import InputBar from './components/InputBar';
 import LoadingSpinner from './components/LoadingSpinner';
 import LearningContentDisplay from './components/LearningContentDisplay';
 import LearningLevelSelector from './components/LearningLevelSelector';
+import VocabularyLevelSelector from './components/VocabularyLevelSelector';
 import { LightbulbIcon } from './components/icons';
 import ApiKeyModal from './components/ApiKeyModal';
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
@@ -50,6 +51,11 @@ const App: React.FC = () => {
   const [learningLevels, setLearningLevels] = useState<LearningLevelSuggestions | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<LearningLevel | null>(null);
   const [showingLevelSelection, setShowingLevelSelection] = useState<boolean>(false);
+  
+  // 新增：單字程度相關狀態 (僅適用於英語主題)
+  const [selectedVocabularyLevel, setSelectedVocabularyLevel] = useState<VocabularyLevel | null>(null);
+  const [showingVocabularySelection, setShowingVocabularySelection] = useState<boolean>(false);
+  const [isEnglishTopic, setIsEnglishTopic] = useState<boolean>(false);
 
   React.useEffect(() => {
     // 1. 先檢查 URL 參數
@@ -96,11 +102,22 @@ const App: React.FC = () => {
     setLearningLevels(null);
     setGeneratedContent(null);
     setSelectedLevel(null);
+    setSelectedVocabularyLevel(null);
+    setShowingVocabularySelection(false);
+
+    // 檢測是否為英語相關主題
+    const englishTopic = isEnglishRelatedTopic(topic);
+    setIsEnglishTopic(englishTopic);
 
     try {
       const levels = await generateLearningLevelSuggestions(topic, apiKey);
       setLearningLevels(levels);
       setShowingLevelSelection(true);
+      
+      // 如果是英語主題，也要顯示單字程度選擇器
+      if (englishTopic) {
+        setShowingVocabularySelection(true);
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message || '產生學習程度建議時發生未知錯誤。');
@@ -117,22 +134,37 @@ const App: React.FC = () => {
       return;
     }
 
+    // 如果是英語主題但未選擇單字程度，顯示錯誤
+    if (isEnglishTopic && !selectedVocabularyLevel) {
+      setError('請先選擇英語單字程度。');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setSelectedLevel(level);
     setGeneratedContent(null);
 
     try {
-      const content = await generateLearningPlanWithLevel(topic, level, apiKey);
+      let content: GeneratedLearningContent;
+      
+      // 根據是否為英語主題選擇不同的生成方式
+      if (isEnglishTopic && selectedVocabularyLevel) {
+        content = await generateLearningPlanWithVocabularyLevel(topic, level, selectedVocabularyLevel, apiKey);
+      } else {
+        content = await generateLearningPlanWithLevel(topic, level, apiKey);
+      }
+      
       setGeneratedContent(content);
       setShowingLevelSelection(false);
+      setShowingVocabularySelection(false);
     } catch (err: any) {
       console.error(err);
       setError(err.message || '產生學習內容時發生未知錯誤。');
     } finally {
       setIsLoading(false);
     }
-  }, [topic, apiKey]);
+  }, [topic, apiKey, isEnglishTopic, selectedVocabularyLevel]);
 
   // 保留原來的函數作為快速生成選項
   const handleGenerateContent = useCallback(async () => {
@@ -150,6 +182,8 @@ const App: React.FC = () => {
     setError(null);
     setGeneratedContent(null);
     setShowingLevelSelection(false);
+    setShowingVocabularySelection(false);
+    setIsEnglishTopic(false);
 
     try {
       const content = await generateLearningPlan(topic, apiKey);
@@ -238,8 +272,17 @@ const App: React.FC = () => {
                 />
               )}
 
+              {/* 顯示英語單字程度選擇 (僅限英語主題) */}
+              {showingVocabularySelection && isEnglishTopic && !isLoading && !error && (
+                <VocabularyLevelSelector
+                  onVocabularyLevelSelect={setSelectedVocabularyLevel}
+                  selectedLevel={selectedVocabularyLevel}
+                  isVisible={true}
+                />
+              )}
+
               {/* 顯示生成的完整內容 */}
-              {generatedContent && !isLoading && !error && !showingLevelSelection && (
+              {generatedContent && !isLoading && !error && !showingLevelSelection && !showingVocabularySelection && (
                 <LearningContentDisplay content={generatedContent} topic={topic} />
               )}
             </main>

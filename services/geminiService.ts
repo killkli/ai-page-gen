@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { GeneratedLearningContent, LearningLevelSuggestions } from '../types';
+import { GeneratedLearningContent, LearningLevelSuggestions, VocabularyLevel } from '../types';
 
 // 單一欄位生成工具
 const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
@@ -213,15 +213,15 @@ const generateEnglishConversation = async (topic: string, apiKey: string, learni
 // 針對特定程度的內容生成函數
 const generateLearningObjectivesForLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<string[]> => {
   const prompt = `
-    Based on the topic "${topic}" and the selected learning level "${selectedLevel.name}" (${selectedLevel.description}),
-    please generate at least 3 specific learning objectives that are appropriate for this level.
-    The objectives should be tailored to the learner's level and capabilities described in: "${selectedLevel.description}".
-    
+    Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}" appropriate for learning level "${selectedLevel.name}" (${selectedLevel.description}).
+    The objectives should be based on scaffolding theory and gamification, written in the primary language of the topic, and tailored to the learner's level and capabilities described in: "${selectedLevel.description}".
     Output MUST be a valid JSON array of strings, e.g.:
     [
       "能夠理解${topic}在${selectedLevel.name}程度的核心概念",
       "能夠應用${topic}的${selectedLevel.name}級技能",
-      "能夠識別${topic}在此程度的重要特點"
+      "能夠辨識${topic}在此程度的常見誤區",
+      "能夠分析${topic}在${selectedLevel.name}程度的進階應用",
+      //...or more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
@@ -230,16 +230,15 @@ const generateLearningObjectivesForLevel = async (topic: string, selectedLevel: 
 
 const generateContentBreakdownForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
   const prompt = `
-    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
-    and learning objectives: ${JSON.stringify(learningObjectives)}
-    
-    Please break down the topic into at least 3 micro-units appropriate for "${selectedLevel.name}" level learners.
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}). For each, provide a sub-topic, a brief explanation, and a concrete teaching example (such as a sample sentence, scenario, or application).
     The content depth and complexity should match the level description: "${selectedLevel.description}".
-    
     Output MUST be a valid JSON array of objects, e.g.:
     [
-      { "topic": "適合${selectedLevel.name}的子主題A", "details": "針對${selectedLevel.name}程度的詳細說明...", "teachingExample": "適合此程度的教學示例..." },
-      { "topic": "適合${selectedLevel.name}的子主題B", "details": "針對${selectedLevel.name}程度的詳細說明...", "teachingExample": "適合此程度的教學示例..." }
+      { "topic": "適合${selectedLevel.name}的子主題A", "details": "子主題A針對${selectedLevel.name}程度的簡要說明...", "teachingExample": "子主題A適合此程度的教學示例..." },
+      { "topic": "適合${selectedLevel.name}的子主題B", "details": "子主題B針對${selectedLevel.name}程度的簡要說明...", "teachingExample": "子主題B適合此程度的教學示例..." },
+      { "topic": "適合${selectedLevel.name}的子主題C", "details": "子主題C針對${selectedLevel.name}程度的簡要說明...", "teachingExample": "子主題C適合此程度的教學示例..." },
+      //...or more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
@@ -248,15 +247,15 @@ const generateContentBreakdownForLevel = async (topic: string, selectedLevel: an
 
 const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
   const prompt = `
-    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
-    and learning objectives: ${JSON.stringify(learningObjectives)}
-    
-    Please identify at least 3 confusing points that learners at "${selectedLevel.name}" level typically encounter.
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    List at least 3 (but more is better if appropriate) common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
     Focus on confusion points that are relevant to their current learning stage: "${selectedLevel.description}".
-    
     Output MUST be a valid JSON array of objects, e.g.:
     [
-      { "point": "對${selectedLevel.name}學習者常見的困惑點A", "clarification": "針對此程度的澄清說明...", "teachingExample": "適合此程度的教學示例..." }
+      { "point": "對${selectedLevel.name}學習者的常見誤區X", "clarification": "詳細說明...", "teachingExample": "誤區X針對此程度的教學示例..." },
+      { "point": "${selectedLevel.name}程度的潛在困難Y", "clarification": "如何克服...", "teachingExample": "困難Y針對此程度的教學示例..." },
+      { "point": "此程度學習者的誤解Z", "clarification": "澄清說明...", "teachingExample": "誤解Z針對此程度的教學示例..." },
+      //...or more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
@@ -265,21 +264,25 @@ const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any
 
 const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
   const prompt = `
-    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
-    and learning objectives: ${JSON.stringify(learningObjectives)}
-    
-    Please design at least 2 classroom activities suitable for "${selectedLevel.name}" level learners.
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    Suggest at least 3 (but more is better if appropriate) engaging, interactive classroom activities (preferably game-like) for the topic "${topic}" suitable for "${selectedLevel.name}" level learners (${selectedLevel.description}).
     Activities should match the complexity and capabilities described in: "${selectedLevel.description}".
-    
+    For each activity, provide the following fields:
+      - title: The name of the activity
+      - description: A brief description of how the activity works
+      - objective: The main learning goal or purpose of the activity
+      - materials: What materials or props are needed (if any)
+      - environment: Any special environment or space requirements (e.g., classroom, outdoors, online, etc.)
     Output MUST be a valid JSON array of objects, e.g.:
     [
-      { 
-        "title": "適合${selectedLevel.name}的活動標題", 
-        "description": "針對此程度設計的活動描述...", 
-        "objective": "符合${selectedLevel.name}能力的活動目標",
-        "materials": "此程度所需的教材",
-        "environment": "適合的環境需求"
-      }
+      {
+        "title": "適合${selectedLevel.name}的遊戲化活動1",
+        "description": "活動1針對此程度的玩法簡述...",
+        "objective": "活動1符合${selectedLevel.name}程度的學習目標...",
+        "materials": "此程度所需教材或道具...",
+        "environment": "教室/戶外/線上等需求..."
+      },
+      // ... more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
@@ -288,39 +291,72 @@ const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel:
 
 const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any> => {
   const prompt = `
-    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
-    and learning objectives: ${JSON.stringify(learningObjectives)}
+    基於主題「${topic}」、選定的學習程度「${selectedLevel.name}」(${selectedLevel.description})，
+    以及學習目標：${JSON.stringify(learningObjectives)}
     
-    Please generate interactive quiz questions appropriate for "${selectedLevel.name}" level learners.
-    Question difficulty and complexity should match: "${selectedLevel.description}".
+    請產生適合「${selectedLevel.name}」程度學習者的互動測驗題目。
+    題目難度和複雜度應符合：「${selectedLevel.description}」。
     
-    Output MUST be a valid JSON object with this structure:
+    輸出必須是有效的 JSON 物件，格式如下：
     {
-      "easy": { /* questions for warm-up */ },
-      "normal": { /* questions matching the selected level */ },
-      "hard": { /* challenging questions for this level */ }
+      "easy": {
+        "trueFalse": [
+          { "statement": "暖身判斷題1...", "isTrue": true, "explanation": "可選說明1" },
+          { "statement": "暖身判斷題2...", "isTrue": false, "explanation": "可選說明2" }
+          // ... 至少 5 題，若有更多更好
+        ],
+        "multipleChoice": [
+          { "question": "暖身選擇題1...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 0 },
+          { "question": "暖身選擇題2...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 1 }
+          // ... 至少 5 題，若有更多更好
+        ],
+        "fillInTheBlanks": [
+          { "sentenceWithBlank": "暖身填空題1...____...", "correctAnswer": "正確答案1" },
+          { "sentenceWithBlank": "暖身填空題2...____...", "correctAnswer": "正確答案2" }
+          // ... 至少 5 題，若有更多更好
+        ],
+        "sentenceScramble": [
+          { "originalSentence": "暖身句子1...", "scrambledWords": ["...", "...", "..."] },
+          { "originalSentence": "暖身句子2...", "scrambledWords": ["...", "...", "..."] }
+          // ... 至少 5 題，若有更多更好
+        ],
+        "memoryCardGame": [
+          {
+            "pairs": [
+              { "question": "卡片1正面", "answer": "卡片1背面" },
+              { "question": "卡片2正面", "answer": "卡片2背面" },
+              { "question": "卡片3正面", "answer": "卡片3背面" },
+              { "question": "卡片4正面", "answer": "卡片4背面" },
+              { "question": "卡片5正面", "answer": "卡片5背面" }
+              // ... 至少 5 組配對，若有更多更好
+            ],
+            "instructions": "請將每個卡片正面與正確的背面配對。"
+          }
+        ]
+      },
+      "normal": { /* 符合所選程度的題目，結構同 easy，memoryCardGame 只 1 題，pairs 至少 5 組 */ },
+      "hard": { /* 此程度的挑戰題目，結構同 easy，memoryCardGame 只 1 題，pairs 至少 5 組 */ }
     }
     
-    Each difficulty should contain: trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble arrays.
-    Adjust complexity appropriately for "${selectedLevel.name}" learners.
-    
-    Do NOT include any explanation or extra text. Only output the JSON object.
+    對於每種測驗類型 (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble)，每個難度等級 (easy, normal, hard) 至少產生 5 題，若有更多更好。
+    對於 memoryCardGame，每個難度只產生 1 題，但內部的 "pairs" 陣列必須包含至少 5 組配對（每組配對是與「${topic}」相關的概念、詞彙/定義、問答或翻譯），若有更多更好。
+    每個 memoryCardGame 題目都應包含清楚的 "instructions" 說明配對任務。
+    所有文字使用主題的主要語言。請勿包含任何說明或額外文字，僅輸出 JSON 物件。
   `;
   return await callGemini(prompt, apiKey);
 };
 
 const generateEnglishConversationForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
   const prompt = `
-    Based on the topic "${topic}", selected learning level "${selectedLevel.name}" (${selectedLevel.description}), 
-    and learning objectives: ${JSON.stringify(learningObjectives)}
-    
-    Please generate an English conversation about "${topic}" appropriate for "${selectedLevel.name}" level learners.
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    Please generate a short, natural English conversation (at least 3 lines, but more is better if appropriate, 2 speakers) about the topic "${topic}" (use English translation if topic is not English) appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}).
     Language complexity and vocabulary should match: "${selectedLevel.description}".
-    
     Output MUST be a valid JSON array, e.g.:
     [
-      { "speaker": "Speaker A", "line": "English suitable for ${selectedLevel.name} level..." },
-      { "speaker": "Speaker B", "line": "Response appropriate for this level..." }
+      { "speaker": "Speaker A", "line": "Hello! Let's talk about ${topic}." },
+      { "speaker": "Speaker B", "line": "Great idea! What's the first thing we should discuss regarding ${topic}?" },
+      { "speaker": "Speaker A", "line": "Perhaps we can start with..." },
+      { "speaker": "Speaker B", "line": "I think examples would help." }
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
@@ -370,6 +406,21 @@ const generateLearningLevels = async (topic: string, apiKey: string, learningObj
   return await callGemini(prompt, apiKey);
 };
 
+// 檢測主題是否為英語相關
+export const isEnglishRelatedTopic = (topic: string): boolean => {
+  const englishKeywords = [
+    'english', 'grammar', 'vocabulary', 'pronunciation', 'speaking', 'writing', 'reading', 'listening',
+    'conversation', 'toefl', 'ielts', 'toeic', 'english literature', 'business english', 'academic english',
+    'phrasal verbs', 'idioms', 'prepositions', 'tenses', 'articles', 'adjectives', 'adverbs', 'nouns', 'verbs',
+    '英語', '英文', '文法', '單字', '發音', '口說', '寫作', '閱讀', '聽力', 
+    '對話', '會話', '托福', '雅思', '多益', '商業英文', '學術英文',
+    '片語動詞', '慣用語', '介系詞', '時態', '冠詞', '形容詞', '副詞', '名詞', '動詞'
+  ];
+  
+  const topicLower = topic.toLowerCase();
+  return englishKeywords.some(keyword => topicLower.includes(keyword.toLowerCase()));
+};
+
 // 第一階段：僅產生學習程度建議
 export const generateLearningLevelSuggestions = async (topic: string, apiKey: string): Promise<LearningLevelSuggestions> => {
   if (!apiKey) {
@@ -407,6 +458,223 @@ export const generateLearningPlanWithLevel = async (topic: string, selectedLevel
     onlineInteractiveQuiz,
     englishConversation
   };
+};
+
+// 第三階段：根據選定的程度和單字量產生英語內容
+export const generateLearningPlanWithVocabularyLevel = async (
+  topic: string, 
+  selectedLevel: any, 
+  vocabularyLevel: VocabularyLevel, 
+  apiKey: string
+): Promise<GeneratedLearningContent> => {
+  if (!apiKey) {
+    throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
+  }
+  
+  // 1. 根據選定程度和單字量重新產生更精確的學習目標
+  const learningObjectives = await generateLearningObjectivesForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey);
+  
+  // 2. 其他部分並行產生，都會考慮選定的程度和單字量
+  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation] = await Promise.all([
+    generateContentBreakdownForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
+    generateConfusingPointsForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
+    generateClassroomActivitiesForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
+    generateOnlineInteractiveQuizForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
+    generateEnglishConversationForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives)
+  ]);
+  
+  return {
+    learningObjectives,
+    contentBreakdown,
+    confusingPoints,
+    classroomActivities,
+    onlineInteractiveQuiz,
+    englishConversation
+  };
+};
+
+// 針對單字量的內容生成函數
+const generateLearningObjectivesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string): Promise<string[]> => {
+  const prompt = `
+    Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}" appropriate for learning level "${selectedLevel.name}" (${selectedLevel.description}) and English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
+    The objectives should be based on scaffolding theory and gamification, written in the primary language of the topic, and tailored to both the learner's level and vocabulary constraints.
+    
+    CRITICAL VOCABULARY CONSTRAINTS for English content:
+    - All English text must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - Adjust language complexity to match ${vocabularyLevel.description}
+    - Avoid advanced vocabulary that exceeds this level
+    
+    Output MUST be a valid JSON array of strings, e.g.:
+    [
+      "能夠理解${topic}在${selectedLevel.name}程度的核心概念（英文內容限制在${vocabularyLevel.wordCount}詞彙範圍）",
+      "能夠應用${topic}的${selectedLevel.name}級技能（適合${vocabularyLevel.name}程度學習者）",
+      "能夠辨識${topic}在此程度和詞彙量的常見誤區",
+      "能夠分析${topic}在${selectedLevel.name}程度的進階應用",
+      //...or more items
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateContentBreakdownForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+  const prompt = `
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}). For each, provide a sub-topic, a brief explanation, and a concrete teaching example (such as a sample sentence, scenario, or application).
+    
+    CRITICAL VOCABULARY CONSTRAINTS for English content:
+    - All English text must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - Teaching examples should match ${vocabularyLevel.description}
+    - Avoid complex words that exceed this vocabulary level
+    - Sentence structures should be appropriate for ${vocabularyLevel.name} learners
+    
+    Output MUST be a valid JSON array of objects, e.g.:
+    [
+      { "topic": "適合${vocabularyLevel.name}的子主題A", "details": "子主題A針對${vocabularyLevel.wordCount}詞彙量的簡要說明...", "teachingExample": "子主題A使用${vocabularyLevel.name}程度詞彙的教學示例..." },
+      { "topic": "適合${vocabularyLevel.name}的子主題B", "details": "子主題B針對${vocabularyLevel.wordCount}詞彙量的簡要說明...", "teachingExample": "子主題B使用${vocabularyLevel.name}程度詞彙的教學示例..." },
+      { "topic": "適合${vocabularyLevel.name}的子主題C", "details": "子主題C針對${vocabularyLevel.wordCount}詞彙量的簡要說明...", "teachingExample": "子主題C使用${vocabularyLevel.name}程度詞彙的教學示例..." },
+      //...or more items
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+  const prompt = `
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    List at least 3 (but more is better if appropriate) common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
+    
+    CRITICAL VOCABULARY CONSTRAINTS for English content:
+    - Explanations must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - Examples should be appropriate for ${vocabularyLevel.description}
+    - Focus on confusion points that arise specifically at this vocabulary level
+    
+    Output MUST be a valid JSON array of objects, e.g.:
+    [
+      { "point": "對${vocabularyLevel.name}學習者的常見誤區X", "clarification": "詳細說明...", "teachingExample": "誤區X使用${vocabularyLevel.name}程度詞彙的教學示例..." },
+      { "point": "${vocabularyLevel.name}程度的潛在困難Y", "clarification": "如何克服...", "teachingExample": "困難Y使用${vocabularyLevel.name}程度詞彙的教學示例..." },
+      { "point": "此詞彙程度學習者的誤解Z", "clarification": "澄清說明...", "teachingExample": "誤解Z使用${vocabularyLevel.name}程度詞彙的教學示例..." },
+      //...or more items
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateClassroomActivitiesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+  const prompt = `
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    Suggest at least 3 (but more is better if appropriate) engaging, interactive classroom activities (preferably game-like) for the topic "${topic}" suitable for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
+    
+    CRITICAL VOCABULARY CONSTRAINTS for English content:
+    - Activity instructions must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - Activity content should match ${vocabularyLevel.description}
+    - Consider vocabulary limitations when designing complexity
+    
+    For each activity, provide the following fields:
+      - title: The name of the activity
+      - description: A brief description of how the activity works
+      - objective: The main learning goal or purpose of the activity
+      - materials: What materials or props are needed (if any)
+      - environment: Any special environment or space requirements (e.g., classroom, outdoors, online, etc.)
+    
+    Output MUST be a valid JSON array of objects, e.g.:
+    [
+      {
+        "title": "適合${vocabularyLevel.name}的遊戲化活動1",
+        "description": "活動1針對${vocabularyLevel.wordCount}詞彙量的玩法簡述...",
+        "objective": "活動1符合${vocabularyLevel.name}程度的學習目標...",
+        "materials": "適合此詞彙程度的教材或道具...",
+        "environment": "教室/戶外/線上等需求..."
+      },
+      // ... more items
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any> => {
+  const prompt = `
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    Please generate quiz content for "${topic}" suitable for learning level "${selectedLevel.name}" (${selectedLevel.description}) and English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
+    
+    CRITICAL VOCABULARY CONSTRAINTS for English content:
+    - All English text in quiz questions, options, and examples must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - Sentence structures should be appropriate for ${vocabularyLevel.description}
+    - Avoid advanced vocabulary that exceeds this level
+    
+    Output in the following JSON structure (no explanation, no extra text):
+    {
+      "easy": {
+        "trueFalse": [
+          { "statement": "簡單判斷題1...", "isTrue": true, "explanation": "可選說明1" },
+          { "statement": "簡單判斷題2...", "isTrue": false, "explanation": "可選說明2" }
+          // ... 至少 5 題，若有更多更好
+        ],
+        "multipleChoice": [
+          { "question": "簡單選擇題1...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 0 },
+          { "question": "簡單選擇題2...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 1 }
+          // ... 至少 5 題，若有更多更好
+        ],
+        "fillInTheBlanks": [
+          { "sentenceWithBlank": "簡單填空題1...____...", "correctAnswer": "正確答案1" },
+          { "sentenceWithBlank": "簡單填空題2...____...", "correctAnswer": "正確答案2" }
+          // ... 至少 5 題，若有更多更好
+        ],
+        "sentenceScramble": [
+          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
+          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
+          // ... 至少 5 題，若有更多更好
+        ],
+        "memoryCardGame": [
+          {
+            "pairs": [
+              { "question": "卡片1正面", "answer": "卡片1背面" },
+              { "question": "卡片2正面", "answer": "卡片2背面" },
+              { "question": "卡片3正面", "answer": "卡片3背面" },
+              { "question": "卡片4正面", "answer": "卡片4背面" },
+              { "question": "卡片5正面", "answer": "卡片5背面" }
+              // ... 至少 5 組配對，若有更多更好
+            ],
+            "instructions": "請將每個卡片正面與正確的背面配對。"
+          }
+        ]
+      },
+      "normal": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ },
+      "hard": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ }
+    }
+    For each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble), generate at least 5 questions per difficulty level (easy, normal, hard), but more is better if appropriate.
+    For memoryCardGame, generate ONLY 1 question per difficulty, but the "pairs" array inside must contain at least 5 pairs (each pair is a related concept, word/definition, Q&A, or translation relevant to '${topic}'), and more is better if appropriate.
+    Each memoryCardGame question should include clear "instructions" for the matching task.
+    All text must be in the primary language of the topic. For English learning topics, limit English vocabulary to ${vocabularyLevel.wordCount} most common words. Only output the JSON object, no explanation or extra text.
+  `;
+  return await callGemini(prompt, apiKey);
+};
+
+const generateEnglishConversationForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+  const prompt = `
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    Please generate a short, natural English conversation (at least 3 lines, but more is better if appropriate, 2 speakers) about the topic "${topic}" (use English translation if topic is not English) appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
+    
+    CRITICAL VOCABULARY CONSTRAINTS:
+    - Use ONLY vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - Sentence structures must be appropriate for ${vocabularyLevel.description}
+    - Conversation complexity should match ${vocabularyLevel.name} level
+    - Avoid advanced vocabulary that exceeds this level
+    - Keep sentences simple and clear for ${vocabularyLevel.name} learners
+    
+    Output MUST be a valid JSON array, e.g.:
+    [
+      { "speaker": "Speaker A", "line": "Hello! Let's talk about ${topic} using simple words for ${vocabularyLevel.name} level." },
+      { "speaker": "Speaker B", "line": "Great idea! What should we discuss first about ${topic}?" },
+      { "speaker": "Speaker A", "line": "Perhaps we can start with..." },
+      { "speaker": "Speaker B", "line": "I think examples would help." }
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callGemini(prompt, apiKey);
 };
 
 // 原本的主函式保持兼容性
