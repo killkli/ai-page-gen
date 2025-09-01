@@ -135,14 +135,37 @@ const generateContentBreakdown = async (topic: string, apiKey: string, learningO
 const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    List at least 3 (but more is better if appropriate) common misconceptions or difficulties students may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
-    Output MUST be a valid JSON array of objects, e.g.:
+    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties students may have with "${topic}".
+    
+    Output MUST be a valid JSON array with the following comprehensive structure:
     [
-      { "point": "常見誤區X", "clarification": "詳細說明...", "teachingExample": "誤區X的教學示例..." },
-      { "point": "潛在困難Y", "clarification": "如何克服...", "teachingExample": "困難Y的教學示例..." },
-      { "point": "誤解Z", "clarification": "澄清說明...", "teachingExample": "誤解Z的教學示例..." },
-      //...or more items
+      {
+        "point": "易混淆點標題",
+        "clarification": "詳細澄清說明",
+        "teachingExample": "具體教學示例",
+        "errorType": "誤區類型 (概念性/程序性/語言性/理解性)",
+        "commonErrors": ["學生典型錯誤示例1", "學生典型錯誤示例2", "學生典型錯誤示例3"],
+        "correctVsWrong": [
+          {
+            "correct": "正確示例",
+            "wrong": "錯誤示例", 
+            "explanation": "對比說明"
+          }
+        ],
+        "preventionStrategy": "預防策略 - 如何防止學生犯錯",
+        "correctionMethod": "糾正方法 - 發現錯誤後的補救措施",
+        "practiceActivities": ["針對性練習活動1", "針對性練習活動2", "針對性練習活動3"]
+      }
     ]
+    
+    Requirements:
+    - Each confusing point should include ALL fields above
+    - commonErrors: Provide at least 3 typical student mistakes
+    - correctVsWrong: Provide at least 1 comparison (more if helpful)  
+    - practiceActivities: Provide at least 3 targeted practice activities
+    - All text should be in the primary language of the topic
+    - Focus on practical teaching guidance that educators can immediately apply
+    
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callGemini(prompt, apiKey);
@@ -323,15 +346,38 @@ const generateContentBreakdownForLevel = async (topic: string, selectedLevel: an
 const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    List at least 3 (but more is better if appropriate) common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
-    Focus on confusion points that are relevant to their current learning stage: "${selectedLevel.description}".
-    Output MUST be a valid JSON array of objects, e.g.:
+    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have with "${topic}".
+    
+    Output MUST be a valid JSON array with the following comprehensive structure:
     [
-      { "point": "對${selectedLevel.name}學習者的常見誤區X", "clarification": "詳細說明...", "teachingExample": "誤區X針對此程度的教學示例..." },
-      { "point": "${selectedLevel.name}程度的潛在困難Y", "clarification": "如何克服...", "teachingExample": "困難Y針對此程度的教學示例..." },
-      { "point": "此程度學習者的誤解Z", "clarification": "澄清說明...", "teachingExample": "誤解Z針對此程度的教學示例..." },
-      //...or more items
+      {
+        "point": "適合${selectedLevel.name}程度的易混淆點標題",
+        "clarification": "針對${selectedLevel.description}的澄清說明",
+        "teachingExample": "適合此程度學習者的具體教學示例",
+        "errorType": "誤區類型 (概念性/程序性/語言性/理解性)",
+        "commonErrors": ["此程度學生的典型錯誤示例1", "此程度學生的典型錯誤示例2", "此程度學生的典型錯誤示例3"],
+        "correctVsWrong": [
+          {
+            "correct": "適合${selectedLevel.name}程度的正確示例",
+            "wrong": "此程度學生常犯的錯誤示例", 
+            "explanation": "適合此程度的對比說明"
+          }
+        ],
+        "preventionStrategy": "針對${selectedLevel.name}程度的預防策略",
+        "correctionMethod": "適合此程度的糾正方法",
+        "practiceActivities": ["適合此程度的練習活動1", "適合此程度的練習活動2", "適合此程度的練習活動3"]
+      }
     ]
+    
+    Requirements:
+    - All content should be appropriate for "${selectedLevel.description}"
+    - Each confusing point should include ALL fields above
+    - commonErrors: Provide at least 3 typical student mistakes at this level
+    - correctVsWrong: Provide at least 1 comparison (more if helpful)  
+    - practiceActivities: Provide at least 3 level-appropriate targeted practice activities
+    - All text should be in the primary language of the topic
+    - Focus on confusion points specific to "${selectedLevel.name}" level: "${selectedLevel.description}"
+    
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callGemini(prompt, apiKey);
@@ -658,20 +704,35 @@ const generateContentBreakdownForLevelAndVocabulary = async (topic: string, sele
 const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    List at least 3 (but more is better if appropriate) common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
+    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have with "${topic}".
     
     CRITICAL VOCABULARY CONSTRAINTS for English content:
-    - Explanations must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - All explanations must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
     - Examples should be appropriate for ${vocabularyLevel.description}
     - Focus on confusion points that arise specifically at this vocabulary level
     
-    Output MUST be a valid JSON array of objects, e.g.:
+    Output MUST be a valid JSON array with the following comprehensive structure:
     [
-      { "point": "對${vocabularyLevel.name}學習者的常見誤區X", "clarification": "詳細說明...", "teachingExample": "誤區X使用${vocabularyLevel.name}程度詞彙的教學示例..." },
-      { "point": "${vocabularyLevel.name}程度的潛在困難Y", "clarification": "如何克服...", "teachingExample": "困難Y使用${vocabularyLevel.name}程度詞彙的教學示例..." },
-      { "point": "此詞彙程度學習者的誤解Z", "clarification": "澄清說明...", "teachingExample": "誤解Z使用${vocabularyLevel.name}程度詞彙的教學示例..." },
-      //...or more items
+      {
+        "point": "適合${vocabularyLevel.name}詞彙程度的易混淆點標題",
+        "clarification": "使用${vocabularyLevel.wordCount}詞彙範圍的澄清說明",
+        "teachingExample": "適合${vocabularyLevel.name}程度的教學示例",
+        "errorType": "誤區類型 (概念性/程序性/語言性/理解性)",
+        "commonErrors": ["此詞彙程度學生的典型錯誤示例1", "此詞彙程度學生的典型錯誤示例2", "此詞彙程度學生的典型錯誤示例3"],
+        "correctVsWrong": [
+          {
+            "correct": "使用${vocabularyLevel.wordCount}詞彙範圍的正確示例",
+            "wrong": "此詞彙程度學生常犯的錯誤示例",
+            "explanation": "適合此詞彙程度的對比說明"
+          }
+        ],
+        "preventionStrategy": "針對${vocabularyLevel.name}詞彙程度的預防策略",
+        "correctionMethod": "適合此詞彙程度的糾正方法",
+        "practiceActivities": ["適合此詞彙程度的練習活動1", "適合此詞彙程度的練習活動2", "適合此詞彙程度的練習活動3"]
+      }
     ]
+    
+    All English content must stay within the ${vocabularyLevel.wordCount} word vocabulary limit and match ${selectedLevel.description}.
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callGemini(prompt, apiKey);

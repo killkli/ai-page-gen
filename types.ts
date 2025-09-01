@@ -61,9 +61,20 @@ export interface ContentBreakdownItem {
 }
 
 export interface ConfusingPointItem {
-  point: string;
-  clarification: string;
-  teachingExample?: string;
+  point: string;                        // 易混淆點標題
+  clarification: string;                // 澄清說明
+  teachingExample?: string;             // 教學示例（原有）
+  // Enhanced fields for more comprehensive teaching guidance
+  errorType?: string;                   // 誤區類型 - 概念性/程序性/語言性等
+  commonErrors?: string[];              // 常見錯誤示例 - 學生典型錯誤案例
+  correctVsWrong?: {                    // 正確與錯誤對比
+    correct: string;                    // 正確示例
+    wrong: string;                      // 錯誤示例
+    explanation: string;                // 對比說明
+  }[];
+  preventionStrategy?: string;          // 預防策略 - 如何防止學生犯錯
+  correctionMethod?: string;            // 糾正方法 - 發現錯誤後的補救措施
+  practiceActivities?: string[];       // 練習建議 - 針對性練習活動
 }
 
 export interface ClassroomActivity {

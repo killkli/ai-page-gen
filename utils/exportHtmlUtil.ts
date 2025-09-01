@@ -71,9 +71,80 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
 
   const confusingPointsHtml = content.confusingPoints && content.confusingPoints.length > 0
     ? content.confusingPoints.map(item => `
-        <div class="confusing-point-item">
-          <h3>${item.point}</h3>
-          <p>${item.clarification}</p>
+        <div class="confusing-point-item" style="border:1px solid #e2e8f0; border-radius:8px; padding:20px; margin-bottom:24px; background:#fefefe;">
+          <h3 style="color:#b91c1c; margin-bottom:12px; font-size:1.3em; font-weight:600;">${item.point}</h3>
+          <p style="margin-bottom:16px; color:#475569; line-height:1.6;">${item.clarification}</p>
+          
+          ${item.errorType ? `
+          <div style="background:#fff7ed; border-left:4px solid #f97316; padding:12px; margin-bottom:12px; border-radius:4px;">
+            <strong style="color:#c2410c; font-size:0.8em; display:block; margin-bottom:4px;">誤區類型</strong>
+            <span style="color:#9a3412; font-size:0.9em;">${item.errorType}</span>
+          </div>` : ''}
+          
+          ${item.commonErrors && item.commonErrors.length > 0 ? `
+          <div style="background:#fef2f2; border-left:4px solid #ef4444; padding:12px; margin-bottom:12px; border-radius:4px;">
+            <strong style="color:#dc2626; font-size:0.8em; display:block; margin-bottom:8px;">常見錯誤示例</strong>
+            <div style="margin-left:0;">
+              ${item.commonErrors.map((error, errorIndex) => `
+                <div style="color:#991b1b; font-size:0.9em; margin-bottom:4px;">
+                  <span style="color:#dc2626; font-family:monospace; margin-right:6px;">${errorIndex + 1}.</span>${error}
+                </div>
+              `).join('')}
+            </div>
+          </div>` : ''}
+          
+          ${item.correctVsWrong && item.correctVsWrong.length > 0 ? `
+          <div style="background:#fefce8; border-left:4px solid #eab308; padding:12px; margin-bottom:12px; border-radius:4px;">
+            <strong style="color:#a16207; font-size:0.8em; display:block; margin-bottom:8px;">正確與錯誤對比</strong>
+            ${item.correctVsWrong.map((comparison, compIndex) => `
+              <div style="border:1px solid #fde047; background:#fffbeb; padding:12px; margin-bottom:8px; border-radius:6px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px;">
+                  <div style="background:#f0fdf4; padding:10px; border-radius:4px; border:1px solid #bbf7d0;">
+                    <strong style="color:#166534; font-size:0.8em; display:block; margin-bottom:4px;">✓ 正確</strong>
+                    <span style="color:#15803d; font-size:0.9em;">${comparison.correct}</span>
+                  </div>
+                  <div style="background:#fef2f2; padding:10px; border-radius:4px; border:1px solid #fecaca;">
+                    <strong style="color:#dc2626; font-size:0.8em; display:block; margin-bottom:4px;">✗ 錯誤</strong>
+                    <span style="color:#991b1b; font-size:0.9em;">${comparison.wrong}</span>
+                  </div>
+                </div>
+                <div style="background:#eff6ff; padding:10px; border-radius:4px; border:1px solid #bfdbfe;">
+                  <strong style="color:#1d4ed8; font-size:0.8em; display:block; margin-bottom:4px;">說明</strong>
+                  <span style="color:#1e40af; font-size:0.9em;">${comparison.explanation}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>` : ''}
+          
+          ${item.preventionStrategy ? `
+          <div style="background:#eff6ff; border-left:4px solid #3b82f6; padding:12px; margin-bottom:12px; border-radius:4px;">
+            <strong style="color:#1d4ed8; font-size:0.8em; display:block; margin-bottom:4px;">預防策略</strong>
+            <span style="color:#1e40af; font-size:0.9em;">${item.preventionStrategy}</span>
+          </div>` : ''}
+          
+          ${item.correctionMethod ? `
+          <div style="background:#faf5ff; border-left:4px solid #a855f7; padding:12px; margin-bottom:12px; border-radius:4px;">
+            <strong style="color:#7c3aed; font-size:0.8em; display:block; margin-bottom:4px;">糾正方法</strong>
+            <span style="color:#6b21a8; font-size:0.9em;">${item.correctionMethod}</span>
+          </div>` : ''}
+          
+          ${item.practiceActivities && item.practiceActivities.length > 0 ? `
+          <div style="background:#f0f9ff; border-left:4px solid #6366f1; padding:12px; margin-bottom:12px; border-radius:4px;">
+            <strong style="color:#4338ca; font-size:0.8em; display:block; margin-bottom:8px;">練習建議</strong>
+            <div style="margin-left:0;">
+              ${item.practiceActivities.map((activity, activityIndex) => `
+                <div style="color:#312e81; font-size:0.9em; margin-bottom:4px;">
+                  <span style="color:#4338ca; font-family:monospace; margin-right:6px;">${activityIndex + 1}.</span>${activity}
+                </div>
+              `).join('')}
+            </div>
+          </div>` : ''}
+          
+          ${item.teachingExample ? `
+          <div style="background:#f9fafb; border-left:4px solid #6b7280; padding:12px; border-radius:4px;">
+            <strong style="color:#374151; font-size:0.8em; display:block; margin-bottom:4px;">教學示例</strong>
+            <span style="color:#111827; font-size:0.9em;">${item.teachingExample}</span>
+          </div>` : ''}
         </div>`).join('')
     : '<p>沒有提供易混淆點。</p>';
 
