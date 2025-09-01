@@ -131,3 +131,52 @@ export interface VocabularyLevelSuggestions {
 
 // Helper type for quiz section props
 export type QuizContentKey = keyof QuizDifficultyContent;
+
+// Quiz customization types
+export interface QuizTypeConfig {
+  trueFalse: number;
+  multipleChoice: number;
+  fillInTheBlanks: number;
+  sentenceScramble: number;
+  memoryCardGame: number;
+}
+
+export interface QuizCustomConfig {
+  easy: QuizTypeConfig;
+  normal: QuizTypeConfig;
+  hard: QuizTypeConfig;
+}
+
+// Default quiz configuration
+export const DEFAULT_QUIZ_CONFIG: QuizCustomConfig = {
+  easy: {
+    trueFalse: 5,
+    multipleChoice: 5,
+    fillInTheBlanks: 5,
+    sentenceScramble: 5,
+    memoryCardGame: 1
+  },
+  normal: {
+    trueFalse: 5,
+    multipleChoice: 5,
+    fillInTheBlanks: 5,
+    sentenceScramble: 5,
+    memoryCardGame: 1
+  },
+  hard: {
+    trueFalse: 5,
+    multipleChoice: 5,
+    fillInTheBlanks: 5,
+    sentenceScramble: 5,
+    memoryCardGame: 1
+  }
+};
+
+// Quiz configuration limits
+export const QUIZ_TYPE_LIMITS: Record<QuizContentKey, number> = {
+  trueFalse: 10,
+  multipleChoice: 10,
+  fillInTheBlanks: 10,
+  sentenceScramble: 10,
+  memoryCardGame: 2
+};

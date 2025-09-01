@@ -1,5 +1,5 @@
 import React from 'react';
-import { GeneratedLearningContent, LearningLevel, VocabularyLevel } from '../types';
+import { GeneratedLearningContent, LearningLevel, VocabularyLevel, QuizCustomConfig, DEFAULT_QUIZ_CONFIG, QUIZ_TYPE_LIMITS } from '../types';
 import SectionCard from './SectionCard';
 import QuizView from './QuizView';
 import ConversationPractice from './ConversationPractice';
@@ -7,12 +7,15 @@ import { AcademicCapIcon, BookOpenIcon, LightbulbIcon, BeakerIcon, ClipboardIcon
 import { exportLearningContentToHtml } from '../utils/exportHtmlUtil'; // Import the new utility
 import Tabs from './Tabs';
 import { saveLearningContent, saveQuizContent } from '../services/jsonbinService';
+import { regenerateQuizWithConfig } from '../services/geminiService';
+import QuizConfigPanel from './QuizConfigPanel';
 
 interface LearningContentDisplayProps {
   content: GeneratedLearningContent;
   topic: string; // Added topic prop
   selectedLevel?: LearningLevel | null; // Added selected learning level
   selectedVocabularyLevel?: VocabularyLevel | null; // Added selected vocabulary level
+  onContentUpdate?: (newContent: GeneratedLearningContent) => void; // Callback for content updates
 }
 
 const tabDefs = [
@@ -24,7 +27,7 @@ const tabDefs = [
   { key: 'quiz', label: '互動測驗' },
 ];
 
-const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content, topic, selectedLevel, selectedVocabularyLevel }) => {
+const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content, topic, selectedLevel, selectedVocabularyLevel, onContentUpdate }) => {
   const [copySuccess, setCopySuccess] = React.useState('');
   const [exportMessage, setExportMessage] = React.useState('');
   const [currentTab, setCurrentTab] = React.useState(tabDefs[0].key);
@@ -36,6 +39,11 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
   const [quizShareLoading, setQuizShareLoading] = React.useState(false);
   const [quizShareError, setQuizShareError] = React.useState('');
   const [quizShareUrl, setQuizShareUrl] = React.useState('');
+  
+  // Quiz configuration states
+  const [quizConfig, setQuizConfig] = React.useState<QuizCustomConfig>(DEFAULT_QUIZ_CONFIG);
+  const [isRegeneratingQuiz, setIsRegeneratingQuiz] = React.useState(false);
+  const [showQuizConfig, setShowQuizConfig] = React.useState(false);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(JSON.stringify(content, null, 2))
@@ -109,6 +117,55 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
     }
   };
 
+  const handleRegenerateQuiz = async () => {
+    if (!content.learningObjectives) {
+      alert('無法重新生成測驗：缺少學習目標');
+      return;
+    }
+
+    // 從 localStorage 獲取 API key
+    const apiKey = localStorage.getItem('gemini_api_key');
+    if (!apiKey) {
+      alert('請先設定 Gemini API 金鑰');
+      return;
+    }
+
+    setIsRegeneratingQuiz(true);
+    try {
+      const newQuiz = await regenerateQuizWithConfig(
+        topic,
+        apiKey,
+        content.learningObjectives,
+        quizConfig,
+        selectedLevel,
+        selectedVocabularyLevel
+      );
+
+      // 更新內容
+      const updatedContent = {
+        ...content,
+        onlineInteractiveQuiz: newQuiz
+      };
+
+      // 如果有回調函數，使用它來更新父組件的狀態
+      if (onContentUpdate) {
+        onContentUpdate(updatedContent);
+      }
+
+      // 關閉配置面板
+      setShowQuizConfig(false);
+      
+      // 顯示成功訊息
+      alert('測驗已成功重新生成！');
+      
+    } catch (error: any) {
+      console.error('重新生成測驗時發生錯誤:', error);
+      alert('重新生成測驗失敗: ' + (error.message || '未知錯誤'));
+    } finally {
+      setIsRegeneratingQuiz(false);
+    }
+  };
+
   return (
     <div className="mt-8">
       <div className="flex flex-wrap justify-end items-center gap-2 mb-4">
@@ -157,6 +214,17 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
               分享測驗
             </span>
           )}
+        </button>
+        <button
+          onClick={() => setShowQuizConfig(!showQuizConfig)}
+          className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors flex items-center text-sm"
+          aria-label="測驗設定"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+          測驗設定
         </button>
         {copySuccess && <span className="text-sm text-green-600">{copySuccess}</span>}
         {exportMessage && <span className="text-sm text-blue-600">{exportMessage}</span>}
@@ -472,7 +540,17 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
           </SectionCard>
         )}
         {/* 互動測驗 */}
-        <QuizView quizzes={content.onlineInteractiveQuiz} />
+        <div>
+          {showQuizConfig && (
+            <QuizConfigPanel
+              config={quizConfig}
+              onConfigChange={setQuizConfig}
+              onRegenerate={handleRegenerateQuiz}
+              isGenerating={isRegeneratingQuiz}
+            />
+          )}
+          <QuizView quizzes={content.onlineInteractiveQuiz} />
+        </div>
       </Tabs>
     </div>
   );

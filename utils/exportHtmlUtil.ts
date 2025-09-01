@@ -28,7 +28,16 @@ const generateInteractiveQuizHtml = (quizDataJson: string): string => {
 
 export const exportLearningContentToHtml = (content: GeneratedLearningContent, topic: string) => {
   const learningObjectivesHtml = content.learningObjectives && content.learningObjectives.length > 0
-    ? `<ul>${content.learningObjectives.map(obj => `<li>${obj}</li>`).join('')}</ul>`
+    ? content.learningObjectives.map(obj => `
+        <div class="objective-item" style="margin-bottom:20px; padding:16px; background:#f0fdf4; border-left:4px solid #10b981; border-radius:6px;">
+          <h3 style="color:#059669; margin-bottom:8px; font-size:1.1em; font-weight:600;">${obj.objective}</h3>
+          <p style="color:#047857; margin-bottom:8px; line-height:1.6;">${obj.description}</p>
+          ${obj.teachingExample ? `
+            <div style="background:#ecfdf5; border:1px solid #a7f3d0; padding:12px; border-radius:4px; margin-top:8px;">
+              <strong style="color:#065f46; font-size:0.85em; display:block; margin-bottom:4px;">教學示例</strong>
+              <span style="color:#047857; font-size:0.9em;">${obj.teachingExample}</span>
+            </div>` : ''}
+        </div>`).join('')
     : '<p>沒有提供教學目標。</p>';
 
   const contentBreakdownHtml = content.contentBreakdown && content.contentBreakdown.length > 0

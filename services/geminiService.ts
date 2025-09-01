@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { GeneratedLearningContent, LearningLevelSuggestions, VocabularyLevel, LearningObjectiveItem } from '../types';
+import { GeneratedLearningContent, LearningLevelSuggestions, VocabularyLevel, LearningObjectiveItem, QuizCustomConfig, QuizTypeConfig, QUIZ_TYPE_LIMITS } from '../types';
 
 // 單一欄位生成工具
 const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
@@ -884,4 +884,118 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
     englishConversation,
     learningLevels
   };
+};
+
+// 驗證並修正測驗配置的輔助函數
+const validateQuizConfig = (config: QuizCustomConfig): QuizCustomConfig => {
+  const validateTypeConfig = (typeConfig: QuizTypeConfig): QuizTypeConfig => {
+    const validated: QuizTypeConfig = {
+      trueFalse: Math.max(0, Math.min(typeConfig.trueFalse, QUIZ_TYPE_LIMITS.trueFalse)),
+      multipleChoice: Math.max(0, Math.min(typeConfig.multipleChoice, QUIZ_TYPE_LIMITS.multipleChoice)),
+      fillInTheBlanks: Math.max(0, Math.min(typeConfig.fillInTheBlanks, QUIZ_TYPE_LIMITS.fillInTheBlanks)),
+      sentenceScramble: Math.max(0, Math.min(typeConfig.sentenceScramble, QUIZ_TYPE_LIMITS.sentenceScramble)),
+      memoryCardGame: Math.max(0, Math.min(typeConfig.memoryCardGame, QUIZ_TYPE_LIMITS.memoryCardGame))
+    };
+    return validated;
+  };
+
+  return {
+    easy: validateTypeConfig(config.easy),
+    normal: validateTypeConfig(config.normal),
+    hard: validateTypeConfig(config.hard)
+  };
+};
+
+// 支援自訂題數的測驗生成函數
+export const generateCustomQuiz = async (
+  topic: string, 
+  apiKey: string, 
+  learningObjectives: LearningObjectiveItem[],
+  quizConfig: QuizCustomConfig,
+  selectedLevel?: any,
+  vocabularyLevel?: VocabularyLevel
+): Promise<any> => {
+  // 驗證並修正配置
+  const validatedConfig = validateQuizConfig(quizConfig);
+  const generateQuizForDifficulty = async (difficulty: keyof QuizCustomConfig) => {
+    const config = validatedConfig[difficulty];
+    
+    // 構建基於自訂題數的 prompt
+    let difficultyPrompt = '';
+    if (selectedLevel) {
+      difficultyPrompt = `適合「${selectedLevel.name}」程度學習者 (${selectedLevel.description}) 的`;
+    }
+    
+    let vocabularyConstraints = '';
+    if (vocabularyLevel) {
+      vocabularyConstraints = `
+      CRITICAL VOCABULARY CONSTRAINTS for English content:
+      - All English text must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+      - Examples should be appropriate for ${vocabularyLevel.description}
+      `;
+    }
+
+    const prompt = `
+      Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+      Please generate ${difficultyPrompt}quiz content for "${topic}" with the following specific quantities:
+      
+      - True/False questions: ${config.trueFalse} questions
+      - Multiple choice questions: ${config.multipleChoice} questions  
+      - Fill in the blanks questions: ${config.fillInTheBlanks} questions
+      - Sentence scramble questions: ${config.sentenceScramble} questions
+      - Memory card game questions: ${config.memoryCardGame} questions
+      
+      ${vocabularyConstraints}
+      
+      Output MUST be a valid JSON object with this exact structure:
+      {
+        "trueFalse": [${config.trueFalse > 0 ? `
+          { "statement": "是非題題目", "isTrue": true, "explanation": "可選說明" }
+          // 總共 ${config.trueFalse} 題` : '// 空陣列，因為設定為 0 題'}],
+        "multipleChoice": [${config.multipleChoice > 0 ? `
+          { "question": "選擇題題目", "options": ["選項A", "選項B", "選項C", "選項D"], "correctAnswerIndex": 0 }
+          // 總共 ${config.multipleChoice} 題` : '// 空陣列，因為設定為 0 題'}],
+        "fillInTheBlanks": [${config.fillInTheBlanks > 0 ? `
+          { "sentenceWithBlank": "填空題題目，空格用 ____ 表示", "correctAnswer": "正確答案" }
+          // 總共 ${config.fillInTheBlanks} 題` : '// 空陣列，因為設定為 0 題'}],
+        "sentenceScramble": [${config.sentenceScramble > 0 ? `
+          { "originalSentence": "正確的完整句子", "scrambledWords": ["打散", "的", "單字", "陣列"] }
+          // 總共 ${config.sentenceScramble} 題` : '// 空陣列，因為設定為 0 題'}],
+        "memoryCardGame": [${config.memoryCardGame > 0 ? `
+          { "pairs": [{"question": "卡片正面", "answer": "卡片背面"}, ...], "instructions": "遊戲說明" }
+          // 總共 ${config.memoryCardGame} 題，每題至少包含 5 對卡片` : '// 空陣列，因為設定為 0 題'}]
+      }
+      
+      IMPORTANT: 
+      - Generate EXACTLY the number of questions specified for each type (supports up to 10 questions for most types, 2 for memory card games)
+      - If a question type is set to 0, provide an empty array []
+      - For memoryCardGame, each question should contain at least 5 pairs in the "pairs" array
+      - Maximum limits: trueFalse/multipleChoice/fillInTheBlanks/sentenceScramble up to 10 questions, memoryCardGame up to 2 questions
+      - All text must be in the primary language of the topic
+      - Do NOT include any explanation or extra text, only output the JSON object
+    `;
+    
+    return await callGemini(prompt, apiKey);
+  };
+
+  // 並行生成三個難度的測驗
+  const [easy, normal, hard] = await Promise.all([
+    generateQuizForDifficulty('easy'),
+    generateQuizForDifficulty('normal'),
+    generateQuizForDifficulty('hard')
+  ]);
+
+  return { easy, normal, hard };
+};
+
+// 重新生成測驗的便利函數
+export const regenerateQuizWithConfig = async (
+  topic: string,
+  apiKey: string, 
+  learningObjectives: LearningObjectiveItem[],
+  quizConfig: QuizCustomConfig,
+  selectedLevel?: any,
+  vocabularyLevel?: VocabularyLevel
+): Promise<any> => {
+  return await generateCustomQuiz(topic, apiKey, learningObjectives, quizConfig, selectedLevel, vocabularyLevel);
 };

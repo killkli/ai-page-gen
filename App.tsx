@@ -290,6 +290,7 @@ const App: React.FC = () => {
                   topic={topic}
                   selectedLevel={selectedLevel}
                   selectedVocabularyLevel={selectedVocabularyLevel}
+                  onContentUpdate={setGeneratedContent}
                 />
               )}
             </main>
