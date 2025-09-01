@@ -5,9 +5,10 @@ import { CheckCircleIcon, XCircleIcon } from '../icons';
 interface MultipleChoiceQuizItemProps {
   question: MultipleChoiceQuestion;
   itemNumber: number;
+  onAnswer?: (userAnswer: any, isCorrect: boolean) => void;
 }
 
-const MultipleChoiceQuizItem: React.FC<MultipleChoiceQuizItemProps> = ({ question, itemNumber }) => {
+const MultipleChoiceQuizItem: React.FC<MultipleChoiceQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
 
@@ -26,6 +27,11 @@ const MultipleChoiceQuizItem: React.FC<MultipleChoiceQuizItemProps> = ({ questio
       isCorrect,
       message: isCorrect ? '答對了！' : `答錯了。正確答案是： ${(question.options || [])[question.correctAnswerIndex] || '未知'}`,
     });
+
+    // 呼叫診斷回調函數
+    if (onAnswer) {
+      onAnswer(selectedOption, isCorrect);
+    }
   };
 
   return (

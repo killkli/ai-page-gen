@@ -236,3 +236,155 @@ export interface WritingPracticeContent {
 export interface ExtendedLearningContent extends GeneratedLearningContent {
   writingPractice?: WritingPracticeContent;
 }
+
+// 學習診斷報告相關類型定義
+
+// 單個題目的回答記錄
+export interface QuestionResponse {
+  questionId: string;                    // 題目ID
+  questionType: QuizContentKey;          // 題目類型
+  difficulty: 'easy' | 'normal' | 'hard'; // 題目難度
+  userAnswer: any;                       // 學生答案
+  correctAnswer: any;                    // 正確答案
+  isCorrect: boolean;                    // 是否正確
+  responseTime?: number;                 // 回答時間(毫秒)
+  attempts?: number;                     // 嘗試次數
+}
+
+// 題目類型表現統計
+export interface QuestionTypePerformance {
+  questionType: QuizContentKey;          // 題目類型
+  totalQuestions: number;                // 總題數
+  correctCount: number;                  // 正確數量
+  accuracy: number;                      // 正確率(0-100)
+  averageTime?: number;                  // 平均回答時間
+  commonErrors: string[];                // 常見錯誤模式
+  difficultyBreakdown: {                 // 各難度表現
+    easy: { total: number; correct: number; accuracy: number };
+    normal: { total: number; correct: number; accuracy: number };
+    hard: { total: number; correct: number; accuracy: number };
+  };
+}
+
+// 學習弱點分析
+export interface LearningWeakness {
+  area: string;                          // 弱點領域
+  description: string;                   // 詳細描述
+  severity: 'low' | 'medium' | 'high';   // 嚴重程度
+  affectedTopics: string[];              // 影響的主題
+  recommendedActions: string[];          // 建議行動
+}
+
+// 學習強項分析
+export interface LearningStrength {
+  area: string;                          // 強項領域
+  description: string;                   // 詳細描述
+  level: 'good' | 'excellent' | 'outstanding'; // 表現水準
+  examples: string[];                    // 表現實例
+  leverageOpportunities: string[];       // 運用機會
+}
+
+// 個人化學習建議
+export interface PersonalizedRecommendation {
+  category: 'immediate' | 'short-term' | 'long-term'; // 建議類別
+  priority: 'high' | 'medium' | 'low';   // 優先級
+  title: string;                         // 建議標題
+  description: string;                   // 詳細說明
+  actionSteps: string[];                 // 具體行動步驟
+  expectedOutcome: string;               // 預期成果
+  estimatedTime: string;                 // 預估時間投入
+  resources?: string[];                  // 推薦資源
+}
+
+// 學生版學習回饋
+export interface StudentLearningFeedback {
+  studentId?: string;                    // 學生ID（可選）
+  overallScore: number;                  // 總體得分(0-100)
+  overallLevel: 'beginner' | 'intermediate' | 'advanced'; // 整體水準
+  encouragementMessage: string;          // 鼓勵訊息
+  keyStrengths: string[];               // 主要強項（簡化版）
+  improvementAreas: string[];           // 改進領域（簡化版）
+  nextSteps: string[];                  // 下一步行動（3-5個）
+  studyTips: string[];                  // 學習小貼士
+  motivationalQuote: string;            // 激勵語句
+}
+
+// 老師版診斷報告
+export interface TeacherDiagnosticReport {
+  studentId?: string;                   // 學生ID（可選）
+  assessmentDate: string;               // 評估日期
+  topic: string;                        // 評估主題
+  
+  // 整體表現摘要
+  overallPerformance: {
+    totalScore: number;                 // 總分(0-100)
+    level: 'beginner' | 'intermediate' | 'advanced';
+    percentile?: number;                // 百分位數（如果有參考群體）
+    timeSpent: number;                  // 總測驗時間(分鐘)
+  };
+  
+  // 各題型表現詳情
+  performanceByType: QuestionTypePerformance[];
+  
+  // 學習分析
+  learningAnalysis: {
+    strengths: LearningStrength[];       // 學習強項
+    weaknesses: LearningWeakness[];      // 學習弱點
+    learningStyle?: string;              // 學習風格推測
+    cognitivePattern?: string;           // 認知模式
+  };
+  
+  // 教學建議
+  teachingRecommendations: {
+    immediateInterventions: string[];    // 立即介入建議
+    instructionalStrategies: string[];   // 教學策略
+    differentiation: string[];           // 差異化教學建議
+    parentGuidance?: string[];           // 家長指導建議
+  };
+  
+  // 個人化建議
+  personalizedRecommendations: PersonalizedRecommendation[];
+  
+  // 進度追蹤建議
+  progressTracking: {
+    keyMetrics: string[];               // 關鍵指標
+    checkpoints: string[];              // 檢查點
+    reassessmentSuggestion: string;     // 重新評估建議
+  };
+}
+
+// 學習診斷會話記錄
+export interface DiagnosticSession {
+  sessionId: string;                    // 會話ID
+  studentId?: string;                   // 學生ID（可選）
+  topic: string;                        // 主題
+  startTime: string;                    // 開始時間
+  endTime?: string;                     // 結束時間
+  responses: QuestionResponse[];        // 所有回答記錄
+  isCompleted: boolean;                 // 是否完成
+  metadata?: {                          // 元數據
+    userAgent?: string;
+    deviceType?: string;
+    location?: string;
+  };
+}
+
+// 完整的學習診斷結果
+export interface LearningDiagnosticResult {
+  session: DiagnosticSession;           // 測驗會話
+  studentFeedback: StudentLearningFeedback; // 學生版回饋
+  teacherReport: TeacherDiagnosticReport;   // 老師版報告
+  rawData: {                            // 原始數據
+    responses: QuestionResponse[];
+    statistics: QuestionTypePerformance[];
+  };
+}
+
+// 診斷報告配置選項
+export interface DiagnosticReportConfig {
+  includeDetailedAnalysis: boolean;     // 包含詳細分析
+  includeComparativeData: boolean;      // 包含比較數據
+  includeVisualCharts: boolean;         // 包含視覺化圖表
+  language: 'zh-TW' | 'en' | 'zh-CN';   // 報告語言
+  reportFormat: 'standard' | 'detailed' | 'summary'; // 報告格式
+}

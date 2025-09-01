@@ -1,7 +1,7 @@
 import React from 'react';
 import { GeneratedLearningContent, ExtendedLearningContent, LearningLevel, VocabularyLevel, QuizCustomConfig, DEFAULT_QUIZ_CONFIG, QUIZ_TYPE_LIMITS } from '../types';
 import SectionCard from './SectionCard';
-import QuizView from './QuizView';
+import DiagnosticQuizView from './DiagnosticQuizView';
 import ConversationPractice from './ConversationPractice';
 import WritingPracticeView from './WritingPracticeView';
 import { AcademicCapIcon, BookOpenIcon, LightbulbIcon, BeakerIcon, ClipboardIcon, ChatBubbleLeftRightIcon } from './icons';
@@ -83,8 +83,15 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
     setShareError('');
     setShareUrl('');
     try {
-      const binId = await saveLearningContent(content);
-      // 這裡請根據你的實際 domain 修改
+      // 包含完整的分享資料：內容、主題、學習程度、單字程度
+      const shareData = {
+        ...content,
+        topic: topic,
+        selectedLevel: selectedLevel,
+        selectedVocabularyLevel: selectedVocabularyLevel,
+        sharedAt: new Date().toISOString()
+      };
+      const binId = await saveLearningContent(shareData);
       const url = `${window.location.origin}${import.meta.env.BASE_URL}share?binId=${binId}`;
       setShareUrl(url);
     } catch (e: any) {
@@ -109,10 +116,12 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
       const binId = await saveQuizContent({
         quiz: content.onlineInteractiveQuiz,
         topic: topic,
+        apiKey: apiKey, // 包含 API Key 以支援學習診斷
         metadata: {
           selectedLevel: selectedLevel?.name,
           selectedVocabularyLevel: selectedVocabularyLevel?.name,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          supportsDiagnostic: !!apiKey
         }
       });
       
@@ -269,35 +278,51 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         {exportMessage && <span className="text-sm text-blue-600">{exportMessage}</span>}
         {shareError && <span className="text-sm text-red-600">{shareError}</span>}
         {quizShareError && <span className="text-sm text-red-600">{quizShareError}</span>}
-        {shareUrl && (
-          <span className="text-sm text-purple-700 flex items-center gap-2">
-            方案分享連結：
-            <button
-              className="underline hover:text-purple-900"
-              onClick={() => {
-                navigator.clipboard.writeText(shareUrl);
-              }}
-            >
-              {shareUrl}
-            </button>
-            <span className="ml-1 text-xs text-gray-400">(點擊可複製)</span>
-          </span>
-        )}
-        {quizShareUrl && (
-          <span className="text-sm text-orange-700 flex items-center gap-2">
-            測驗分享連結：
-            <button
-              className="underline hover:text-orange-900"
-              onClick={() => {
-                navigator.clipboard.writeText(quizShareUrl);
-              }}
-            >
-              {quizShareUrl}
-            </button>
-            <span className="ml-1 text-xs text-gray-400">(點擊可複製)</span>
-          </span>
-        )}
       </div>
+
+      {/* Unified Share URL Display - Learning Plan */}
+      {shareUrl && (
+        <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <p className="text-sm text-purple-700 mb-2">方案分享連結已生成：</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={shareUrl}
+              readOnly
+              className="flex-1 px-3 py-2 bg-white border border-purple-300 rounded text-sm"
+              onClick={() => navigator.clipboard.writeText(shareUrl)}
+            />
+            <button
+              onClick={() => navigator.clipboard.writeText(shareUrl)}
+              className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+            >
+              複製
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Unified Share URL Display - Quiz */}
+      {quizShareUrl && (
+        <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <p className="text-sm text-orange-700 mb-2">測驗分享連結已生成：</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={quizShareUrl}
+              readOnly
+              className="flex-1 px-3 py-2 bg-white border border-orange-300 rounded text-sm"
+              onClick={() => navigator.clipboard.writeText(quizShareUrl)}
+            />
+            <button
+              onClick={() => navigator.clipboard.writeText(quizShareUrl)}
+              className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
+            >
+              複製
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Topic and Level Display Section */}
       <div className="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg shadow-sm">
@@ -511,60 +536,108 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         {/* 課堂活動 */}
         <SectionCard title="課堂活動與遊戲設計" icon={<BeakerIcon className="w-7 h-7" />}>
           {content.classroomActivities && content.classroomActivities.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {content.classroomActivities.map((activity, index) => (
-                <div key={index} className="p-4 border border-slate-200 rounded-md bg-slate-50">
-                  <h4 className="font-bold text-lg text-sky-700 mb-2">{activity.title}</h4>
-                  <p className="mb-3 text-slate-700">{activity.description}</p>
+                <div key={index} className="bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+                  {/* Activity Header */}
+                  <div className="bg-gradient-to-r from-sky-50 to-blue-50 px-6 py-4 border-b border-slate-200 rounded-t-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-sky-500 text-white rounded-full font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <h4 className="font-bold text-xl text-sky-800">{activity.title}</h4>
+                    </div>
+                    <p className="mt-3 text-slate-700 leading-relaxed">{activity.description}</p>
+                  </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                    {activity.objective && (
-                      <div className="text-sm text-sky-900">
-                        <span className="font-semibold">學習目標：</span>
-                        <p className="mt-1">{activity.objective}</p>
+                  {/* Activity Details */}
+                  <div className="p-6">
+                    {/* Basic Info Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      {activity.objective && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="font-semibold text-green-800 text-sm">學習目標</span>
+                          </div>
+                          <p className="text-green-900 text-sm leading-relaxed">{activity.objective}</p>
+                        </div>
+                      )}
+                      {activity.timing && (
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <span className="font-semibold text-purple-800 text-sm">使用時機</span>
+                          </div>
+                          <p className="text-purple-900 text-sm leading-relaxed">{activity.timing}</p>
+                        </div>
+                      )}
+                      {activity.materials && (
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            <span className="font-semibold text-orange-800 text-sm">所需教具</span>
+                          </div>
+                          <p className="text-orange-900 text-sm leading-relaxed">{activity.materials}</p>
+                        </div>
+                      )}
+                      {activity.environment && (
+                        <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+                            <span className="font-semibold text-teal-800 text-sm">環境要求</span>
+                          </div>
+                          <p className="text-teal-900 text-sm leading-relaxed">{activity.environment}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Activity Steps */}
+                    {activity.steps && activity.steps.length > 0 && (
+                      <div className="mb-6">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-blue-600">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                            </svg>
+                            <span className="font-semibold text-blue-800">活動步驟</span>
+                          </div>
+                          <div className="space-y-3">
+                            {activity.steps.map((step, stepIndex) => (
+                              <div key={stepIndex} className="flex gap-3">
+                                <div className="flex items-center justify-center w-6 h-6 bg-blue-500 text-white rounded-full font-semibold text-xs flex-shrink-0 mt-0.5">
+                                  {stepIndex + 1}
+                                </div>
+                                <p className="text-blue-900 text-sm leading-relaxed flex-1">{step}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
-                    {activity.timing && (
-                      <div className="text-sm text-sky-900">
-                        <span className="font-semibold">使用時機：</span>
-                        <p className="mt-1">{activity.timing}</p>
-                      </div>
-                    )}
-                    {activity.materials && (
-                      <div className="text-sm text-sky-900">
-                        <span className="font-semibold">所需教具：</span>
-                        <p className="mt-1">{activity.materials}</p>
-                      </div>
-                    )}
-                    {activity.environment && (
-                      <div className="text-sm text-sky-900">
-                        <span className="font-semibold">環境要求：</span>
-                        <p className="mt-1">{activity.environment}</p>
+                    
+                    {/* Assessment Points */}
+                    {activity.assessmentPoints && activity.assessmentPoints.length > 0 && (
+                      <div>
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-indigo-600">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+                            </svg>
+                            <span className="font-semibold text-indigo-800">評估重點</span>
+                          </div>
+                          <div className="space-y-2">
+                            {activity.assessmentPoints.map((point, pointIndex) => (
+                              <div key={pointIndex} className="flex items-start gap-3">
+                                <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                                <p className="text-indigo-900 text-sm leading-relaxed">{point}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
-                  
-                  {activity.steps && activity.steps.length > 0 && (
-                    <div className="mb-3">
-                      <span className="font-semibold text-sm text-sky-900">活動步驟：</span>
-                      <ol className="list-decimal list-inside mt-2 space-y-1">
-                        {activity.steps.map((step, stepIndex) => (
-                          <li key={stepIndex} className="text-sm text-slate-700">{step}</li>
-                        ))}
-                      </ol>
-                    </div>
-                  )}
-                  
-                  {activity.assessmentPoints && activity.assessmentPoints.length > 0 && (
-                    <div>
-                      <span className="font-semibold text-sm text-sky-900">評估重點：</span>
-                      <ul className="list-disc list-inside mt-2 space-y-1">
-                        {activity.assessmentPoints.map((point, pointIndex) => (
-                          <li key={pointIndex} className="text-sm text-slate-700">{point}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -651,7 +724,12 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
               isGenerating={isRegeneratingQuiz}
             />
           )}
-          <QuizView quizzes={content.onlineInteractiveQuiz} />
+          <DiagnosticQuizView 
+            quizzes={content.onlineInteractiveQuiz} 
+            topic={topic}
+            apiKey={apiKey}
+            enableDiagnostic={!!apiKey}
+          />
         </div>
       </Tabs>
     </div>

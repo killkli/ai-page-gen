@@ -9,6 +9,8 @@ const QuizPage: React.FC = () => {
   const binId = params.get('binId');
   const [quiz, setQuiz] = React.useState<any>(null);
   const [topic, setTopic] = React.useState<string>('');
+  const [apiKey, setApiKey] = React.useState<string>('');
+  const [supportsDiagnostic, setSupportsDiagnostic] = React.useState<boolean>(false);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
 
@@ -23,6 +25,8 @@ const QuizPage: React.FC = () => {
       .then(data => {
         setQuiz(data.quiz);
         setTopic(data.topic);
+        setApiKey(data.apiKey || '');
+        setSupportsDiagnostic(data.supportsDiagnostic || false);
       })
       .catch(e => setError(e.message || '載入測驗失敗'))
       .finally(() => setLoading(false));
@@ -64,7 +68,7 @@ const QuizPage: React.FC = () => {
     );
   }
 
-  return <StudentQuizView quiz={quiz} topic={topic} />;
+  return <StudentQuizView quiz={quiz} topic={topic} apiKey={apiKey} supportsDiagnostic={supportsDiagnostic} />;
 };
 
 export default QuizPage;

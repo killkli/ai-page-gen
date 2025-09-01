@@ -6,9 +6,10 @@ import { CheckCircleIcon, XCircleIcon } from '../icons';
 interface SentenceScrambleQuizItemProps {
   question: SentenceScrambleQuestion;
   itemNumber: number;
+  onAnswer?: (userAnswer: any, isCorrect: boolean) => void;
 }
 
-const SentenceScrambleQuizItem: React.FC<SentenceScrambleQuizItemProps> = ({ question, itemNumber }) => {
+const SentenceScrambleQuizItem: React.FC<SentenceScrambleQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   const [constructedSentence, setConstructedSentence] = useState<string[]>([]);
   const [availableWords, setAvailableWords] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
@@ -52,6 +53,11 @@ const SentenceScrambleQuizItem: React.FC<SentenceScrambleQuizItemProps> = ({ que
       isCorrect,
       message: isCorrect ? '答對了！' : `答錯了。正確句子是： \"${question.originalSentence}\"`,
     });
+
+    // 呼叫診斷回調函數
+    if (onAnswer) {
+      onAnswer(userAnswer, isCorrect);
+    }
   };
 
   return (

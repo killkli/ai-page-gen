@@ -30,14 +30,16 @@ export async function getLearningContent(binId: string): Promise<any> {
   return result.record;
 }
 
-// 專門用於分享測驗內容的函數
-export async function saveQuizContent(quizData: { quiz: any, topic: string, metadata?: any }): Promise<string> {
+// 專門用於分享測驗內容的函數（支援診斷功能）
+export async function saveQuizContent(quizData: { quiz: any, topic: string, apiKey?: string, metadata?: any }): Promise<string> {
   const quizPayload = {
     type: 'quiz', // 標識這是測驗專用分享
     quiz: quizData.quiz,
     topic: quizData.topic,
+    apiKey: quizData.apiKey, // 包含API Key以支援學習診斷
     metadata: quizData.metadata,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    supportsDiagnostic: !!quizData.apiKey // 標記是否支援診斷功能
   };
 
   const response = await fetch(JSONBIN_API, {
@@ -56,8 +58,8 @@ export async function saveQuizContent(quizData: { quiz: any, topic: string, meta
   return result.metadata.id; // binId
 }
 
-// 專門用於獲取測驗內容的函數
-export async function getQuizContent(binId: string): Promise<{ quiz: any, topic: string, metadata?: any }> {
+// 專門用於獲取測驗內容的函數（支援診斷功能）
+export async function getQuizContent(binId: string): Promise<{ quiz: any, topic: string, apiKey?: string, supportsDiagnostic?: boolean, metadata?: any }> {
   const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
     // 公開 bin 可不帶 X-Master-Key
     // headers: { 'X-Master-Key': JSONBIN_KEY },
@@ -75,6 +77,8 @@ export async function getQuizContent(binId: string): Promise<{ quiz: any, topic:
   return {
     quiz: data.quiz,
     topic: data.topic,
+    apiKey: data.apiKey, // 返回API Key以支援診斷功能
+    supportsDiagnostic: data.supportsDiagnostic || false,
     metadata: data.metadata
   };
 }

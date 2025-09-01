@@ -5,9 +5,10 @@ import { CheckCircleIcon, XCircleIcon } from '../icons';
 interface TrueFalseQuizItemProps {
   question: TrueFalseQuestion;
   itemNumber: number;
+  onAnswer?: (userAnswer: boolean, isCorrect: boolean) => void;
 }
 
-const TrueFalseQuizItem: React.FC<TrueFalseQuizItemProps> = ({ question, itemNumber }) => {
+const TrueFalseQuizItem: React.FC<TrueFalseQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string; explanation?: string } | null>(null);
 
@@ -31,6 +32,11 @@ const TrueFalseQuizItem: React.FC<TrueFalseQuizItemProps> = ({ question, itemNum
       message: feedbackMessage,
       explanation: question.explanation
     });
+
+    // 呼叫診斷回調函數
+    if (onAnswer) {
+      onAnswer(answer, isCorrect);
+    }
   };
 
   return (

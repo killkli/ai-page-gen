@@ -4,6 +4,7 @@ import { MemoryCardGameQuestion } from '../../types';
 interface MemoryCardGameQuizItemProps {
   question: MemoryCardGameQuestion;
   itemNumber: number;
+  onAnswer?: (userAnswer: any, isCorrect: boolean) => void;
 }
 
 interface CardData {
@@ -23,7 +24,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ question, itemNumber }) => {
+const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   // 將每對拆成兩張卡，隨機排列
   const [cards, setCards] = useState<CardData[]>([]);
   const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
@@ -71,6 +72,14 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
   };
 
   const allMatched = matchedCount === (question.pairs || []).length;
+
+  // 遊戲完成時呼叫診斷回調
+  useEffect(() => {
+    if (allMatched && onAnswer) {
+      // 記憶卡遊戲完成視為答對
+      onAnswer(matchedCount, true);
+    }
+  }, [allMatched, matchedCount, onAnswer]);
 
   return (
     <div className="mb-4 p-4 border rounded bg-slate-50">

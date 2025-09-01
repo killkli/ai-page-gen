@@ -1,19 +1,112 @@
-import React, { useState } from 'react';
-import { OnlineInteractiveQuiz, QuizDifficulty, QuizDifficultyContent, QuizContentKey } from '../types';
+import React, { useState, useCallback } from 'react';
+import { OnlineInteractiveQuiz, QuizDifficulty, QuizDifficultyContent, QuizContentKey, QuestionResponse } from '../types';
 import TrueFalseQuizItem from './quizTypes/TrueFalseQuizItem';
 import MultipleChoiceQuizItem from './quizTypes/MultipleChoiceQuizItem';
 import FillBlankQuizItem from './quizTypes/FillBlankQuizItem';
 import SentenceScrambleQuizItem from './quizTypes/SentenceScrambleQuizItem';
 import MemoryCardGameQuizItem from './quizTypes/MemoryCardGameQuizItem';
-import { PuzzlePieceIcon, AcademicCapIcon } from './icons';
+import LearningDiagnosticReport from './LearningDiagnosticReport';
+import { PuzzlePieceIcon, AcademicCapIcon, ChartBarIcon } from './icons';
 
 interface StudentQuizViewProps {
   quiz: OnlineInteractiveQuiz;
   topic: string;
+  apiKey?: string;
+  supportsDiagnostic?: boolean;
 }
 
-const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic }) => {
+const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, supportsDiagnostic = false }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<QuizDifficulty>(QuizDifficulty.Easy);
+  const [responses, setResponses] = useState<QuestionResponse[]>([]);
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
+
+  const handleQuestionResponse = useCallback((
+    questionType: QuizContentKey,
+    questionIndex: number,
+    userAnswer: any,
+    correctAnswer: any,
+    isCorrect: boolean,
+    responseTime?: number
+  ) => {
+    if (!supportsDiagnostic) return;
+
+    const questionId = `${selectedDifficulty}-${questionType}-${questionIndex}`;
+    const response: QuestionResponse = {
+      questionId,
+      questionType,
+      difficulty: selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard',
+      userAnswer,
+      correctAnswer,
+      isCorrect,
+      responseTime,
+      attempts: 1
+    };
+
+    setResponses(prev => {
+      const existingIndex = prev.findIndex(r => r.questionId === questionId);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          userAnswer,
+          isCorrect,
+          attempts: (updated[existingIndex].attempts || 1) + 1
+        };
+        return updated;
+      }
+      return [...prev, response];
+    });
+  }, [selectedDifficulty, supportsDiagnostic]);
+
+  const getCorrectAnswer = (type: QuizContentKey, question: any) => {
+    switch (type) {
+      case 'trueFalse':
+        return question.isTrue;
+      case 'multipleChoice':
+        return question.options[question.correctAnswerIndex];
+      case 'fillInTheBlanks':
+        return question.correctAnswers;
+      case 'sentenceScramble':
+        return question.originalSentence;
+      case 'memoryCardGame':
+        return question.pairs;
+      default:
+        return null;
+    }
+  };
+
+  if (showDiagnostic && supportsDiagnostic && apiKey && responses.length > 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-4xl mx-auto px-4 py-6">
+            <div className="flex items-center gap-3 mb-2">
+              <ChartBarIcon className="w-8 h-8 text-indigo-600" />
+              <h1 className="text-2xl font-bold text-gray-900">學習診斷報告</h1>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <AcademicCapIcon className="w-5 h-5" />
+              <span className="text-lg font-medium">{topic}</span>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <LearningDiagnosticReport
+            session={{
+              sessionId: `shared-quiz-${Date.now()}`,
+              topic,
+              startTime: new Date().toISOString(),
+              endTime: new Date().toISOString(),
+              responses
+            }}
+            apiKey={apiKey}
+            config={{ viewMode: 'student' }}
+            onBack={() => setShowDiagnostic(false)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (!quiz) {
     return (
@@ -43,12 +136,24 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic }) => {
   const getQuizComponent = (type: QuizContentKey, questions: any[]) => {
     if (!questions || questions.length === 0) return null;
 
+    const createAnswerCallback = (questionIndex: number) => supportsDiagnostic 
+      ? (userAnswer: any, isCorrect: boolean) => {
+          const correctAnswer = getCorrectAnswer(type, questions[questionIndex]);
+          handleQuestionResponse(type, questionIndex, userAnswer, correctAnswer, isCorrect);
+        }
+      : undefined;
+
     switch (type) {
       case 'trueFalse':
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <TrueFalseQuizItem key={`${selectedDifficulty}-tf-${i}`} question={q} itemNumber={i + 1} />
+              <TrueFalseQuizItem 
+                key={`${selectedDifficulty}-tf-${i}`} 
+                question={q} 
+                itemNumber={i + 1}
+                onAnswer={createAnswerCallback(i)}
+              />
             ))}
           </div>
         );
@@ -56,7 +161,12 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic }) => {
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <MultipleChoiceQuizItem key={`${selectedDifficulty}-mc-${i}`} question={q} itemNumber={i + 1} />
+              <MultipleChoiceQuizItem 
+                key={`${selectedDifficulty}-mc-${i}`} 
+                question={q} 
+                itemNumber={i + 1}
+                onAnswer={createAnswerCallback(i)}
+              />
             ))}
           </div>
         );
@@ -64,7 +174,12 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic }) => {
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <FillBlankQuizItem key={`${selectedDifficulty}-fb-${i}`} question={q} itemNumber={i + 1} />
+              <FillBlankQuizItem 
+                key={`${selectedDifficulty}-fb-${i}`} 
+                question={q} 
+                itemNumber={i + 1}
+                onAnswer={createAnswerCallback(i)}
+              />
             ))}
           </div>
         );
@@ -72,7 +187,12 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic }) => {
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <SentenceScrambleQuizItem key={`${selectedDifficulty}-ss-${i}`} question={q} itemNumber={i + 1} />
+              <SentenceScrambleQuizItem 
+                key={`${selectedDifficulty}-ss-${i}`} 
+                question={q} 
+                itemNumber={i + 1}
+                onAnswer={createAnswerCallback(i)}
+              />
             ))}
           </div>
         );
@@ -80,7 +200,12 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic }) => {
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <MemoryCardGameQuizItem key={`${selectedDifficulty}-mcg-${i}`} question={q} itemNumber={i + 1} />
+              <MemoryCardGameQuizItem 
+                key={`${selectedDifficulty}-mcg-${i}`} 
+                question={q} 
+                itemNumber={i + 1}
+                onAnswer={createAnswerCallback(i)}
+              />
             ))}
           </div>
         );
@@ -98,14 +223,49 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic }) => {
             <PuzzlePieceIcon className="w-8 h-8 text-indigo-600" />
             <h1 className="text-2xl font-bold text-gray-900">互動測驗</h1>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <AcademicCapIcon className="w-5 h-5" />
-            <span className="text-lg font-medium">{topic}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-gray-600">
+              <AcademicCapIcon className="w-5 h-5" />
+              <span className="text-lg font-medium">{topic}</span>
+              {supportsDiagnostic && (
+                <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                  支援 AI 診斷
+                </span>
+              )}
+            </div>
+            {supportsDiagnostic && responses.length > 0 && (
+              <button
+                onClick={() => setShowDiagnostic(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <ChartBarIcon className="w-5 h-5" />
+                查看學習診斷 ({responses.length})
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Diagnostic Notice */}
+        {supportsDiagnostic && (
+          <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <ChartBarIcon className="w-5 h-5 text-blue-400 mt-0.5" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-700 font-medium">
+                  此測驗支援 AI 學習診斷功能
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  完成題目後可查看個人化學習建議。您的答題資料僅用於生成學習診斷報告。
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Difficulty Selector */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">選擇難度等級</h2>

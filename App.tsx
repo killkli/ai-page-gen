@@ -34,10 +34,34 @@ const SharePage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [binId]);
 
-  if (loading) return <div className="flex justify-center my-10"><LoadingSpinner /></div>;
-  if (error) return <div className="my-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-md">{error}</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-center my-10"><LoadingSpinner /></div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="my-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-md">{error}</div>
+      </div>
+    </div>
+  );
+  
   if (!content) return null;
-  return <LearningContentDisplay content={content} topic={('topic' in content && typeof content.topic === 'string') ? content.topic : ''} />;
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <LearningContentDisplay 
+          content={content} 
+          topic={content.topic || ''}
+          selectedLevel={content.selectedLevel || null}
+          selectedVocabularyLevel={content.selectedVocabularyLevel || null}
+        />
+      </div>
+    </div>
+  );
 };
 
 const App: React.FC = () => {

@@ -5,9 +5,10 @@ import { CheckCircleIcon, XCircleIcon } from '../icons';
 interface FillBlankQuizItemProps {
   question: FillBlankQuestion;
   itemNumber: number;
+  onAnswer?: (userAnswer: any, isCorrect: boolean) => void;
 }
 
-const FillBlankQuizItem: React.FC<FillBlankQuizItemProps> = ({ question, itemNumber }) => {
+const FillBlankQuizItem: React.FC<FillBlankQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
 
@@ -27,6 +28,11 @@ const FillBlankQuizItem: React.FC<FillBlankQuizItemProps> = ({ question, itemNum
       isCorrect,
       message: isCorrect ? '答對了！' : `答錯了。正確答案是： ${question.correctAnswer}`,
     });
+
+    // 呼叫診斷回調函數
+    if (onAnswer) {
+      onAnswer(userAnswer.trim(), isCorrect);
+    }
   };
 
   const parts = question.sentenceWithBlank?.split('____') || ['', ''];
