@@ -283,7 +283,12 @@ const App: React.FC = () => {
 
               {/* 顯示生成的完整內容 */}
               {generatedContent && !isLoading && !error && !showingLevelSelection && !showingVocabularySelection && (
-                <LearningContentDisplay content={generatedContent} topic={topic} />
+                <LearningContentDisplay 
+                  content={generatedContent} 
+                  topic={topic}
+                  selectedLevel={selectedLevel}
+                  selectedVocabularyLevel={selectedVocabularyLevel}
+                />
               )}
             </main>
 

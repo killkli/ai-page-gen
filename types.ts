@@ -54,6 +54,10 @@ export interface ContentBreakdownItem {
   topic: string;
   details: string;
   teachingExample?: string;
+  // Enhanced fields for English learning
+  coreConcept?: string;              // 核心概念 - 該要點的核心學習概念
+  teachingSentences?: string[];      // 教學例句 - 3~5句教學例句
+  teachingTips?: string;             // 教學要點提示 - 教學說明與要點
 }
 
 export interface ConfusingPointItem {

@@ -33,9 +33,39 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
 
   const contentBreakdownHtml = content.contentBreakdown && content.contentBreakdown.length > 0
     ? content.contentBreakdown.map(item => `
-        <div class="breakdown-item">
-          <h3>${item.topic}</h3>
-          <p>${item.details}</p>
+        <div class="breakdown-item" style="margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid #e2e8f0;">
+          <h3 style="color:#0369a1; margin-bottom:8px;">${item.topic}</h3>
+          <p style="margin-bottom:12px; color:#475569;">${item.details}</p>
+          
+          ${item.coreConcept ? `
+            <div style="background:#eff6ff; border-left:4px solid #3b82f6; padding:12px; border-radius:4px; margin-bottom:12px;">
+              <strong style="color:#1e40af; font-size:0.85em; display:block; margin-bottom:4px;">核心概念</strong>
+              <span style="color:#1e3a8a; font-size:0.9em;">${item.coreConcept}</span>
+            </div>` : ''}
+          
+          ${item.teachingSentences && item.teachingSentences.length > 0 ? `
+            <div style="background:#eef2ff; border-left:4px solid #6366f1; padding:12px; border-radius:4px; margin-bottom:12px;">
+              <strong style="color:#4338ca; font-size:0.85em; display:block; margin-bottom:8px;">教學例句</strong>
+              <div style="line-height:1.6;">
+                ${item.teachingSentences.map((sentence, index) => `
+                  <div style="color:#312e81; font-size:0.9em; margin-bottom:4px;">
+                    <span style="color:#6366f1; font-family:monospace;">${index + 1}.</span> ${sentence}
+                  </div>
+                `).join('')}
+              </div>
+            </div>` : ''}
+          
+          ${item.teachingTips ? `
+            <div style="background:#faf5ff; border-left:4px solid #8b5cf6; padding:12px; border-radius:4px; margin-bottom:12px;">
+              <strong style="color:#7c3aed; font-size:0.85em; display:block; margin-bottom:4px;">教學要點提示</strong>
+              <span style="color:#6b21a8; font-size:0.9em;">${item.teachingTips}</span>
+            </div>` : ''}
+          
+          ${item.teachingExample ? `
+            <div style="background:#f0f9ff; border-left:4px solid #0ea5e9; padding:12px; border-radius:4px;">
+              <strong style="color:#0284c7; font-size:0.85em; display:block; margin-bottom:4px;">教學示例</strong>
+              <span style="color:#0c4a6e; font-size:0.9em;">${item.teachingExample}</span>
+            </div>` : ''}
         </div>`).join('')
     : '<p>沒有提供內容分解。</p>';
 
