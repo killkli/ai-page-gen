@@ -44,6 +44,12 @@ export interface OnlineInteractiveQuiz {
   hard: QuizDifficultyContent;
 }
 
+export interface LearningObjectiveItem {
+  objective: string;
+  description: string;
+  teachingExample?: string;
+}
+
 export interface ContentBreakdownItem {
   topic: string;
   details: string;
@@ -65,7 +71,7 @@ export interface ClassroomActivity {
 }
 
 export interface GeneratedLearningContent {
-  learningObjectives: string[];
+  learningObjectives: LearningObjectiveItem[];
   contentBreakdown: ContentBreakdownItem[];
   confusingPoints: ConfusingPointItem[];
   classroomActivities: ClassroomActivity[];

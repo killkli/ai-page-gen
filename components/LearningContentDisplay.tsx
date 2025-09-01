@@ -129,11 +129,18 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         {/* 教學目標 */}
         <SectionCard title="教學目標設定" icon={<AcademicCapIcon className="w-7 h-7" />}>
           {content.learningObjectives && content.learningObjectives.length > 0 ? (
-            <ul className="list-disc list-inside space-y-1 pl-2">
-              {content.learningObjectives.map((obj, index) => (
-                <li key={index}>{obj}</li>
-              ))}
-            </ul>
+            content.learningObjectives.map((objective, index) => (
+              <div key={index} className="mb-4 pb-4 border-b border-slate-200 last:border-b-0 last:pb-0">
+                <h4 className="font-semibold text-lg text-green-800 mb-1">{objective.objective}</h4>
+                <p className="text-slate-700 mb-2">{objective.description}</p>
+                {objective.teachingExample && (
+                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-md mt-2">
+                    <span className="block text-xs font-semibold text-green-700 mb-1">教學示例</span>
+                    <span className="text-green-900 text-sm">{objective.teachingExample}</span>
+                  </div>
+                )}
+              </div>
+            ))
           ) : <p>沒有提供教學目標。</p>}
         </SectionCard>
         {/* 分解內容 */}

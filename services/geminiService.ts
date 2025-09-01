@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { GeneratedLearningContent, LearningLevelSuggestions, VocabularyLevel } from '../types';
+import { GeneratedLearningContent, LearningLevelSuggestions, VocabularyLevel, LearningObjectiveItem } from '../types';
 
 // 單一欄位生成工具
 const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
@@ -63,16 +63,28 @@ const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
 };
 
 // 1. 產生 learningObjectives
-const generateLearningObjectives = async (topic: string, apiKey: string): Promise<string[]> => {
+const generateLearningObjectives = async (topic: string, apiKey: string): Promise<LearningObjectiveItem[]> => {
   const prompt = `
     Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}".
     The objectives should be based on scaffolding theory and gamification, and written in the primary language of the topic.
-    Output MUST be a valid JSON array of strings, e.g.:
+    For each objective, provide the objective statement, a detailed description, and a concrete teaching example (such as a sample sentence, scenario, or application).
+    Output MUST be a valid JSON array of objects, e.g.:
     [
-      "能夠理解${topic}的基本概念",
-      "能夠應用${topic}於實際情境",
-      "能夠辨識${topic}常見的誤區",
-      "能夠分析${topic}的進階應用",
+      { 
+        "objective": "能夠理解${topic}的基本概念", 
+        "description": "此目標幫助學習者建立對${topic}的基礎理解和認知框架...", 
+        "teachingExample": "透過具體例子展示${topic}的核心概念，例如..." 
+      },
+      { 
+        "objective": "能夠應用${topic}於實際情境", 
+        "description": "培養學習者將理論知識轉化為實際應用的能力...", 
+        "teachingExample": "提供真實情境讓學習者練習應用${topic}，如..." 
+      },
+      { 
+        "objective": "能夠辨識${topic}常見的誤區", 
+        "description": "幫助學習者識別和避免${topic}學習中的常見錯誤...", 
+        "teachingExample": "展示常見誤區的具體例子和正確理解方式..." 
+      },
       //...or more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
@@ -81,7 +93,7 @@ const generateLearningObjectives = async (topic: string, apiKey: string): Promis
 };
 
 // 2. 產生 contentBreakdown
-const generateContentBreakdown = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateContentBreakdown = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units. For each, provide a sub-topic, a brief explanation, and a concrete teaching example (such as a sample sentence, scenario, or application).
@@ -98,7 +110,7 @@ const generateContentBreakdown = async (topic: string, apiKey: string, learningO
 };
 
 // 3. 產生 confusingPoints
-const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     List at least 3 (but more is better if appropriate) common misconceptions or difficulties students may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
@@ -115,7 +127,7 @@ const generateConfusingPoints = async (topic: string, apiKey: string, learningOb
 };
 
 // 4. 產生 classroomActivities
-const generateClassroomActivities = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateClassroomActivities = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Suggest at least 3 (but more is better if appropriate) engaging, interactive classroom activities (preferably game-like) for the topic "${topic}".
@@ -142,7 +154,7 @@ const generateClassroomActivities = async (topic: string, apiKey: string, learni
 };
 
 // 5. 產生 onlineInteractiveQuiz
-const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<any> => {
+const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate quiz content for "${topic}" in the following JSON structure (no explanation, no extra text):
@@ -194,7 +206,7 @@ const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, lear
 };
 
 // 6. 產生 englishConversation
-const generateEnglishConversation = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateEnglishConversation = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate a short, natural English conversation (at least 3 lines, but more is better if appropriate, 2 speakers) about the topic "${topic}" (use English translation if topic is not English).
@@ -211,16 +223,28 @@ const generateEnglishConversation = async (topic: string, apiKey: string, learni
 };
 
 // 針對特定程度的內容生成函數
-const generateLearningObjectivesForLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<string[]> => {
+const generateLearningObjectivesForLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<any[]> => {
   const prompt = `
     Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}" appropriate for learning level "${selectedLevel.name}" (${selectedLevel.description}).
     The objectives should be based on scaffolding theory and gamification, written in the primary language of the topic, and tailored to the learner's level and capabilities described in: "${selectedLevel.description}".
-    Output MUST be a valid JSON array of strings, e.g.:
+    For each objective, provide the objective statement, a detailed description, and a concrete teaching example (such as a sample sentence, scenario, or application).
+    Output MUST be a valid JSON array of objects, e.g.:
     [
-      "能夠理解${topic}在${selectedLevel.name}程度的核心概念",
-      "能夠應用${topic}的${selectedLevel.name}級技能",
-      "能夠辨識${topic}在此程度的常見誤區",
-      "能夠分析${topic}在${selectedLevel.name}程度的進階應用",
+      { 
+        "objective": "能夠理解${topic}在${selectedLevel.name}程度的核心概念", 
+        "description": "此目標針對${selectedLevel.name}程度學習者的詳細描述...", 
+        "teachingExample": "針對此目標的具體教學示例..." 
+      },
+      { 
+        "objective": "能夠應用${topic}的${selectedLevel.name}級技能", 
+        "description": "此目標的具體說明和期望成果...", 
+        "teachingExample": "實際應用此技能的示例..." 
+      },
+      { 
+        "objective": "能夠辨識${topic}在此程度的常見誤區", 
+        "description": "幫助學習者識別和避免常見錯誤...", 
+        "teachingExample": "常見誤區的具體例子和正確做法..." 
+      },
       //...or more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
@@ -228,7 +252,7 @@ const generateLearningObjectivesForLevel = async (topic: string, selectedLevel: 
   return await callGemini(prompt, apiKey);
 };
 
-const generateContentBreakdownForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateContentBreakdownForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}). For each, provide a sub-topic, a brief explanation, and a concrete teaching example (such as a sample sentence, scenario, or application).
@@ -245,7 +269,7 @@ const generateContentBreakdownForLevel = async (topic: string, selectedLevel: an
   return await callGemini(prompt, apiKey);
 };
 
-const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     List at least 3 (but more is better if appropriate) common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
@@ -262,7 +286,7 @@ const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any
   return await callGemini(prompt, apiKey);
 };
 
-const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Suggest at least 3 (but more is better if appropriate) engaging, interactive classroom activities (preferably game-like) for the topic "${topic}" suitable for "${selectedLevel.name}" level learners (${selectedLevel.description}).
@@ -289,7 +313,7 @@ const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel:
   return await callGemini(prompt, apiKey);
 };
 
-const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any> => {
+const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
   const prompt = `
     基於主題「${topic}」、選定的學習程度「${selectedLevel.name}」(${selectedLevel.description})，
     以及學習目標：${JSON.stringify(learningObjectives)}
@@ -346,7 +370,7 @@ const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLeve
   return await callGemini(prompt, apiKey);
 };
 
-const generateEnglishConversationForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateEnglishConversationForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate a short, natural English conversation (at least 3 lines, but more is better if appropriate, 2 speakers) about the topic "${topic}" (use English translation if topic is not English) appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}).
@@ -364,7 +388,7 @@ const generateEnglishConversationForLevel = async (topic: string, selectedLevel:
 };
 
 // 7. 產生 learningLevels (學習程度建議)
-const generateLearningLevels = async (topic: string, apiKey: string, learningObjectives: string[]): Promise<LearningLevelSuggestions> => {
+const generateLearningLevels = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<LearningLevelSuggestions> => {
   const prompt = `
     Based on the topic "${topic}" and learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate 3-4 learning levels that are specific to this topic. Each level should have a unique name, description, and order.
@@ -494,22 +518,34 @@ export const generateLearningPlanWithVocabularyLevel = async (
 };
 
 // 針對單字量的內容生成函數
-const generateLearningObjectivesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string): Promise<string[]> => {
+const generateLearningObjectivesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string): Promise<LearningObjectiveItem[]> => {
   const prompt = `
     Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}" appropriate for learning level "${selectedLevel.name}" (${selectedLevel.description}) and English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
     The objectives should be based on scaffolding theory and gamification, written in the primary language of the topic, and tailored to both the learner's level and vocabulary constraints.
+    For each objective, provide the objective statement, a detailed description, and a concrete teaching example (such as a sample sentence, scenario, or application).
     
     CRITICAL VOCABULARY CONSTRAINTS for English content:
     - All English text must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
     - Adjust language complexity to match ${vocabularyLevel.description}
     - Avoid advanced vocabulary that exceeds this level
     
-    Output MUST be a valid JSON array of strings, e.g.:
+    Output MUST be a valid JSON array of objects, e.g.:
     [
-      "能夠理解${topic}在${selectedLevel.name}程度的核心概念（英文內容限制在${vocabularyLevel.wordCount}詞彙範圍）",
-      "能夠應用${topic}的${selectedLevel.name}級技能（適合${vocabularyLevel.name}程度學習者）",
-      "能夠辨識${topic}在此程度和詞彙量的常見誤區",
-      "能夠分析${topic}在${selectedLevel.name}程度的進階應用",
+      { 
+        "objective": "能夠理解${topic}在${selectedLevel.name}程度的核心概念（英文內容限制在${vocabularyLevel.wordCount}詞彙範圍）", 
+        "description": "此目標針對${selectedLevel.name}程度和${vocabularyLevel.name}詞彙量學習者的詳細描述...", 
+        "teachingExample": "使用${vocabularyLevel.wordCount}詞彙範圍內的英文例句和教學示例..." 
+      },
+      { 
+        "objective": "能夠應用${topic}的${selectedLevel.name}級技能（適合${vocabularyLevel.name}程度學習者）", 
+        "description": "培養在詞彙限制下的實際應用能力...", 
+        "teachingExample": "提供符合${vocabularyLevel.wordCount}詞彙量的實際應用情境..." 
+      },
+      { 
+        "objective": "能夠辨識${topic}在此程度和詞彙量的常見誤區", 
+        "description": "幫助學習者識別和避免在此詞彙程度下的常見錯誤...", 
+        "teachingExample": "使用簡單詞彙展示常見誤區和正確做法..." 
+      },
       //...or more items
     ]
     Do NOT include any explanation or extra text. Only output the JSON array.
@@ -517,7 +553,7 @@ const generateLearningObjectivesForLevelAndVocabulary = async (topic: string, se
   return await callGemini(prompt, apiKey);
 };
 
-const generateContentBreakdownForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateContentBreakdownForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}). For each, provide a sub-topic, a brief explanation, and a concrete teaching example (such as a sample sentence, scenario, or application).
@@ -540,7 +576,7 @@ const generateContentBreakdownForLevelAndVocabulary = async (topic: string, sele
   return await callGemini(prompt, apiKey);
 };
 
-const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     List at least 3 (but more is better if appropriate) common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have with "${topic}", and provide a clarification and a concrete teaching example for each (such as a sample sentence, scenario, or application).
@@ -562,7 +598,7 @@ const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selec
   return await callGemini(prompt, apiKey);
 };
 
-const generateClassroomActivitiesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateClassroomActivitiesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Suggest at least 3 (but more is better if appropriate) engaging, interactive classroom activities (preferably game-like) for the topic "${topic}" suitable for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
@@ -595,7 +631,7 @@ const generateClassroomActivitiesForLevelAndVocabulary = async (topic: string, s
   return await callGemini(prompt, apiKey);
 };
 
-const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any> => {
+const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate quiz content for "${topic}" suitable for learning level "${selectedLevel.name}" (${selectedLevel.description}) and English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
@@ -653,7 +689,7 @@ const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string,
   return await callGemini(prompt, apiKey);
 };
 
-const generateEnglishConversationForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: string[]): Promise<any[]> => {
+const generateEnglishConversationForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate a short, natural English conversation (at least 3 lines, but more is better if appropriate, 2 speakers) about the topic "${topic}" (use English translation if topic is not English) appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
