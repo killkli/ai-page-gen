@@ -303,9 +303,27 @@ const StudentResultsPage: React.FC = () => {
 
       {/* API Key 設定 Modal */}
       {showApiKeyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowApiKeyModal(false);
+            }
+          }}
+        >
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">設定 API Key</h3>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">設定 API Key</h3>
+              <button
+                onClick={() => setShowApiKeyModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="關閉"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <p className="text-gray-600 mb-4">
               要使用 AI 學習診斷功能，請輸入您的 Google Gemini API Key。
               <a 
