@@ -29,6 +29,8 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
   const [cards, setCards] = useState<CardData[]>([]);
   const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
   const [matchedCount, setMatchedCount] = useState(0);
+  const [attempts, setAttempts] = useState(0); // 記錄嘗試次數（翻卡次數）
+  const [gameCompleted, setGameCompleted] = useState(false); // 避免重複觸發
 
   useEffect(() => {
     let id = 0;
@@ -39,14 +41,21 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
     setCards(shuffleArray(cardList));
     setFlippedIndices([]);
     setMatchedCount(0);
+    setAttempts(0);
+    setGameCompleted(false);
   }, [question]);
 
   const handleCardClick = (index: number) => {
-    if (cards[index].isFlipped || cards[index].isMatched || flippedIndices.length === 2) return;
+    if (cards[index].isFlipped || cards[index].isMatched || flippedIndices.length === 2 || gameCompleted) return;
     const newCards = cards.map((card, i) => i === index ? { ...card, isFlipped: true } : card);
     const newFlipped = [...flippedIndices, index];
     setCards(newCards);
     setFlippedIndices(newFlipped);
+    
+    // 當翻開第二張卡時，計算一次嘗試
+    if (newFlipped.length === 2) {
+      setAttempts(prev => prev + 1);
+    }
 
     if (newFlipped.length === 2) {
       const [firstIdx, secondIdx] = newFlipped;
@@ -73,13 +82,14 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
 
   const allMatched = matchedCount === (question.pairs || []).length;
 
-  // 遊戲完成時呼叫診斷回調
+  // 遊戲完成時呼叫診斷回調（只觸發一次）
   useEffect(() => {
-    if (allMatched && onAnswer) {
-      // 記憶卡遊戲完成視為答對
-      onAnswer(matchedCount, true);
+    if (allMatched && !gameCompleted && onAnswer) {
+      setGameCompleted(true);
+      // 記憶卡遊戲完成視為答對，用嘗試次數作為 userAnswer
+      onAnswer(attempts, true);
     }
-  }, [allMatched, matchedCount, onAnswer]);
+  }, [allMatched, gameCompleted, attempts, onAnswer]);
 
   return (
     <div className="mb-4 p-4 border rounded bg-slate-50">
@@ -87,6 +97,13 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
       {question.instructions && (
         <div className="mb-2 text-sky-700 text-sm">{question.instructions}</div>
       )}
+      <div className="mb-3 text-sm text-gray-600 flex justify-between items-center">
+        <span>配對進度: {matchedCount}/{(question.pairs || []).length}</span>
+        <span>嘗試次數: {attempts}</span>
+        {allMatched && (
+          <span className="text-green-600 font-medium">✅ 遊戲完成！</span>
+        )}
+      </div>
       <div className="grid grid-cols-4 gap-3 max-w-xl mx-auto mb-2">
         {cards.map((card, idx) => (
           <button

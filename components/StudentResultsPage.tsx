@@ -253,49 +253,83 @@ const StudentResultsPage: React.FC = () => {
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">📋 詳細作答記錄</h3>
           <div className="space-y-4">
-            {results.responses.map((response, index) => (
-              <div 
-                key={response.questionId || index}
-                className={`p-4 rounded-lg border-2 ${
-                  response.isCorrect 
-                    ? 'border-green-200 bg-green-50' 
-                    : 'border-red-200 bg-red-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {response.isCorrect ? (
-                      <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <XCircleIcon className="w-5 h-5 text-red-600" />
-                    )}
-                    <span className="font-medium text-gray-700">
-                      第 {index + 1} 題 ({response.questionType})
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      難度: {response.difficulty}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {response.attempts && response.attempts > 1 && `嘗試 ${response.attempts} 次`}
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <div className="text-gray-600 mb-1">學生答案:</div>
-                    <div className="font-medium text-gray-800">
-                      {JSON.stringify(response.userAnswer)}
+            {results.responses.map((response, index) => {
+              // 格式化答案顯示
+              const formatAnswer = (answer: any, questionType: string) => {
+                if (questionType === 'memoryCardGame') {
+                  if (Array.isArray(answer)) {
+                    // 如果是 pairs 陣列，顯示配對內容
+                    return (
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-700 mb-2">配對卡片:</div>
+                        {answer.map((pair: any, idx: number) => (
+                          <div key={idx} className="text-xs bg-gray-100 p-2 rounded flex justify-between">
+                            <span>🃏 {pair.question || pair.card1 || '空'}</span>
+                            <span>↔️</span>
+                            <span>🃊 {pair.answer || pair.card2 || '空'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } else if (typeof answer === 'number') {
+                    // 如果是數字，可能是嘗試次數
+                    return `翽卡嘗試次數: ${answer}`;
+                  }
+                }
+                
+                // 其他類型的題目保持原本顯示
+                if (typeof answer === 'object') {
+                  return JSON.stringify(answer, null, 2);
+                }
+                return String(answer);
+              };
+              
+              return (
+                <div 
+                  key={response.questionId || index}
+                  className={`p-4 rounded-lg border-2 ${
+                    response.isCorrect 
+                      ? 'border-green-200 bg-green-50' 
+                      : 'border-red-200 bg-red-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {response.isCorrect ? (
+                        <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <XCircleIcon className="w-5 h-5 text-red-600" />
+                      )}
+                      <span className="font-medium text-gray-700">
+                        第 {index + 1} 題 ({response.questionType === 'memoryCardGame' ? '翽卡配對遊戲' : response.questionType})
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        難度: {response.difficulty}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {response.attempts && response.attempts > 1 && `嘗試 ${response.attempts} 次`}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-gray-600 mb-1">正確答案:</div>
-                    <div className="font-medium text-green-700">
-                      {JSON.stringify(response.correctAnswer)}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-gray-600 mb-1">學生表現:</div>
+                      <div className="font-medium text-gray-800">
+                        {formatAnswer(response.userAnswer, response.questionType)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-600 mb-1">
+                        {response.questionType === 'memoryCardGame' ? '測驗內容:' : '正確答案:'}
+                      </div>
+                      <div className="font-medium text-green-700">
+                        {formatAnswer(response.correctAnswer, response.questionType)}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
