@@ -75,7 +75,13 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
     }
   };
 
-  if (showDiagnostic && supportsDiagnostic && apiKey && responses.length > 0) {
+  // 取得當前難度的回答記錄
+  const getCurrentDifficultyResponses = () => {
+    const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
+    return responses.filter(response => response.difficulty === currentDifficultyString);
+  };
+
+  if (showDiagnostic && supportsDiagnostic && apiKey && getCurrentDifficultyResponses().length > 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         <div className="bg-white shadow-sm border-b">
@@ -83,6 +89,10 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
             <div className="flex items-center gap-3 mb-2">
               <ChartBarIcon className="w-8 h-8 text-indigo-600" />
               <h1 className="text-2xl font-bold text-gray-900">學習診斷報告</h1>
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-medium rounded-full">
+                {selectedDifficulty === QuizDifficulty.Easy ? '簡單' : 
+                 selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'} 難度
+              </span>
             </div>
             <div className="flex items-center gap-2 text-gray-600">
               <AcademicCapIcon className="w-5 h-5" />
@@ -92,16 +102,19 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         </div>
         <div className="max-w-4xl mx-auto px-4 py-8">
           <LearningDiagnosticReport
-            session={{
-              sessionId: `shared-quiz-${Date.now()}`,
-              topic,
-              startTime: new Date().toISOString(),
-              endTime: new Date().toISOString(),
-              responses
-            }}
+            topic={`${topic} (${selectedDifficulty === QuizDifficulty.Easy ? '簡單' : 
+                     selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'}難度)`}
             apiKey={apiKey}
-            config={{ viewMode: 'student' }}
-            onBack={() => setShowDiagnostic(false)}
+            mode="student"
+            initialResponses={getCurrentDifficultyResponses()}
+            onClose={() => setShowDiagnostic(false)}
+            onRetakeQuiz={() => {
+              // 只清除當前難度的回答
+              const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
+              setResponses(prev => prev.filter(r => r.difficulty !== currentDifficultyString));
+              setShowDiagnostic(false);
+            }}
+            onContinueLearning={() => setShowDiagnostic(false)}
           />
         </div>
       </div>
@@ -233,13 +246,13 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                 </span>
               )}
             </div>
-            {supportsDiagnostic && responses.length > 0 && (
+            {supportsDiagnostic && getCurrentDifficultyResponses().length > 0 && (
               <button
                 onClick={() => setShowDiagnostic(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 <ChartBarIcon className="w-5 h-5" />
-                查看學習診斷 ({responses.length})
+                查看學習診斷 ({getCurrentDifficultyResponses().length})
               </button>
             )}
           </div>

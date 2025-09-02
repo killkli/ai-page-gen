@@ -123,23 +123,12 @@ export const analyzeQuizResults = (responses: QuestionResponse[]): QuestionTypeP
   return Array.from(performanceMap.values());
 };
 
-// 計算整體得分
-export const calculateOverallScore = (performances: QuestionTypePerformance[]): number => {
-  if (performances.length === 0) return 0;
+// 計算整體得分 - 使用簡單的答對比例
+export const calculateOverallScore = (responses: QuestionResponse[]): number => {
+  if (responses.length === 0) return 0;
   
-  const weightedScore = performances.reduce((sum, perf) => {
-    // 根據題型難度給予不同權重
-    let weight = 1;
-    const avgDifficultyScore = (
-      perf.difficultyBreakdown.easy.accuracy * 0.7 +
-      perf.difficultyBreakdown.normal.accuracy * 1.0 +
-      perf.difficultyBreakdown.hard.accuracy * 1.3
-    ) / 3;
-    
-    return sum + (avgDifficultyScore * weight);
-  }, 0);
-  
-  return Math.round(weightedScore / performances.length);
+  const correctAnswers = responses.filter(r => r.isCorrect).length;
+  return Math.round((correctAnswers / responses.length) * 100);
 };
 
 // 確定學習水準
@@ -156,42 +145,64 @@ export const generateLearningAnalysisWithAI = async (
   performances: QuestionTypePerformance[],
   apiKey: string
 ): Promise<{ strengths: LearningStrength[], weaknesses: LearningWeakness[], learningStyle?: string, cognitivePattern?: string }> => {
+  
+  // 整理錯誤的具體題目和答案
+  const incorrectResponses = responses.filter(r => !r.isCorrect);
+  const correctResponses = responses.filter(r => r.isCorrect);
+  
+  const errorAnalysis = incorrectResponses.map(r => {
+    return `
+    題型: ${r.questionType}
+    難度: ${r.difficulty}
+    學生答案: ${JSON.stringify(r.userAnswer)}
+    正確答案: ${JSON.stringify(r.correctAnswer)}
+    嘗試次數: ${r.attempts || 1}`;
+  }).join('\n');
+  
+  const correctAnalysis = correctResponses.map(r => {
+    return `
+    題型: ${r.questionType}
+    難度: ${r.difficulty}
+    學生答案: ${JSON.stringify(r.userAnswer)}`;
+  }).join('\n');
+
   const prompt = `
-    Based on the quiz performance data for topic "${topic}", provide a comprehensive learning analysis.
+    針對主題「${topic}」的測驗表現進行學習診斷分析。
     
-    Performance Summary:
-    ${performances.map(p => `
-    - ${p.questionType}: ${p.accuracy}% accuracy (${p.correctCount}/${p.totalQuestions})
-      Easy: ${p.difficultyBreakdown.easy.accuracy}%, Normal: ${p.difficultyBreakdown.normal.accuracy}%, Hard: ${p.difficultyBreakdown.hard.accuracy}%
-    `).join('\n')}
+    總體表現：
+    - 答對題数：${correctResponses.length}
+    - 答錯題数：${incorrectResponses.length}
+    - 正確率：${Math.round((correctResponses.length / responses.length) * 100)}%
     
-    Total responses analyzed: ${responses.length}
+    答錯題目詳細分析：${errorAnalysis}
     
-    Please provide analysis in the following JSON structure (no explanation, no extra text):
+    答對題目詳細分析：${correctAnalysis}
+    
+    請提供以下 JSON 結構的分析（不要解釋，不要額外文字）：
     {
       "strengths": [
         {
-          "area": "具體強項領域",
-          "description": "詳細描述學生在此領域的表現",
+          "area": "學生的具體強項領域",
+          "description": "根據答對的題目類型和內容，詳細描述學生的優勢",
           "level": "good|excellent|outstanding",
-          "examples": ["具體表現實例"],
-          "leverageOpportunities": ["如何運用此強項的建議"]
+          "examples": ["從答對題目中提取的具體表現例子"],
+          "leverageOpportunities": ["如何利用此強項來改善弱點的具體建議"]
         }
       ],
       "weaknesses": [
         {
-          "area": "需要改進的領域",
-          "description": "詳細描述問題所在",
+          "area": "根據錯誤題目整理出的知識漏洞領域",
+          "description": "分析錯誤原因：是概念不清、計算錯誤、還是理解偏差？",
           "severity": "low|medium|high",
-          "affectedTopics": ["受影響的主題"],
-          "recommendedActions": ["具體改進行動"]
+          "affectedTopics": ["具體受影響的知識點或技能"],
+          "recommendedActions": ["針對此類錯誤的具體改進方法和練習建議"]
         }
       ],
-      "learningStyle": "推測的學習風格（視覺型/聽覺型/動手型等）",
-      "cognitivePattern": "認知模式分析"
+      "learningStyle": "根據答題表現推測的學習風格（如：視覺型、邏輯型、記憶型等）",
+      "cognitivePattern": "認知模式分析（如：敬重細節、善於整體把握等）"
     }
     
-    Please respond in Traditional Chinese (繁體中文) and focus on educational insights that would be valuable for both students and teachers.
+    請用繁體中文回答，並提供對學生和教師都有價值的教育洞察。特別要針對錯誤題目做出具體分析和改進建議。
   `;
 
   try {
@@ -265,34 +276,42 @@ export const generateStudentFeedback = async (
   strengths: LearningStrength[],
   weaknesses: LearningWeakness[],
   apiKey: string,
-  studentId?: string
+  studentId?: string,
+  responses?: QuestionResponse[]
 ): Promise<StudentLearningFeedback> => {
+  
+  // 整理錯誤題目的具體資訊
+  const incorrectResponses = responses?.filter(r => !r.isCorrect) || [];
+  const errorDetails = incorrectResponses.map(r => `
+  - ${r.questionType} (難度: ${r.difficulty}): 你的答案「${JSON.stringify(r.userAnswer)}」，正確答案是「${JSON.stringify(r.correctAnswer)}」`).join('');
+  
   const prompt = `
-    Generate encouraging and constructive feedback for a student based on their quiz performance.
+    為學生提供關於主題「${topic}」的學習回饋和指導。
     
-    Context:
-    - Topic: "${topic}"
-    - Overall Score: ${overallScore}%
-    - Learning Level: ${overallLevel}
-    - Strengths: ${strengths.map(s => s.area).join(', ')}
-    - Areas for improvement: ${weaknesses.map(w => w.area).join(', ')}
+    表現概要：
+    - 總分：${overallScore}%
+    - 學習水平：${overallLevel}
+    - 主要強項：${strengths.map(s => s.area).join('、')}
+    - 需要改進的領域：${weaknesses.map(w => w.area).join('、')}
     
-    Please provide student-friendly feedback in the following JSON structure (no explanation, no extra text):
+    錯誤題目詳情：${errorDetails}
+    
+    請提供學生友善的回饋，使用以下 JSON 結構（不要解釋，不要額外文字）：
     {
-      "encouragementMessage": "鼓勵的開場訊息，要正面且具體",
-      "keyStrengths": ["主要強項1", "主要強項2", "主要強項3"],
-      "improvementAreas": ["需要加強的領域1", "需要加強的領域2"],
-      "nextSteps": ["下一步具體行動1", "下一步具體行動2", "下一步具體行動3"],
-      "studyTips": ["實用學習小貼士1", "實用學習小貼士2", "實用學習小貼士3"],
-      "motivationalQuote": "激勵性的結尾語句"
+      "encouragementMessage": "根據實際分數給出的鼓勵訊息，要具體且正面",
+      "keyStrengths": ["從答對的題目中發現的具體強項", "另一個強項", "第三個強項"],
+      "improvementAreas": ["根據錯誤題目整理的具體需加強領域", "另一個需加強領域"],
+      "nextSteps": ["針對錯誤題目的具體改進行動", "強化練習建議", "補強知識漏洞的方法"],
+      "studyTips": ["針對錯誤類型的實用學習技巧", "加強記憶的方法", "提高理解的策略"],
+      "motivationalQuote": "激勵學生繼續努力的結尾話"
     }
     
-    Use encouraging, positive language appropriate for students. Focus on growth mindset and actionable advice.
-    Respond in Traditional Chinese (繁體中文).
+    使用鼓勵、正向的語言，適合學生閱讀。重點關注成長心態和可實行的建議。
+    請用繁體中文回答，特別要針對具體錯誤提供有針對性的改進建議。
   `;
 
   try {
-    const result = await callGeminiForDiagnostic(prompt, apiKey);
+    const result = await callGeminiForDiagnosticForDiagnostic(prompt, apiKey);
     return {
       studentId,
       overallScore,
@@ -328,37 +347,48 @@ export const generateTeachingRecommendations = async (
   performances: QuestionTypePerformance[],
   strengths: LearningStrength[],
   weaknesses: LearningWeakness[],
-  apiKey: string
+  apiKey: string,
+  responses?: QuestionResponse[]
 ): Promise<{
   immediateInterventions: string[];
   instructionalStrategies: string[];
   differentiation: string[];
   parentGuidance?: string[];
 }> => {
+  
+  // 整理錯誤資訊供教師參考
+  const incorrectResponses = responses?.filter(r => !r.isCorrect) || [];
+  const errorPatterns = incorrectResponses.map(r => `
+  - 題型: ${r.questionType}, 難度: ${r.difficulty}
+    學生答案: ${JSON.stringify(r.userAnswer)}
+    正確答案: ${JSON.stringify(r.correctAnswer)}
+    嘗試次數: ${r.attempts || 1}`).join('');
+  
   const prompt = `
-    Generate comprehensive teaching recommendations based on student assessment results.
+    為主題「${topic}」提供教學建議，根據學生評量結果。
     
-    Context:
-    - Topic: "${topic}"
-    - Overall Performance: ${overallScore}%
-    - Strengths: ${strengths.map(s => s.area).join(', ')}
-    - Areas needing support: ${weaknesses.map(w => w.area).join(', ')}
-    - Performance by type: ${performances.map(p => `${p.questionType}: ${p.accuracy}%`).join(', ')}
+    表現概要：
+    - 總體表現：${overallScore}%
+    - 強項：${strengths.map(s => s.area).join('、')}
+    - 需要支援的領域：${weaknesses.map(w => w.area).join('、')}
+    - 各題型表現：${performances.map(p => `${p.questionType}: ${p.accuracy}%`).join('、')}
     
-    Please provide teaching recommendations in the following JSON structure (no explanation, no extra text):
+    具體錯誤模式分析：${errorPatterns}
+    
+    請提供教學建議，使用以下 JSON 結構（不要解釋，不要額外文字）：
     {
-      "immediateInterventions": ["立即可採取的教學介入措施1", "立即可採取的教學介入措施2"],
-      "instructionalStrategies": ["適合的教學策略1", "適合的教學策略2", "適合的教學策略3"],
-      "differentiation": ["差異化教學建議1", "差異化教學建議2"],
-      "parentGuidance": ["給家長的指導建議1", "給家長的指導建議2"]
+      "immediateInterventions": ["根據具體錯誤類型提供的立即介入措施", "針對知識漏洞的急需處理方法"],
+      "instructionalStrategies": ["針對錯誤模式的教學策略", "加強理解的教學方法", "預防相似錯誤的策略"],
+      "differentiation": ["根據錯誤類型設計的差異化教學", "適合不同學習風格的調整"],
+      "parentGuidance": ["家長在家輔導的具體建議", "家庭練習的重點領域"]
     }
     
-    Focus on practical, evidence-based teaching strategies that address the identified strengths and weaknesses.
-    Respond in Traditional Chinese (繁體中文).
+    重點在於實用、基於證據的教學策略，並針對識別出的強項和弱點提供具體建議。
+    請用繁體中文回答，特別要針對學生的具體錯誤提供有針對性的教學建議。
   `;
 
   try {
-    const result = await callGeminiForDiagnostic(prompt, apiKey);
+    const result = await callGeminiForDiagnosticForDiagnostic(prompt, apiKey);
     return {
       immediateInterventions: result.immediateInterventions || [],
       instructionalStrategies: result.instructionalStrategies || [],
@@ -391,7 +421,7 @@ export const generateLearningDiagnostic = async (
   try {
     // 1. 分析測驗結果
     const performanceStats = analyzeQuizResults(session.responses);
-    const overallScore = calculateOverallScore(performanceStats);
+    const overallScore = calculateOverallScore(session.responses);
     const learningLevel = determineLearningLevel(overallScore);
 
     // 2. 使用AI生成學習分析
@@ -421,7 +451,8 @@ export const generateLearningDiagnostic = async (
       learningAnalysis.strengths,
       learningAnalysis.weaknesses,
       apiKey,
-      session.studentId
+      session.studentId,
+      session.responses
     );
 
     // 5. 生成教學建議
@@ -431,7 +462,8 @@ export const generateLearningDiagnostic = async (
       performanceStats,
       learningAnalysis.strengths,
       learningAnalysis.weaknesses,
-      apiKey
+      apiKey,
+      session.responses
     );
 
     // 6. 組裝老師版報告

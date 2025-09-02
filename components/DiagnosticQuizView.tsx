@@ -39,7 +39,6 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
-  const [totalQuestions, setTotalQuestions] = useState(0);
   const startTimeRef = useRef<number | null>(null);
 
   // 初始化診斷會話
@@ -51,22 +50,30 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
     }
   }, [topic, studentId, enableDiagnostic, session]);
 
-  // 計算總題數
-  useEffect(() => {
-    if (quizzes) {
-      let total = 0;
-      Object.values(quizzes).forEach(difficultyContent => {
-        if (difficultyContent) {
-          Object.values(difficultyContent).forEach(questions => {
-            if (Array.isArray(questions)) {
-              total += questions.length;
-            }
-          });
-        }
-      });
-      setTotalQuestions(total);
-    }
-  }, [quizzes]);
+  // 計算當前難度的總題數
+  const getCurrentDifficultyTotalQuestions = () => {
+    if (!quizzes || !currentQuizSet) return 0;
+    
+    let total = 0;
+    Object.values(currentQuizSet).forEach(questions => {
+      if (Array.isArray(questions)) {
+        total += questions.length;
+      }
+    });
+    return total;
+  };
+
+  // 計算當前難度已回答的題數
+  const getCurrentDifficultyAnsweredCount = () => {
+    const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
+    return responses.filter(r => r.difficulty === currentDifficultyString).length;
+  };
+
+  // 取得當前難度的回答記錄
+  const getCurrentDifficultyResponses = () => {
+    const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
+    return responses.filter(r => r.difficulty === currentDifficultyString);
+  };
 
   const handleQuestionResponse = useCallback((
     questionId: string,
@@ -127,16 +134,29 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
 
   const handleRetakeQuiz = useCallback(() => {
     setShowDiagnostic(false);
-    setResponses([]);
-    setAnsweredQuestions(new Set());
-    setSelectedDifficulty(QuizDifficulty.Easy);
+    
+    // 只清除當前難度的回答記錄
+    const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
+    setResponses(prev => prev.filter(r => r.difficulty !== currentDifficultyString));
+    
+    // 清除當前難度的已回答題目 ID
+    setAnsweredQuestions(prev => {
+      const newSet = new Set(prev);
+      const difficultyPrefix = selectedDifficulty.toLowerCase();
+      Array.from(prev).forEach(questionId => {
+        if (questionId.startsWith(`${difficultyPrefix}-`)) {
+          newSet.delete(questionId);
+        }
+      });
+      return newSet;
+    });
     
     if (enableDiagnostic) {
       const newSession = createDiagnosticSession(topic, studentId);
       setSession(newSession);
       startTimeRef.current = Date.now();
     }
-  }, [enableDiagnostic, topic, studentId]);
+  }, [enableDiagnostic, topic, studentId, selectedDifficulty]);
 
   const handleContinueLearning = useCallback(() => {
     setShowDiagnostic(false);
@@ -144,9 +164,11 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
   }, []);
 
   if (showDiagnostic && enableDiagnostic) {
+    const difficultyLabel = selectedDifficulty === QuizDifficulty.Easy ? '簡單' : 
+                          selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難';
     return (
       <LearningDiagnosticReport
-        topic={topic}
+        topic={`${topic} (${difficultyLabel}難度)`}
         quizData={quizzes}
         studentId={studentId}
         apiKey={apiKey}
@@ -154,7 +176,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
         onRetakeQuiz={handleRetakeQuiz}
         onContinueLearning={handleContinueLearning}
         onClose={() => setShowDiagnostic(false)}
-        initialResponses={responses}
+        initialResponses={getCurrentDifficultyResponses()}
       />
     );
   }
@@ -180,7 +202,9 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
   };
 
   const getProgressPercentage = () => {
-    return totalQuestions > 0 ? (answeredQuestions.size / totalQuestions) * 100 : 0;
+    const currentTotal = getCurrentDifficultyTotalQuestions();
+    const currentAnswered = getCurrentDifficultyAnsweredCount();
+    return currentTotal > 0 ? (currentAnswered / currentTotal) * 100 : 0;
   };
 
   return (
@@ -192,11 +216,11 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
             <h4 className="text-sm font-semibold text-gray-800">學習診斷模式</h4>
             <div className="flex items-center gap-4 text-sm">
               <span className="text-gray-600">
-                進度: {answeredQuestions.size} / {totalQuestions}
+                進度: {getCurrentDifficultyAnsweredCount()} / {getCurrentDifficultyTotalQuestions()}
               </span>
               <button
                 onClick={handleCompleteQuiz}
-                disabled={answeredQuestions.size === 0}
+                disabled={getCurrentDifficultyAnsweredCount() === 0}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
@@ -379,7 +403,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
       )}
 
       {/* 提示訊息 */}
-      {enableDiagnostic && answeredQuestions.size > 0 && (
+      {enableDiagnostic && getCurrentDifficultyAnsweredCount() > 0 && (
         <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-start gap-3">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-yellow-600 mt-0.5 flex-shrink-0">
@@ -388,7 +412,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
             <div>
               <p className="text-yellow-800 font-medium text-sm">學習診斷提示</p>
               <p className="text-yellow-700 text-sm mt-1">
-                您已完成 {answeredQuestions.size} 題測驗。點擊上方的「生成學習診斷」按鈕，AI 將為您分析學習狀況並提供個人化建議！
+                您已完成 {getCurrentDifficultyAnsweredCount()} 題測驗。點擊上方的「生成學習診斷」按鈕，AI 將為您分析學習狀況並提供個人化建議！
               </p>
             </div>
           </div>

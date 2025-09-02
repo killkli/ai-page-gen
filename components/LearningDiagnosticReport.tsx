@@ -45,16 +45,6 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
   const [currentView, setCurrentView] = useState<'student' | 'teacher'>(mode === 'teacher' ? 'teacher' : 'student');
   const [session, setSession] = useState<DiagnosticSession | null>(null);
 
-  // 初始化或更新診斷會話
-  useEffect(() => {
-    if (topic && initialResponses.length > 0) {
-      const newSession = createDiagnosticSession(topic, studentId);
-      newSession.responses = initialResponses;
-      setSession(completeDiagnosticSession(newSession));
-      generateDiagnosticReport(newSession);
-    }
-  }, [topic, studentId, initialResponses]);
-
   const generateDiagnosticReport = useCallback(async (diagnosticSession: DiagnosticSession) => {
     if (!apiKey) {
       setError('需要 API Key 才能生成診斷報告');
@@ -82,6 +72,16 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
       setLoading(false);
     }
   }, [apiKey]);
+
+  // 初始化或更新診斷會話
+  useEffect(() => {
+    if (topic && initialResponses.length > 0) {
+      const newSession = createDiagnosticSession(topic, studentId);
+      newSession.responses = initialResponses;
+      setSession(completeDiagnosticSession(newSession));
+      generateDiagnosticReport(newSession);
+    }
+  }, [topic, studentId, initialResponses, generateDiagnosticReport]);
 
   const handleRecordResponse = useCallback((response: QuestionResponse) => {
     if (!session) return;
