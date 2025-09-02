@@ -17,6 +17,7 @@ interface StudentResults {
   quizBinId?: string;
   quizContent?: any; // 完整的測驗題目內容
   metadata?: any;
+  diagnosticReport?: any; // AI診斷報告
 }
 
 const StudentResultsPage: React.FC = () => {
@@ -27,6 +28,7 @@ const StudentResultsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
+  const [hasSavedReport, setHasSavedReport] = useState<boolean>(false);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
@@ -42,6 +44,8 @@ const StudentResultsPage: React.FC = () => {
         setLoading(true);
         const data = await getStudentResults(binId);
         setResults(data);
+        // 檢查是否已有儲存的診斷報告
+        setHasSavedReport(!!data.diagnosticReport);
       } catch (err) {
         console.error('載入學生作答結果失敗:', err);
         setError(err instanceof Error ? err.message : '載入學生作答結果失敗');
@@ -82,6 +86,12 @@ const StudentResultsPage: React.FC = () => {
     setShowDiagnostic(true);
   };
 
+  const handleViewExistingReport = () => {
+    if (results?.diagnosticReport) {
+      setShowDiagnostic(true);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex items-center justify-center">
@@ -120,7 +130,17 @@ const StudentResultsPage: React.FC = () => {
         apiKey={apiKey}
         mode="teacher"
         initialResponses={results.responses}
+        quizData={results.quizContent ? { 
+          topic: results.topic, 
+          [results.metadata?.selectedDifficulty?.toLowerCase() || 'normal']: results.quizContent 
+        } : undefined}
+        existingReport={results.diagnosticReport}
+        resultsBinId={binId}
         onClose={() => setShowDiagnostic(false)}
+        onReportSaved={(report) => {
+          setResults(prev => prev ? { ...prev, diagnosticReport: report } : null);
+          setHasSavedReport(true);
+        }}
       />
     );
   }
@@ -224,13 +244,31 @@ const StudentResultsPage: React.FC = () => {
           {/* 行動按鈕 */}
           <div className="flex flex-col gap-4">
             <div className="flex gap-4 items-center">
-              <button
-                onClick={handleStartDiagnostic}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-medium"
-              >
-                <ChartBarIcon className="w-5 h-5" />
-                生成 AI 學習診斷報告
-              </button>
+              {hasSavedReport ? (
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleViewExistingReport}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all font-medium"
+                  >
+                    <ChartBarIcon className="w-5 h-5" />
+                    查看 AI 診斷報告
+                  </button>
+                  <button
+                    onClick={handleStartDiagnostic}
+                    className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-medium text-sm"
+                  >
+                    🔄 重新生成
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleStartDiagnostic}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-medium"
+                >
+                  <ChartBarIcon className="w-5 h-5" />
+                  生成 AI 學習診斷報告
+                </button>
+              )}
               
               {apiKey ? (
                 <div className="text-sm text-green-600 flex items-center gap-1">
@@ -243,11 +281,13 @@ const StudentResultsPage: React.FC = () => {
               )}
             </div>
             
-            {apiKey && (
-              <div className="text-xs text-gray-500">
-                💡 小提示：如需更更換 API Key，請點擊上方按鈕後在彈出視窗中重新設定
-              </div>
-            )}
+            <div className="text-xs text-gray-500">
+              {hasSavedReport ? (
+                <span>📊 已儲存診斷報告，可隨時查看或重新生成新的分析</span>
+              ) : apiKey ? (
+                <span>💡 小提示：如需更更換 API Key，請點擊上方按鈕後在彈出視窗中重新設定</span>
+              ) : null}
+            </div>
           </div>
         </div>
 

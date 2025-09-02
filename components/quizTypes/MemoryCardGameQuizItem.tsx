@@ -4,7 +4,7 @@ import { MemoryCardGameQuestion } from '../../types';
 interface MemoryCardGameQuizItemProps {
   question: MemoryCardGameQuestion;
   itemNumber: number;
-  onAnswer?: (userAnswer: any, isCorrect: boolean) => void;
+  onAnswer?: (userAnswer: any, isCorrect: boolean, responseTime?: number) => void;
 }
 
 interface CardData {
@@ -31,6 +31,7 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
   const [matchedCount, setMatchedCount] = useState(0);
   const [attempts, setAttempts] = useState(0); // 記錄嘗試次數（翻卡次數）
   const [gameCompleted, setGameCompleted] = useState(false); // 避免重複觸發
+  const [startTime, setStartTime] = useState<number>(0); // 記錄開始時間
 
   useEffect(() => {
     let id = 0;
@@ -43,6 +44,7 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
     setMatchedCount(0);
     setAttempts(0);
     setGameCompleted(false);
+    setStartTime(Date.now()); // 記錄開始時間
   }, [question]);
 
   const handleCardClick = (index: number) => {
@@ -86,10 +88,12 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
   useEffect(() => {
     if (allMatched && !gameCompleted && onAnswer) {
       setGameCompleted(true);
+      // 計算遊戲總時間
+      const totalTime = startTime > 0 ? Date.now() - startTime : undefined;
       // 記憶卡遊戲完成視為答對，用嘗試次數作為 userAnswer
-      onAnswer(attempts, true);
+      onAnswer(attempts, true, totalTime);
     }
-  }, [allMatched, gameCompleted, attempts, onAnswer]);
+  }, [allMatched, gameCompleted, attempts, onAnswer, startTime]);
 
   return (
     <div className="mb-4 p-4 border rounded bg-slate-50">

@@ -177,6 +177,7 @@ export async function getStudentResults(binId: string): Promise<{
   quizBinId?: string;
   quizContent?: any; // 完整的測驗題目內容
   metadata?: any;
+  diagnosticReport?: any; // AI診斷報告
 }> {
   const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
     // 公開 bin 可不帶 X-Master-Key
@@ -201,8 +202,50 @@ export async function getStudentResults(binId: string): Promise<{
     completedAt: data.completedAt,
     quizBinId: data.quizBinId,
     quizContent: data.quizContent, // 包含完整的測驗題目內容
-    metadata: data.metadata
+    metadata: data.metadata,
+    diagnosticReport: data.diagnosticReport // AI診斷報告
   };
+}
+
+// 更新學生作答結果（添加AI診斷報告）
+export async function updateStudentResults(binId: string, diagnosticReport: any): Promise<void> {
+  if (!JSONBIN_KEY) {
+    throw new Error('無法更新，缺少 API Key');
+  }
+
+  // 先獲取當前資料
+  const currentData = await getStudentResults(binId);
+  
+  // 加入診斷報告
+  const updatedData = {
+    ...currentData,
+    diagnosticReport: {
+      ...diagnosticReport,
+      generatedAt: new Date().toISOString(),
+      resultsBinId: binId
+    },
+    updatedAt: new Date().toISOString()
+  };
+
+  // 重新包裝成完整的資料結構
+  const fullPayload = {
+    type: 'student-results',
+    ...updatedData
+  };
+
+  const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': JSONBIN_KEY,
+    },
+    body: JSON.stringify(fullPayload),
+  });
+
+  const result = await response.json();
+  if (!result || !result.metadata) {
+    throw new Error('無法更新學生作答結果');
+  }
 }
 
 // 通用分享內容獲取函數（支援完整教案、測驗、寫作練習）

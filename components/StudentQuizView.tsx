@@ -214,9 +214,9 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
     if (!questions || questions.length === 0) return null;
 
     const createAnswerCallback = (questionIndex: number) => supportsDiagnostic 
-      ? (userAnswer: any, isCorrect: boolean) => {
+      ? (userAnswer: any, isCorrect: boolean, responseTime?: number) => {
           const correctAnswer = getCorrectAnswer(type, questions[questionIndex]);
-          handleQuestionResponse(type, questionIndex, userAnswer, correctAnswer, isCorrect);
+          handleQuestionResponse(type, questionIndex, userAnswer, correctAnswer, isCorrect, responseTime);
         }
       : undefined;
 

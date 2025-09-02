@@ -12,6 +12,7 @@ import {
   createDiagnosticSession, 
   completeDiagnosticSession 
 } from '../services/diagnosticService';
+import { updateStudentResults } from '../services/jsonbinService';
 import StudentLearningFeedback from './StudentLearningFeedback';
 import TeacherDiagnosticReport from './TeacherDiagnosticReport';
 import LoadingSpinner from './LoadingSpinner';
@@ -26,6 +27,9 @@ interface LearningDiagnosticReportProps {
   onRetakeQuiz?: () => void;
   onContinueLearning?: () => void;
   initialResponses?: QuestionResponse[];
+  existingReport?: LearningDiagnosticResult; // 已存在的診斷報告
+  resultsBinId?: string; // 學生作答結果的 binId
+  onReportSaved?: (report: LearningDiagnosticResult) => void; // 報告儲存後的回調
 }
 
 const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
@@ -37,7 +41,10 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
   onClose,
   onRetakeQuiz,
   onContinueLearning,
-  initialResponses = []
+  initialResponses = [],
+  existingReport,
+  resultsBinId,
+  onReportSaved
 }) => {
   const [diagnosticResult, setDiagnosticResult] = useState<LearningDiagnosticResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -64,24 +71,50 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
       };
 
       const result = await generateLearningDiagnostic(diagnosticSession, apiKey, config);
-      setDiagnosticResult(result);
+      
+      // 添加生成時間和結果 binId
+      const enhancedResult = {
+        ...result,
+        generatedAt: new Date().toISOString(),
+        resultsBinId: resultsBinId
+      };
+      
+      setDiagnosticResult(enhancedResult);
+      
+      // 自動儲存報告到學生作答結果中
+      if (resultsBinId) {
+        try {
+          await updateStudentResults(resultsBinId, enhancedResult);
+          console.log('診斷報告已自動儲存到學生作答結果');
+          onReportSaved?.(enhancedResult);
+        } catch (saveError) {
+          console.warn('儲存診斷報告失敗，但報告仍可正常顯示:', saveError);
+        }
+      }
     } catch (err) {
       console.error('生成診斷報告失敗:', err);
       setError(err instanceof Error ? err.message : '生成診斷報告時發生錯誤');
     } finally {
       setLoading(false);
     }
-  }, [apiKey]);
+  }, [apiKey, resultsBinId, onReportSaved]);
 
   // 初始化或更新診斷會話
   useEffect(() => {
-    if (topic && initialResponses.length > 0) {
+    if (existingReport) {
+      // 載入已存在的報告
+      setDiagnosticResult(existingReport);
+      const existingSession = createDiagnosticSession(topic, studentId);
+      existingSession.responses = initialResponses;
+      setSession(completeDiagnosticSession(existingSession));
+    } else if (topic && initialResponses.length > 0) {
+      // 生成新報告
       const newSession = createDiagnosticSession(topic, studentId);
       newSession.responses = initialResponses;
       setSession(completeDiagnosticSession(newSession));
       generateDiagnosticReport(newSession);
     }
-  }, [topic, studentId, initialResponses, generateDiagnosticReport]);
+  }, [topic, studentId, initialResponses, existingReport, generateDiagnosticReport]);
 
   const handleRecordResponse = useCallback((response: QuestionResponse) => {
     if (!session) return;

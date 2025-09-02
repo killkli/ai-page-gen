@@ -378,6 +378,8 @@ export interface LearningDiagnosticResult {
     responses: QuestionResponse[];
     statistics: QuestionTypePerformance[];
   };
+  generatedAt: string;                  // 報告生成時間
+  resultsBinId?: string;                // 對應的學生作答結果 BinId
 }
 
 // 診斷報告配置選項

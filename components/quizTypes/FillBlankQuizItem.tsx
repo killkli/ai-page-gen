@@ -5,16 +5,18 @@ import { CheckCircleIcon, XCircleIcon } from '../icons';
 interface FillBlankQuizItemProps {
   question: FillBlankQuestion;
   itemNumber: number;
-  onAnswer?: (userAnswer: any, isCorrect: boolean) => void;
+  onAnswer?: (userAnswer: any, isCorrect: boolean, responseTime?: number) => void;
 }
 
 const FillBlankQuizItem: React.FC<FillBlankQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
+  const [startTime, setStartTime] = useState<number>(0);
 
   useEffect(() => {
     setUserAnswer('');
     setFeedback(null);
+    setStartTime(Date.now()); // 記錄開始時間
   }, [question]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,9 +31,12 @@ const FillBlankQuizItem: React.FC<FillBlankQuizItemProps> = ({ question, itemNum
       message: isCorrect ? '答對了！' : `答錯了。正確答案是： ${question.correctAnswer}`,
     });
 
+    // 計算答題時間
+    const responseTime = startTime > 0 ? Date.now() - startTime : undefined;
+
     // 呼叫診斷回調函數
     if (onAnswer) {
-      onAnswer(userAnswer.trim(), isCorrect);
+      onAnswer(userAnswer.trim(), isCorrect, responseTime);
     }
   };
 

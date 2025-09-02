@@ -6,19 +6,21 @@ import { CheckCircleIcon, XCircleIcon } from '../icons';
 interface SentenceScrambleQuizItemProps {
   question: SentenceScrambleQuestion;
   itemNumber: number;
-  onAnswer?: (userAnswer: any, isCorrect: boolean) => void;
+  onAnswer?: (userAnswer: any, isCorrect: boolean, responseTime?: number) => void;
 }
 
 const SentenceScrambleQuizItem: React.FC<SentenceScrambleQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   const [constructedSentence, setConstructedSentence] = useState<string[]>([]);
   const [availableWords, setAvailableWords] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
+  const [startTime, setStartTime] = useState<number>(0);
 
   useEffect(() => {
     const words = question.scrambledWords || [];
     setAvailableWords([...words].sort(() => Math.random() - 0.5));
     setConstructedSentence([]);
     setFeedback(null);
+    setStartTime(Date.now()); // 記錄開始時間
   }, [question]);
 
   const addWordToSentence = (word: string, index: number) => {
@@ -54,9 +56,12 @@ const SentenceScrambleQuizItem: React.FC<SentenceScrambleQuizItemProps> = ({ que
       message: isCorrect ? '答對了！' : `答錯了。正確句子是： \"${question.originalSentence}\"`,
     });
 
+    // 計算答題時間
+    const responseTime = startTime > 0 ? Date.now() - startTime : undefined;
+
     // 呼叫診斷回調函數
     if (onAnswer) {
-      onAnswer(userAnswer, isCorrect);
+      onAnswer(userAnswer, isCorrect, responseTime);
     }
   };
 

@@ -5,16 +5,18 @@ import { CheckCircleIcon, XCircleIcon } from '../icons';
 interface TrueFalseQuizItemProps {
   question: TrueFalseQuestion;
   itemNumber: number;
-  onAnswer?: (userAnswer: boolean, isCorrect: boolean) => void;
+  onAnswer?: (userAnswer: boolean, isCorrect: boolean, responseTime?: number) => void;
 }
 
 const TrueFalseQuizItem: React.FC<TrueFalseQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string; explanation?: string } | null>(null);
+  const [startTime, setStartTime] = useState<number>(0);
 
   useEffect(() => {
     setSelectedAnswer(null);
     setFeedback(null);
+    setStartTime(Date.now()); // 記錄開始時間
   }, [question]);
 
   const handleSelectAnswer = (answer: boolean) => {
@@ -33,9 +35,12 @@ const TrueFalseQuizItem: React.FC<TrueFalseQuizItemProps> = ({ question, itemNum
       explanation: question.explanation
     });
 
+    // 計算答題時間
+    const responseTime = startTime > 0 ? Date.now() - startTime : undefined;
+
     // 呼叫診斷回調函數
     if (onAnswer) {
-      onAnswer(answer, isCorrect);
+      onAnswer(answer, isCorrect, responseTime);
     }
   };
 

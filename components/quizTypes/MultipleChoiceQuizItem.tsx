@@ -5,16 +5,18 @@ import { CheckCircleIcon, XCircleIcon } from '../icons';
 interface MultipleChoiceQuizItemProps {
   question: MultipleChoiceQuestion;
   itemNumber: number;
-  onAnswer?: (userAnswer: any, isCorrect: boolean) => void;
+  onAnswer?: (userAnswer: any, isCorrect: boolean, responseTime?: number) => void;
 }
 
 const MultipleChoiceQuizItem: React.FC<MultipleChoiceQuizItemProps> = ({ question, itemNumber, onAnswer }) => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
+  const [startTime, setStartTime] = useState<number>(0);
 
   useEffect(() => {
     setSelectedOption(null);
     setFeedback(null);
+    setStartTime(Date.now()); // 記錄開始時間
   }, [question]);
 
   const handleSubmit = () => {
@@ -28,9 +30,12 @@ const MultipleChoiceQuizItem: React.FC<MultipleChoiceQuizItemProps> = ({ questio
       message: isCorrect ? '答對了！' : `答錯了。正確答案是： ${(question.options || [])[question.correctAnswerIndex] || '未知'}`,
     });
 
+    // 計算答題時間
+    const responseTime = startTime > 0 ? Date.now() - startTime : undefined;
+
     // 呼叫診斷回調函數
     if (onAnswer) {
-      onAnswer(selectedOption, isCorrect);
+      onAnswer(selectedOption, isCorrect, responseTime);
     }
   };
 
