@@ -6,13 +6,15 @@ import LoadingSpinner from './components/LoadingSpinner';
 import LearningContentDisplay from './components/LearningContentDisplay';
 import LearningLevelSelector from './components/LearningLevelSelector';
 import VocabularyLevelSelector from './components/VocabularyLevelSelector';
-import { LightbulbIcon } from './components/icons';
+import { LightbulbIcon, AcademicCapIcon } from './components/icons';
 import ApiKeyModal from './components/ApiKeyModal';
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import { getLearningContent } from './services/jsonbinService';
+import { lessonPlanStorage, createStoredLessonPlan } from './services/lessonPlanStorage';
 import QuizPage from './components/QuizPage';
 import StudentWritingPage from './components/StudentWritingPage';
 import StudentResultsPage from './components/StudentResultsPage';
+import LessonPlanManager from './components/LessonPlanManager';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
 
@@ -155,6 +157,18 @@ const App: React.FC = () => {
     setShowApiKeyModal(false);
   };
 
+  // 保存教案到本地存儲
+  const saveToLocalStorage = async (content: ExtendedLearningContent, currentTopic: string) => {
+    try {
+      await lessonPlanStorage.init();
+      const storedPlan = createStoredLessonPlan(currentTopic, content);
+      await lessonPlanStorage.saveLessonPlan(storedPlan);
+    } catch (error) {
+      console.error('保存教案到本地存儲失敗:', error);
+      // 不影響用戶體驗，只記錄錯誤
+    }
+  };
+
   // 第一階段：產生程度建議
   const handleGenerateLevelSuggestions = useCallback(async () => {
     if (!topic.trim()) {
@@ -228,6 +242,9 @@ const App: React.FC = () => {
       setGeneratedContent(content);
       setShowingLevelSelection(false);
       setShowingVocabularySelection(false);
+      
+      // 自動保存到本地存儲
+      await saveToLocalStorage(content, topic);
     } catch (err: any) {
       console.error(err);
       setError(err.message || '產生學習內容時發生未知錯誤。');
@@ -258,6 +275,9 @@ const App: React.FC = () => {
     try {
       const content = await generateLearningPlan(topic, apiKey);
       setGeneratedContent(content);
+      
+      // 自動保存到本地存儲
+      await saveToLocalStorage(content, topic);
     } catch (err: any) {
       console.error(err);
       setError(err.message || '產生內容時發生未知錯誤。');
@@ -289,6 +309,7 @@ const App: React.FC = () => {
         <Route path="quiz" element={<QuizPage />} />
         <Route path="writing" element={<StudentWritingPage />} />
         <Route path="student-results" element={<StudentResultsPage />} />
+        <Route path="lesson-plans" element={<LessonPlanManager />} />
         <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
@@ -310,6 +331,35 @@ const App: React.FC = () => {
                 </ul>
               </div>
             </header>
+
+            {/* Navigation Bar */}
+            <div className="max-w-4xl mx-auto mb-8">
+              <div className="flex justify-center gap-4">
+                <a 
+                  href={`${import.meta.env.BASE_URL}lesson-plans`}
+                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+                >
+                  <AcademicCapIcon className="w-5 h-5" />
+                  我的教案庫
+                </a>
+                <button
+                  onClick={handleShareLink}
+                  className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
+                  </svg>
+                  分享應用程式
+                </button>
+              </div>
+              {copySuccess && (
+                <div className="mt-3 text-center">
+                  <p className={`text-sm ${copySuccess.includes('請先') ? 'text-red-600' : 'text-green-600'}`}>
+                    {copySuccess}
+                  </p>
+                </div>
+              )}
+            </div>
 
             <main className="max-w-4xl mx-auto">
               <InputBar
