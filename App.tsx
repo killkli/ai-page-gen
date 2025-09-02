@@ -15,6 +15,7 @@ import QuizPage from './components/QuizPage';
 import StudentWritingPage from './components/StudentWritingPage';
 import StudentResultsPage from './components/StudentResultsPage';
 import LessonPlanManager from './components/LessonPlanManager';
+import InteractiveLearningPage from './components/InteractiveLearning/InteractiveLearningPage';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
 
@@ -366,6 +367,7 @@ const App: React.FC = () => {
         <Route path="writing" element={<StudentWritingPage />} />
         <Route path="student-results" element={<StudentResultsPage />} />
         <Route path="lesson-plans" element={<LessonPlanManager />} />
+        <Route path="interactive-learning" element={<InteractiveLearningPage />} />
         <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />

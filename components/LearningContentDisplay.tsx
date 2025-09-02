@@ -52,6 +52,12 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
   const [writingShareUrl, setWritingShareUrl] = React.useState('');
   const [showWritingQRCode, setShowWritingQRCode] = React.useState(false);
   
+  // Interactive learning sharing states
+  const [interactiveLearningShareLoading, setInteractiveLearningShareLoading] = React.useState(false);
+  const [interactiveLearningShareError, setInteractiveLearningShareError] = React.useState('');
+  const [interactiveLearningShareUrl, setInteractiveLearningShareUrl] = React.useState('');
+  const [showInteractiveLearningQRCode, setShowInteractiveLearningQRCode] = React.useState(false);
+  
   // Quiz configuration states
   const [quizConfig, setQuizConfig] = React.useState<QuizCustomConfig>(DEFAULT_QUIZ_CONFIG);
   const [isRegeneratingQuiz, setIsRegeneratingQuiz] = React.useState(false);
@@ -189,6 +195,30 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
     }
   };
 
+  const handleInteractiveLearningShare = async () => {
+    setInteractiveLearningShareLoading(true);
+    setInteractiveLearningShareError('');
+    setInteractiveLearningShareUrl('');
+    
+    try {
+      // 包含完整的分享資料：內容、主題、學習程度、單字程度
+      const shareData = {
+        ...content,
+        topic: topic,
+        selectedLevel: selectedLevel,
+        selectedVocabularyLevel: selectedVocabularyLevel,
+        sharedAt: new Date().toISOString()
+      };
+      const binId = await saveLearningContent(shareData);
+      const url = `${window.location.origin}${import.meta.env.BASE_URL}interactive-learning?binId=${binId}`;
+      setInteractiveLearningShareUrl(url);
+    } catch (e: any) {
+      setInteractiveLearningShareError(e.message || '分享互動學習失敗');
+    } finally {
+      setInteractiveLearningShareLoading(false);
+    }
+  };
+
   const handleRegenerateQuiz = async () => {
     if (!content.learningObjectives) {
       alert('無法重新生成測驗：缺少學習目標');
@@ -272,9 +302,27 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
             <span>分享方案</span>
           )}
         </button>
+        <button
+          onClick={handleInteractiveLearningShare}
+          className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors flex items-center text-sm disabled:opacity-60"
+          aria-label="分享互動學習"
+          disabled={interactiveLearningShareLoading}
+        >
+          {interactiveLearningShareLoading ? (
+            <span className="flex items-center"><span className="animate-spin mr-2">⏳</span> 分享中...</span>
+          ) : (
+            <span className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+              </svg>
+              互動學習
+            </span>
+          )}
+        </button>
         {copySuccess && <span className="text-sm text-green-600">{copySuccess}</span>}
         {exportMessage && <span className="text-sm text-blue-600">{exportMessage}</span>}
         {shareError && <span className="text-sm text-red-600">{shareError}</span>}
+        {interactiveLearningShareError && <span className="text-sm text-red-600">{interactiveLearningShareError}</span>}
       </div>
 
       {/* Unified Share URL Display - Learning Plan */}
@@ -295,6 +343,53 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
             >
               複製
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Interactive Learning Share URL Display */}
+      {interactiveLearningShareUrl && (
+        <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <p className="text-sm text-emerald-700 mb-2">互動學習連結已生成：</p>
+          <div className="flex items-center gap-2 mb-3">
+            <input
+              type="text"
+              value={interactiveLearningShareUrl}
+              readOnly
+              className="flex-1 px-3 py-2 bg-white border border-emerald-300 rounded text-sm"
+              onClick={() => navigator.clipboard.writeText(interactiveLearningShareUrl)}
+            />
+            <button
+              onClick={() => navigator.clipboard.writeText(interactiveLearningShareUrl)}
+              className="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm"
+            >
+              複製
+            </button>
+            <button
+              onClick={() => setShowInteractiveLearningQRCode(!showInteractiveLearningQRCode)}
+              className="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+              </svg>
+              QR
+            </button>
+          </div>
+          
+          {showInteractiveLearningQRCode && (
+            <div className="mt-4 flex justify-center">
+              <QRCodeDisplay
+                url={interactiveLearningShareUrl}
+                title="互動學習分享 QR Code"
+                size={200}
+                className="bg-white p-4 rounded-lg shadow-sm"
+              />
+            </div>
+          )}
+          
+          <div className="text-xs text-emerald-600 bg-emerald-100 px-3 py-2 rounded-lg">
+            💡 學生可以通過此連結進行沈浸式互動學習，包含翻卡學習、進度追蹤等功能
           </div>
         </div>
       )}

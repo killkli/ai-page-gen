@@ -382,6 +382,17 @@ const LessonPlanManager: React.FC = () => {
                         <EyeIcon className="w-4 h-4" />
                         查看
                       </button>
+                      <a
+                        href={`${import.meta.env.BASE_URL}interactive-learning?contentId=${plan.id}`}
+                        className="flex items-center gap-2 px-3 py-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                        </svg>
+                        互動學習
+                      </a>
                       <button
                         onClick={() => handleSharePlan(plan)}
                         disabled={shareLoading === plan.id}

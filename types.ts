@@ -237,6 +237,35 @@ export interface ExtendedLearningContent extends GeneratedLearningContent {
   writingPractice?: WritingPracticeContent;
 }
 
+// 互動學習相關類型定義
+export interface LearningProgress {
+  currentObjectiveIndex: number;           // 目前學習目標索引
+  completedObjectives: string[];           // 已完成的學習目標ID
+  timeSpent: number;                       // 學習時間(毫秒)
+  interactionCount: number;                // 互動次數
+  startTime: number;                       // 開始學習時間
+  lastUpdateTime: number;                  // 最後更新時間
+  completedActivities: string[];           // 已完成的活動ID
+}
+
+export interface InteractiveElement {
+  id: string;
+  type: 'flip-card' | 'drag-drop' | 'click-reveal' | 'comparison' | 'voice-practice';
+  content: any;
+  completed: boolean;
+  attempts?: number;
+  timeSpent?: number;
+}
+
+export interface InteractiveLearningSession {
+  contentId: string;
+  topic: string;
+  progress: LearningProgress;
+  interactions: InteractiveElement[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 // 學習診斷報告相關類型定義
 
 // 單個題目的回答記錄
