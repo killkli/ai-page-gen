@@ -7,18 +7,25 @@ import SentenceScrambleQuizItem from './quizTypes/SentenceScrambleQuizItem';
 import MemoryCardGameQuizItem from './quizTypes/MemoryCardGameQuizItem';
 import LearningDiagnosticReport from './LearningDiagnosticReport';
 import { PuzzlePieceIcon, AcademicCapIcon, ChartBarIcon } from './icons';
+import { saveStudentResults } from '../services/jsonbinService';
+import { calculateOverallScore } from '../services/diagnosticService';
 
 interface StudentQuizViewProps {
   quiz: OnlineInteractiveQuiz;
   topic: string;
   apiKey?: string;
   supportsDiagnostic?: boolean;
+  quizBinId?: string; // 原始測驗的 binId
 }
 
-const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, supportsDiagnostic = false }) => {
+const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, supportsDiagnostic = false, quizBinId }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<QuizDifficulty>(QuizDifficulty.Easy);
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [studentName, setStudentName] = useState('');
+  const [sharing, setSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+  const [showNameInput, setShowNameInput] = useState(false);
 
   const handleQuestionResponse = useCallback((
     questionType: QuizContentKey,
@@ -80,6 +87,58 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
     const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
     return responses.filter(response => response.difficulty === currentDifficultyString);
   };
+
+  // 分享作答結果給老師
+  const handleShareResults = useCallback(async () => {
+    const currentResponses = getCurrentDifficultyResponses();
+    if (currentResponses.length === 0) {
+      alert('請先完成一些題目再分享結果！');
+      return;
+    }
+
+    if (!studentName.trim()) {
+      setShowNameInput(true);
+      return;
+    }
+
+    setSharing(true);
+    try {
+      const overallScore = calculateOverallScore(currentResponses);
+      const difficultyLabel = selectedDifficulty === QuizDifficulty.Easy ? '簡單' : 
+                            selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難';
+      
+      const resultBinId = await saveStudentResults({
+        studentName: studentName.trim(),
+        topic,
+        difficulty: difficultyLabel,
+        responses: currentResponses,
+        overallScore,
+        completedAt: new Date().toISOString(),
+        quizBinId,
+        metadata: {
+          totalQuestions: currentResponses.length,
+          correctAnswers: currentResponses.filter(r => r.isCorrect).length
+        }
+      });
+
+      const baseUrl = import.meta.env.BASE_URL || '/';
+      const teacherUrl = `${window.location.origin}${baseUrl}student-results?binId=${resultBinId}`;
+      setShareUrl(teacherUrl);
+      
+      // 自動複製到剪貼簿
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(teacherUrl);
+        alert(`作答結果已分享！連結已複製到剪貼簿，可以傳送給老師。`);
+      } else {
+        alert(`作答結果已分享！請複製下方連結傳送給老師。`);
+      }
+    } catch (error) {
+      console.error('分享失敗:', error);
+      alert('分享失敗，請稍後再試。');
+    } finally {
+      setSharing(false);
+    }
+  }, [getCurrentDifficultyResponses, studentName, topic, selectedDifficulty, quizBinId]);
 
   if (showDiagnostic && supportsDiagnostic && apiKey && getCurrentDifficultyResponses().length > 0) {
     return (
@@ -246,15 +305,30 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                 </span>
               )}
             </div>
-            {supportsDiagnostic && getCurrentDifficultyResponses().length > 0 && (
-              <button
-                onClick={() => setShowDiagnostic(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                <ChartBarIcon className="w-5 h-5" />
-                查看學習診斷 ({getCurrentDifficultyResponses().length})
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {supportsDiagnostic && getCurrentDifficultyResponses().length > 0 && (
+                <button
+                  onClick={() => setShowDiagnostic(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                >
+                  <ChartBarIcon className="w-5 h-5" />
+                  查看學習診斷 ({getCurrentDifficultyResponses().length})
+                </button>
+              )}
+              
+              {getCurrentDifficultyResponses().length > 0 && (
+                <button
+                  onClick={handleShareResults}
+                  disabled={sharing}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
+                  </svg>
+                  {sharing ? '分享中...' : `分享結果給老師 (${getCurrentDifficultyResponses().length})`}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -334,6 +408,84 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
           </div>
         )}
       </div>
+
+      {/* 姓名輸入 Modal */}
+      {showNameInput && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">分享作答結果給老師</h3>
+            <p className="text-gray-600 mb-4">請輸入您的姓名，讓老師知道這是誰的作答結果：</p>
+            <input
+              type="text"
+              value={studentName}
+              onChange={(e) => setStudentName(e.target.value)}
+              placeholder="請輸入姓名"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+              onKeyPress={(e) => e.key === 'Enter' && handleShareResults()}
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowNameInput(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleShareResults}
+                disabled={!studentName.trim() || sharing}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {sharing ? '分享中...' : '分享結果'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 分享成功 Modal */}
+      {shareUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">✅ 作答結果已分享成功！</h3>
+            <p className="text-gray-600 mb-4">請將下方連結傳送給您的老師，老師可以查看您的作答結果並提供學習建議：</p>
+            <div className="bg-gray-50 p-3 rounded-lg mb-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm"
+                />
+                <button
+                  onClick={async () => {
+                    if (navigator.clipboard && window.isSecureContext) {
+                      await navigator.clipboard.writeText(shareUrl);
+                      alert('連結已複製到剪貼簿！');
+                    }
+                  }}
+                  className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                >
+                  複製
+                </button>
+              </div>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg mb-4">
+              <p className="text-sm text-blue-700">
+                💡 <strong>給老師的說明：</strong><br/>
+                老師打開連結後可以看到 {studentName} 在「{topic}」({selectedDifficulty === QuizDifficulty.Easy ? '簡單' : selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'}難度) 的作答結果，並可使用 AI 進行詳細的學習分析。
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShareUrl('')}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                關閉
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-white border-t mt-12 py-6">

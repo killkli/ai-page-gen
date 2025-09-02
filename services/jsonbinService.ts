@@ -132,6 +132,76 @@ export async function getWritingPracticeContent(binId: string): Promise<{ writin
   };
 }
 
+// 儲存學生作答結果供老師檢視
+export async function saveStudentResults(resultData: {
+  studentName?: string;
+  topic: string;
+  difficulty: string;
+  responses: any[];
+  overallScore: number;
+  completedAt: string;
+  quizBinId?: string; // 原始測驗的 binId
+  metadata?: any;
+}): Promise<string> {
+  const resultPayload = {
+    type: 'student-results', // 標識這是學生作答結果
+    ...resultData,
+    createdAt: new Date().toISOString()
+  };
+
+  const response = await fetch(JSONBIN_API, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': JSONBIN_KEY,
+      'X-Bin-Private': 'false', // 公開 bin 方便老師查看
+    },
+    body: JSON.stringify(resultPayload),
+  });
+  const result = await response.json();
+  if (!result || !result.metadata || !result.metadata.id) {
+    throw new Error('無法儲存學生作答結果');
+  }
+  return result.metadata.id; // binId
+}
+
+// 獲取學生作答結果供老師檢視
+export async function getStudentResults(binId: string): Promise<{
+  studentName?: string;
+  topic: string;
+  difficulty: string;
+  responses: any[];
+  overallScore: number;
+  completedAt: string;
+  quizBinId?: string;
+  metadata?: any;
+}> {
+  const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+    // 公開 bin 可不帶 X-Master-Key
+    // headers: { 'X-Master-Key': JSONBIN_KEY },
+  });
+  const result = await response.json();
+  if (!result || !result.record) {
+    throw new Error('找不到對應的學生作答結果');
+  }
+  
+  const data = result.record;
+  if (data.type !== 'student-results') {
+    throw new Error('此連結不是學生作答結果專用分享');
+  }
+  
+  return {
+    studentName: data.studentName,
+    topic: data.topic,
+    difficulty: data.difficulty,
+    responses: data.responses,
+    overallScore: data.overallScore,
+    completedAt: data.completedAt,
+    quizBinId: data.quizBinId,
+    metadata: data.metadata
+  };
+}
+
 // 通用分享內容獲取函數（支援完整教案、測驗、寫作練習）
 export async function getSharedContent(binId: string): Promise<any> {
   const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {

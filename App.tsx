@@ -12,6 +12,7 @@ import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-r
 import { getLearningContent } from './services/jsonbinService';
 import QuizPage from './components/QuizPage';
 import StudentWritingPage from './components/StudentWritingPage';
+import StudentResultsPage from './components/StudentResultsPage';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
 
@@ -287,6 +288,7 @@ const App: React.FC = () => {
         <Route path="share" element={<SharePage />} />
         <Route path="quiz" element={<QuizPage />} />
         <Route path="writing" element={<StudentWritingPage />} />
+        <Route path="student-results" element={<StudentResultsPage />} />
         <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
