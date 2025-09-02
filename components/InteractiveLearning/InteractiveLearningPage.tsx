@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ExtendedLearningContent, InteractiveLearningSession } from '../../types';
 import { getLearningContent } from '../../services/jsonbinService';
 import { lessonPlanStorage, StoredLessonPlan } from '../../services/lessonPlanStorage';
+import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent } from '../../services/geminiService';
 import LoadingSpinner from '../LoadingSpinner';
 import ProgressTracker from './ProgressTracker';
 import LearningObjectiveCard from './LearningObjectiveCard';
@@ -29,6 +30,8 @@ const InteractiveLearningPage: React.FC = () => {
   const [learningSession, setLearningSession] = useState<InteractiveLearningSession | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [learningSteps, setLearningSteps] = useState<LearningStep[]>([]);
+  const [transformedContent, setTransformedContent] = useState<{[key: string]: any}>({});
+  const [transforming, setTransforming] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     loadContent();
@@ -232,6 +235,73 @@ const InteractiveLearningPage: React.FC = () => {
     }
   };
 
+  // 獲取 API 金鑰
+  const getApiKey = () => {
+    return localStorage.getItem('gemini_api_key') || '';
+  };
+
+  // 轉換內容為學生友好格式
+  const transformStepContent = async (step: LearningStep) => {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      console.warn('未設定 API 金鑰，無法進行內容轉換');
+      return null;
+    }
+
+    const transformKey = `${step.type}_${step.index || 0}`;
+    
+    if (transformedContent[transformKey] || transforming[transformKey]) {
+      return transformedContent[transformKey] || null;
+    }
+
+    try {
+      setTransforming(prev => ({ ...prev, [transformKey]: true }));
+      
+      let transformedData = null;
+      
+      switch (step.type) {
+        case 'objective':
+          transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
+          break;
+        case 'breakdown':
+          transformedData = await transformContentBreakdownForStudent(step.data, apiKey);
+          break;
+        case 'confusing':
+          transformedData = await transformConfusingPointForStudent(step.data, apiKey);
+          break;
+        default:
+          return null;
+      }
+      
+      setTransformedContent(prev => ({ ...prev, [transformKey]: transformedData }));
+      return transformedData;
+      
+    } catch (error) {
+      console.error('內容轉換失敗:', error);
+      return null;
+    } finally {
+      setTransforming(prev => ({ ...prev, [transformKey]: false }));
+    }
+  };
+
+  // 檢查步驟是否已轉換
+  const isStepTransformed = (step: LearningStep) => {
+    const transformKey = `${step.type}_${step.index || 0}`;
+    return !!transformedContent[transformKey];
+  };
+
+  // 檢查步驟是否正在轉換
+  const isStepTransforming = (step: LearningStep) => {
+    const transformKey = `${step.type}_${step.index || 0}`;
+    return !!transforming[transformKey];
+  };
+
+  // 獲取步驟的轉換內容
+  const getTransformedStepContent = (step: LearningStep) => {
+    const transformKey = `${step.type}_${step.index || 0}`;
+    return transformedContent[transformKey] || null;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -263,34 +333,139 @@ const InteractiveLearningPage: React.FC = () => {
 
   // 渲染當前步驟內容
   const renderStepContent = () => {
+    const transformedData = getTransformedStepContent(currentStep);
+    const isTransformed = isStepTransformed(currentStep);
+    const isTransforming = isStepTransforming(currentStep);
+    const hasApiKey = !!getApiKey();
+
     switch (currentStep.type) {
       case 'objective':
         const objective = currentStep.data;
         const objectiveIndex = currentStep.index || 0;
+        
+        // 使用轉換後的內容（如果存在）
+        const displayObjective = transformedData || objective;
+        
         return (
           <div className="max-w-4xl mx-auto">
+            {/* 內容轉換控制區 */}
+            {hasApiKey && currentStep.type !== 'summary' && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🔄</div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">
+                        {isTransformed ? '已轉換為學生友好內容' : '轉換為學生友好內容'}
+                      </h3>
+                      <p className="text-sm text-slate-600">
+                        {isTransformed 
+                          ? '內容已轉換為更適合學生學習的語言和格式'
+                          : '將教師導向的教案內容轉換為學生容易理解的學習材料'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {!isTransformed && (
+                    <button
+                      onClick={() => transformStepContent(currentStep)}
+                      disabled={isTransforming}
+                      className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      {isTransforming ? (
+                        <>
+                          <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          轉換中...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          開始轉換
+                        </>
+                      )}
+                    </button>
+                  )}
+                  
+                  {isTransformed && (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      轉換完成
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* 大版面學習目標卡片 */}
             <div className="bg-gradient-to-br from-indigo-500 to-sky-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
               <div className="text-6xl mb-6">🎯</div>
               <h3 className="text-4xl font-bold mb-6 leading-tight">
-                {objective.objective}
+                {displayObjective.objective}
               </h3>
-              {objective.description && (
+              {displayObjective.description && (
                 <p className="text-xl text-indigo-100 leading-relaxed max-w-3xl mx-auto">
-                  {objective.description}
+                  {displayObjective.description}
                 </p>
               )}
             </div>
 
             {/* 詳細內容區域 */}
-            {objective.teachingExample && (
+            {isTransformed && transformedData ? (
+              <div className="space-y-8 mb-8">
+                {/* 個人相關性 */}
+                {transformedData.personalRelevance && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h4 className="text-2xl font-bold text-purple-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">🌟</span>
+                      對你的意義
+                    </h4>
+                    <div className="bg-purple-50 rounded-xl p-6 text-lg leading-relaxed text-purple-900">
+                      {transformedData.personalRelevance}
+                    </div>
+                  </div>
+                )}
+
+                {/* 學習範例 */}
+                {transformedData.teachingExample && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h4 className="text-2xl font-bold text-green-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">📝</span>
+                      實際應用
+                    </h4>
+                    <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed text-green-900">
+                      {transformedData.teachingExample}
+                    </div>
+                  </div>
+                )}
+
+                {/* 鼓勵話語 */}
+                {transformedData.encouragement && (
+                  <div className="bg-gradient-to-r from-sky-50 to-indigo-50 rounded-2xl p-8">
+                    <h4 className="text-2xl font-bold text-sky-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">💪</span>
+                      給你的鼓勵
+                    </h4>
+                    <div className="text-lg leading-relaxed text-sky-900 font-medium">
+                      {transformedData.encouragement}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : displayObjective.teachingExample && (
               <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                 <h4 className="text-2xl font-bold text-green-700 mb-6 flex items-center">
                   <span className="text-3xl mr-3">📝</span>
                   教學示例
                 </h4>
                 <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed">
-                  {objective.teachingExample}
+                  {displayObjective.teachingExample}
                 </div>
               </div>
             )}
@@ -342,118 +517,454 @@ const InteractiveLearningPage: React.FC = () => {
 
       case 'breakdown':
         const breakdownItem = currentStep.data;
+        const displayBreakdown = transformedData || breakdownItem;
+        
         return (
           <div className="max-w-5xl mx-auto">
-            {/* 主題標題卡片 */}
-            <div className="bg-gradient-to-br from-sky-500 to-blue-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
-              <div className="text-6xl mb-6">📖</div>
-              <h3 className="text-4xl font-bold mb-6 leading-tight">
-                {breakdownItem.topic}
-              </h3>
-            </div>
-
-            {/* 詳細說明 */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-              <h4 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
-                <span className="text-3xl mr-3">📋</span>
-                詳細說明
-              </h4>
-              <div className="text-lg leading-relaxed text-slate-700 bg-slate-50 rounded-xl p-6">
-                {breakdownItem.details}
-              </div>
-            </div>
-
-            {/* 核心概念和教學示例 */}
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              {breakdownItem.coreConcept && (
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                  <h4 className="text-2xl font-bold text-sky-700 mb-6 flex items-center">
-                    <span className="text-3xl mr-3">💡</span>
-                    核心概念
-                  </h4>
-                  <div className="bg-sky-50 rounded-xl p-6 text-lg leading-relaxed text-sky-900">
-                    {breakdownItem.coreConcept}
+            {/* 內容轉換控制區 */}
+            {hasApiKey && currentStep.type !== 'summary' && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🔄</div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">
+                        {isTransformed ? '已轉換為學生友好內容' : '轉換為學生友好內容'}
+                      </h3>
+                      <p className="text-sm text-slate-600">
+                        {isTransformed 
+                          ? '內容已轉換為更適合學生學習的語言和格式'
+                          : '將教師導向的教案內容轉換為學生容易理解的學習材料'
+                        }
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-              
-              {breakdownItem.teachingExample && (
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                  <h4 className="text-2xl font-bold text-green-700 mb-6 flex items-center">
-                    <span className="text-3xl mr-3">📝</span>
-                    教學示例
-                  </h4>
-                  <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed text-green-900">
-                    {breakdownItem.teachingExample}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* 重點句型 */}
-            {breakdownItem.teachingSentences && breakdownItem.teachingSentences.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-xl p-8">
-                <h4 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center">
-                  <span className="text-3xl mr-3">🎯</span>
-                  重點句型
-                </h4>
-                <div className="bg-indigo-50 rounded-xl p-6">
-                  <div className="space-y-4">
-                    {breakdownItem.teachingSentences.map((sentence, sentenceIndex) => (
-                      <div key={sentenceIndex} className="flex items-start">
-                        <span className="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
-                          {sentenceIndex + 1}
-                        </span>
-                        <p className="text-lg text-indigo-900 leading-relaxed">
-                          {sentence}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  
+                  {!isTransformed && (
+                    <button
+                      onClick={() => transformStepContent(currentStep)}
+                      disabled={isTransforming}
+                      className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      {isTransforming ? (
+                        <>
+                          <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          轉換中...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          開始轉換
+                        </>
+                      )}
+                    </button>
+                  )}
+                  
+                  {isTransformed && (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      轉換完成
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* 教學提示 */}
-            {breakdownItem.teachingTips && (
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-8 mt-8">
-                <h4 className="text-xl font-bold text-amber-700 mb-4 flex items-center">
-                  <span className="text-2xl mr-3">💡</span>
-                  教學提示
-                </h4>
-                <p className="text-lg text-amber-800 leading-relaxed">
-                  {breakdownItem.teachingTips}
+            {/* 主題標題卡片 */}
+            <div className="bg-gradient-to-br from-sky-500 to-blue-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
+              <div className="text-6xl mb-6">📖</div>
+              <h3 className="text-4xl font-bold mb-6 leading-tight">
+                {isTransformed && transformedData?.title ? transformedData.title : breakdownItem.topic}
+              </h3>
+              {isTransformed && transformedData?.introduction && (
+                <p className="text-xl text-sky-100 leading-relaxed max-w-3xl mx-auto">
+                  {transformedData.introduction}
                 </p>
+              )}
+            </div>
+
+            {/* 學習內容 */}
+            {isTransformed && transformedData ? (
+              <div className="space-y-8 mb-8">
+                {/* 重點概念 */}
+                {transformedData.keyPoints && transformedData.keyPoints.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h4 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">💡</span>
+                      重點概念
+                    </h4>
+                    <div className="bg-indigo-50 rounded-xl p-6">
+                      <div className="space-y-4">
+                        {transformedData.keyPoints.map((point, pointIndex) => (
+                          <div key={pointIndex} className="flex items-start">
+                            <span className="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
+                              {pointIndex + 1}
+                            </span>
+                            <p className="text-lg text-indigo-900 leading-relaxed">
+                              {point}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 生活中的例子 */}
+                {transformedData.realLifeExamples && transformedData.realLifeExamples.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h4 className="text-2xl font-bold text-green-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">🌟</span>
+                      生活中的例子
+                    </h4>
+                    <div className="bg-green-50 rounded-xl p-6">
+                      <div className="space-y-4">
+                        {transformedData.realLifeExamples.map((example, exampleIndex) => (
+                          <div key={exampleIndex} className="flex items-start">
+                            <span className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
+                              {exampleIndex + 1}
+                            </span>
+                            <p className="text-lg text-green-900 leading-relaxed">
+                              {example}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 學習技巧 */}
+                {transformedData.learningTips && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h4 className="text-2xl font-bold text-purple-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">🎯</span>
+                      學習技巧
+                    </h4>
+                    <div className="bg-purple-50 rounded-xl p-6 text-lg leading-relaxed text-purple-900">
+                      {transformedData.learningTips}
+                    </div>
+                  </div>
+                )}
+
+                {/* 下一步探索 */}
+                {transformedData.nextSteps && (
+                  <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-8">
+                    <h4 className="text-2xl font-bold text-cyan-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">🚀</span>
+                      下一步探索
+                    </h4>
+                    <div className="text-lg leading-relaxed text-cyan-900">
+                      {transformedData.nextSteps}
+                    </div>
+                  </div>
+                )}
+
+                {/* 鼓勵話語 */}
+                {transformedData.encouragement && (
+                  <div className="bg-gradient-to-r from-sky-50 to-indigo-50 rounded-2xl p-8">
+                    <h4 className="text-2xl font-bold text-sky-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">💪</span>
+                      給你的鼓勵
+                    </h4>
+                    <div className="text-lg leading-relaxed text-sky-900 font-medium">
+                      {transformedData.encouragement}
+                    </div>
+                  </div>
+                )}
               </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <h4 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+                  <span className="text-3xl mr-3">📋</span>
+                  詳細說明
+                </h4>
+                <div className="text-lg leading-relaxed text-slate-700 bg-slate-50 rounded-xl p-6">
+                  {breakdownItem.details}
+                </div>
+              </div>
+            )}
+
+            {/* 原始內容（僅在未轉換時顯示）*/}
+            {!isTransformed && (
+              <>
+                {/* 核心概念和教學示例 */}
+                <div className="grid md:grid-cols-2 gap-8 mb-8">
+                  {breakdownItem.coreConcept && (
+                    <div className="bg-white rounded-2xl shadow-xl p-8">
+                      <h4 className="text-2xl font-bold text-sky-700 mb-6 flex items-center">
+                        <span className="text-3xl mr-3">💡</span>
+                        核心概念
+                      </h4>
+                      <div className="bg-sky-50 rounded-xl p-6 text-lg leading-relaxed text-sky-900">
+                        {breakdownItem.coreConcept}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {breakdownItem.teachingExample && (
+                    <div className="bg-white rounded-2xl shadow-xl p-8">
+                      <h4 className="text-2xl font-bold text-green-700 mb-6 flex items-center">
+                        <span className="text-3xl mr-3">📝</span>
+                        教學示例
+                      </h4>
+                      <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed text-green-900">
+                        {breakdownItem.teachingExample}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* 重點句型 */}
+                {breakdownItem.teachingSentences && breakdownItem.teachingSentences.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                    <h4 className="text-2xl font-bold text-indigo-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">🎯</span>
+                      重點句型
+                    </h4>
+                    <div className="bg-indigo-50 rounded-xl p-6">
+                      <div className="space-y-4">
+                        {breakdownItem.teachingSentences.map((sentence, sentenceIndex) => (
+                          <div key={sentenceIndex} className="flex items-start">
+                            <span className="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
+                              {sentenceIndex + 1}
+                            </span>
+                            <p className="text-lg text-indigo-900 leading-relaxed">
+                              {sentence}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 教學提示 */}
+                {breakdownItem.teachingTips && (
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-8 mt-8">
+                    <h4 className="text-xl font-bold text-amber-700 mb-4 flex items-center">
+                      <span className="text-2xl mr-3">💡</span>
+                      教學提示
+                    </h4>
+                    <p className="text-lg text-amber-800 leading-relaxed">
+                      {breakdownItem.teachingTips}
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         );
 
       case 'confusing':
         const confusingItem = currentStep.data;
+        const displayConfusing = transformedData || confusingItem;
+        
         return (
           <div className="max-w-5xl mx-auto">
+            {/* 內容轉換控制區 */}
+            {hasApiKey && currentStep.type !== 'summary' && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🔄</div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">
+                        {isTransformed ? '已轉換為學生友好內容' : '轉換為學生友好內容'}
+                      </h3>
+                      <p className="text-sm text-slate-600">
+                        {isTransformed 
+                          ? '內容已轉換為更適合學生學習的語言和格式'
+                          : '將教師導向的教案內容轉換為學生容易理解的學習材料'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {!isTransformed && (
+                    <button
+                      onClick={() => transformStepContent(currentStep)}
+                      disabled={isTransforming}
+                      className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      {isTransforming ? (
+                        <>
+                          <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          轉換中...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          開始轉換
+                        </>
+                      )}
+                    </button>
+                  )}
+                  
+                  {isTransformed && (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      轉換完成
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* 易混淆點標題卡片 */}
             <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
               <div className="text-6xl mb-6">⚡</div>
               <h3 className="text-4xl font-bold mb-6 leading-tight">
-                {confusingItem.point}
+                {isTransformed && transformedData?.title ? transformedData.title : confusingItem.point}
               </h3>
               <p className="text-xl text-amber-100 leading-relaxed max-w-3xl mx-auto">
-                避免常見錯誤，掌握正確用法
+                {isTransformed && transformedData?.normalizeConfusion 
+                  ? transformedData.normalizeConfusion 
+                  : '避免常見錯誤，掌握正確用法'
+                }
               </p>
             </div>
 
-            {/* 解釋說明 */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-              <h4 className="text-2xl font-bold text-amber-800 mb-6 flex items-center">
-                <span className="text-3xl mr-3">📝</span>
-                詳細解釋
-              </h4>
-              <div className="text-lg leading-relaxed text-slate-700 bg-amber-50 rounded-xl p-6">
-                {confusingItem.clarification}
+            {/* 學習內容 */}
+            {isTransformed && transformedData ? (
+              <div className="space-y-8 mb-8">
+                {/* 為什麼會混淆 */}
+                {transformedData.whyItHappens && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h4 className="text-2xl font-bold text-amber-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">🤔</span>
+                      為什麼會有這種混淆？
+                    </h4>
+                    <div className="bg-amber-50 rounded-xl p-6 text-lg leading-relaxed text-amber-900">
+                      {transformedData.whyItHappens}
+                    </div>
+                  </div>
+                )}
+
+                {/* 清楚解釋 */}
+                {transformedData.clearExplanation && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h4 className="text-2xl font-bold text-green-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">✨</span>
+                      正確理解
+                    </h4>
+                    <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed text-green-900">
+                      {transformedData.clearExplanation}
+                    </div>
+                  </div>
+                )}
+
+                {/* 記憶技巧 */}
+                {transformedData.rememberingTricks && transformedData.rememberingTricks.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h4 className="text-2xl font-bold text-purple-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">💡</span>
+                      記憶小技巧
+                    </h4>
+                    <div className="bg-purple-50 rounded-xl p-6">
+                      <div className="space-y-4">
+                        {transformedData.rememberingTricks.map((trick, trickIndex) => (
+                          <div key={trickIndex} className="flex items-start">
+                            <span className="flex-shrink-0 w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
+                              {trickIndex + 1}
+                            </span>
+                            <p className="text-lg text-purple-900 leading-relaxed">
+                              {trick}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 練習例子 */}
+                {transformedData.practiceExamples && transformedData.practiceExamples.length > 0 && (
+                  <div className="space-y-6">
+                    {transformedData.practiceExamples.map((example, exampleIndex) => (
+                      <div key={exampleIndex} className="bg-white rounded-2xl shadow-xl p-8">
+                        <h4 className="text-xl font-bold text-slate-800 mb-6 text-center">
+                          練習情境 {exampleIndex + 1}
+                        </h4>
+                        
+                        <div className="bg-slate-50 rounded-xl p-6 mb-6">
+                          <h5 className="text-lg font-bold text-slate-700 mb-3">情境：</h5>
+                          <p className="text-lg text-slate-800">{example.situation}</p>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-6 mb-6">
+                          <div className="bg-red-50 border-3 border-red-300 rounded-2xl p-6">
+                            <div className="flex items-center mb-4">
+                              <div className="w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center text-lg font-bold mr-3">
+                                ✗
+                              </div>
+                              <h5 className="text-xl font-bold text-red-700">錯誤想法</h5>
+                            </div>
+                            <p className="text-lg text-red-900 bg-white rounded-lg p-4">
+                              {example.wrongThinking}
+                            </p>
+                          </div>
+
+                          <div className="bg-green-50 border-3 border-green-300 rounded-2xl p-6">
+                            <div className="flex items-center mb-4">
+                              <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center text-lg font-bold mr-3">
+                                ✓
+                              </div>
+                              <h5 className="text-xl font-bold text-green-700">正確想法</h5>
+                            </div>
+                            <p className="text-lg text-green-900 bg-white rounded-lg p-4">
+                              {example.rightThinking}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                          <h5 className="text-lg font-bold text-blue-700 mb-3">解釋：</h5>
+                          <p className="text-lg text-blue-900 leading-relaxed">
+                            {example.explanation}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 信心提升 */}
+                {transformedData.confidenceBooster && (
+                  <div className="bg-gradient-to-r from-sky-50 to-indigo-50 rounded-2xl p-8">
+                    <h4 className="text-2xl font-bold text-sky-700 mb-6 flex items-center">
+                      <span className="text-3xl mr-3">💪</span>
+                      給你的鼓勵
+                    </h4>
+                    <div className="text-lg leading-relaxed text-sky-900 font-medium">
+                      {transformedData.confidenceBooster}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <h4 className="text-2xl font-bold text-amber-800 mb-6 flex items-center">
+                  <span className="text-3xl mr-3">📝</span>
+                  詳細解釋
+                </h4>
+                <div className="text-lg leading-relaxed text-slate-700 bg-amber-50 rounded-xl p-6">
+                  {confusingItem.clarification}
+                </div>
+              </div>
+            )}
 
             {/* 錯誤類型 */}
             {confusingItem.errorType && (
