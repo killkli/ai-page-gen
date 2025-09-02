@@ -159,6 +159,7 @@ const SharePage: React.FC = () => {
           selectedLevel={content.selectedLevel || null}
           selectedVocabularyLevel={content.selectedVocabularyLevel || null}
           apiKey={apiKey || undefined}
+          onContentUpdate={setContent}
         />
       </div>
     </div>

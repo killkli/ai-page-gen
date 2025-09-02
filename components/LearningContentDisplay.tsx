@@ -195,9 +195,11 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
       return;
     }
 
-    // 從 localStorage 獲取 API key
-    const apiKey = localStorage.getItem('gemini_api_key');
-    if (!apiKey) {
+    // 從 localStorage 獲取 API key（兼容多種 key 名稱）
+    const storedApiKey = localStorage.getItem('gemini_api_key') || 
+                        localStorage.getItem('geminiApiKey') || 
+                        apiKey;
+    if (!storedApiKey) {
       alert('請先設定 Gemini API 金鑰');
       return;
     }
@@ -206,7 +208,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
     try {
       const newQuiz = await regenerateQuizWithConfig(
         topic,
-        apiKey,
+        storedApiKey,
         content.learningObjectives,
         quizConfig,
         selectedLevel,

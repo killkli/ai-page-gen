@@ -192,6 +192,23 @@ const LessonPlanManager: React.FC = () => {
             selectedLevel={selectedPlan.content.selectedLevel || null}
             selectedVocabularyLevel={selectedPlan.content.selectedVocabularyLevel || null}
             apiKey={apiKey || undefined}
+            onContentUpdate={async (updatedContent) => {
+              // 更新選中的教案
+              const updatedPlan = {
+                ...selectedPlan,
+                content: updatedContent,
+                lastAccessedAt: new Date().toISOString()
+              };
+              setSelectedPlan(updatedPlan);
+              
+              // 更新到 IndexedDB
+              try {
+                await lessonPlanStorage.saveLessonPlan(updatedPlan);
+                console.log('教案已更新到 IndexedDB');
+              } catch (error) {
+                console.error('更新教案到 IndexedDB 失敗:', error);
+              }
+            }}
           />
         </div>
       </div>
