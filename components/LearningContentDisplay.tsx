@@ -267,38 +267,9 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
             <span>分享方案</span>
           )}
         </button>
-        <button
-          onClick={handleQuizShare}
-          className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors flex items-center text-sm disabled:opacity-60"
-          aria-label="分享測驗給學生"
-          disabled={quizShareLoading}
-        >
-          {quizShareLoading ? (
-            <span className="flex items-center"><span className="animate-spin mr-2">⏳</span> 分享中...</span>
-          ) : (
-            <span className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-              </svg>
-              分享測驗
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setShowQuizConfig(!showQuizConfig)}
-          className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors flex items-center text-sm"
-          aria-label="測驗設定"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-          </svg>
-          測驗設定
-        </button>
         {copySuccess && <span className="text-sm text-green-600">{copySuccess}</span>}
         {exportMessage && <span className="text-sm text-blue-600">{exportMessage}</span>}
         {shareError && <span className="text-sm text-red-600">{shareError}</span>}
-        {quizShareError && <span className="text-sm text-red-600">{quizShareError}</span>}
       </div>
 
       {/* Unified Share URL Display - Learning Plan */}
@@ -320,40 +291,6 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
               複製
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Unified Share URL Display - Quiz */}
-      {quizShareUrl && (
-        <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <p className="text-sm text-orange-700">測驗分享連結已生成：</p>
-            {apiKey && (
-              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                含 AI 診斷
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={quizShareUrl}
-              readOnly
-              className="flex-1 px-3 py-2 bg-white border border-orange-300 rounded text-sm"
-              onClick={() => navigator.clipboard.writeText(quizShareUrl)}
-            />
-            <button
-              onClick={() => navigator.clipboard.writeText(quizShareUrl)}
-              className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
-            >
-              複製
-            </button>
-          </div>
-          {apiKey && (
-            <p className="text-xs text-orange-600 mt-2">
-              💡 此連結包含您的 API Key，學生可直接使用 AI 學習診斷功能
-            </p>
-          )}
         </div>
       )}
       
@@ -761,6 +698,71 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         )}
         {/* 互動測驗 */}
         <div>
+          <div className="flex flex-wrap justify-end items-center gap-2 mb-4">
+            <button
+              onClick={handleQuizShare}
+              className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors flex items-center text-sm disabled:opacity-60"
+              aria-label="分享測驗給學生"
+              disabled={quizShareLoading}
+            >
+              {quizShareLoading ? (
+                <span className="flex items-center"><span className="animate-spin mr-2">⏳</span> 分享中...</span>
+              ) : (
+                <span className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                  </svg>
+                  分享測驗
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setShowQuizConfig(!showQuizConfig)}
+              className="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 transition-colors flex items-center text-sm"
+              aria-label="測驗設定"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+              測驗設定
+            </button>
+          </div>
+
+          {quizShareError && <span className="text-sm text-red-600">{quizShareError}</span>}
+
+          {quizShareUrl && (
+            <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-sm text-orange-700">測驗分享連結已生成：</p>
+                {apiKey && (
+                  <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                    含 AI 診斷
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={quizShareUrl}
+                  readOnly
+                  className="flex-1 px-3 py-2 bg-white border border-orange-300 rounded text-sm"
+                  onClick={() => navigator.clipboard.writeText(quizShareUrl)}
+                />
+                <button
+                  onClick={() => navigator.clipboard.writeText(quizShareUrl)}
+                  className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
+                >
+                  複製
+                </button>
+              </div>
+              {apiKey && (
+                <p className="text-xs text-orange-600 mt-2">
+                  💡 此連結包含您的 API Key，學生可直接使用 AI 學習診斷功能
+                </p>
+              )}
+            </div>
+          )}
           {showQuizConfig && (
             <QuizConfigPanel
               config={quizConfig}
