@@ -16,6 +16,8 @@ export interface StoredLessonPlan {
     totalSections?: number;
     hasQuiz?: boolean;
     hasWriting?: boolean;
+    isShared?: boolean; // 標記是否為分享的教案
+    sharedBinId?: string; // 原始的分享 ID
   };
 }
 
@@ -156,6 +158,18 @@ class LessonPlanStorage {
     return allPlans.filter(plan => 
       plan.topic.toLowerCase().includes(lowerQuery)
     );
+  }
+
+  // 獲取所有分享的教案
+  async getSharedLessonPlans(): Promise<StoredLessonPlan[]> {
+    const allPlans = await this.getAllLessonPlans();
+    return allPlans.filter(plan => plan.metadata?.isShared === true);
+  }
+
+  // 獲取所有本機建立的教案
+  async getLocalLessonPlans(): Promise<StoredLessonPlan[]> {
+    const allPlans = await this.getAllLessonPlans();
+    return allPlans.filter(plan => !plan.metadata?.isShared);
   }
 
   // 清理舊教案（保留最近的 N 個）

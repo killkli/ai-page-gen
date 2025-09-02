@@ -34,10 +34,65 @@ const SharePage: React.FC = () => {
     }
     setLoading(true);
     getLearningContent(binId)
-      .then(data => setContent(data))
+      .then(data => {
+        setContent(data);
+        // 自動儲存分享的教案到本地 IndexedDB
+        saveSharedContentToLocal(data, binId);
+      })
       .catch(e => setError(e.message || '讀取失敗'))
       .finally(() => setLoading(false));
   }, [binId]);
+
+  // 儲存分享的教案到本地存儲
+  const saveSharedContentToLocal = async (content: ExtendedLearningContent, shareBinId: string) => {
+    try {
+      await lessonPlanStorage.init();
+      
+      // 檢查是否已經儲存過這個分享教案（避免重複儲存）
+      const existingPlan = await lessonPlanStorage.getLessonPlan(`shared_${shareBinId}`);
+      if (existingPlan) {
+        // 如果已存在，只更新最後訪問時間
+        await lessonPlanStorage.updateLastAccessed(`shared_${shareBinId}`);
+        return;
+      }
+
+      // 建立儲存格式，使用特殊的 ID 格式來標記這是分享的教案
+      const storedPlan: StoredLessonPlan = {
+        id: `shared_${shareBinId}`, // 使用 shared_ 前綴來標記分享教案
+        topic: content.topic || '分享的教案',
+        createdAt: new Date().toISOString(),
+        lastAccessedAt: new Date().toISOString(),
+        content: {
+          learningObjectives: content.learningObjectives,
+          contentBreakdown: content.contentBreakdown,
+          confusingPoints: content.confusingPoints,
+          classroomActivities: content.classroomActivities,
+          quiz: content.onlineInteractiveQuiz,
+          writingPractice: content.writingPractice
+        },
+        metadata: {
+          totalSections: [
+            content.learningObjectives,
+            content.contentBreakdown,
+            content.confusingPoints,
+            content.classroomActivities,
+            content.onlineInteractiveQuiz,
+            content.writingPractice
+          ].filter(Boolean).length,
+          hasQuiz: !!content.onlineInteractiveQuiz,
+          hasWriting: !!content.writingPractice,
+          isShared: true, // 標記這是分享的教案
+          sharedBinId: shareBinId // 保存原始的分享 ID
+        }
+      };
+      
+      await lessonPlanStorage.saveLessonPlan(storedPlan);
+      console.log(`分享教案已儲存到本地: ${content.topic || '分享的教案'} (${shareBinId})`);
+    } catch (error) {
+      console.error('儲存分享教案到本地存儲失敗:', error);
+      // 不影響用戶體驗，只記錄錯誤
+    }
+  };
 
   // 載入 API Key
   React.useEffect(() => {

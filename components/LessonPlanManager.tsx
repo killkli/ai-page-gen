@@ -86,7 +86,7 @@ const LessonPlanManager: React.FC = () => {
       };
 
       const binId = await saveLearningContent(shareData, apiKey, true);
-      const shareUrl = `${window.location.origin}${import.meta.env.BASE_URL}?binId=${binId}`;
+      const shareUrl = `${window.location.origin}${import.meta.env.BASE_URL}share?binId=${binId}`;
       
       // 複製到剪貼簿
       if (navigator.clipboard && window.isSecureContext) {
@@ -320,9 +320,17 @@ const LessonPlanManager: React.FC = () => {
                 <div key={plan.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {plan.topic}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {plan.topic}
+                        </h3>
+                        {plan.metadata?.isShared && (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <ShareIcon className="w-3 h-3" />
+                            分享的教案
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                         <div className="flex items-center gap-1">
                           <ClockIcon className="w-4 h-4" />

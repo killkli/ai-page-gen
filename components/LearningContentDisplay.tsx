@@ -11,6 +11,7 @@ import Tabs from './Tabs';
 import { saveLearningContent, saveQuizContent, saveWritingPracticeContent } from '../services/jsonbinService';
 import { regenerateQuizWithConfig } from '../services/geminiService';
 import QuizConfigPanel from './QuizConfigPanel';
+import QRCodeDisplay from './QRCodeDisplay';
 
 interface LearningContentDisplayProps {
   content: ExtendedLearningContent;
@@ -43,11 +44,13 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
   const [quizShareLoading, setQuizShareLoading] = React.useState(false);
   const [quizShareError, setQuizShareError] = React.useState('');
   const [quizShareUrl, setQuizShareUrl] = React.useState('');
+  const [showQuizQRCode, setShowQuizQRCode] = React.useState(false);
   
   // Writing practice sharing states
   const [writingShareLoading, setWritingShareLoading] = React.useState(false);
   const [writingShareError, setWritingShareError] = React.useState('');
   const [writingShareUrl, setWritingShareUrl] = React.useState('');
+  const [showWritingQRCode, setShowWritingQRCode] = React.useState(false);
   
   // Quiz configuration states
   const [quizConfig, setQuizConfig] = React.useState<QuizCustomConfig>(DEFAULT_QUIZ_CONFIG);
@@ -672,7 +675,29 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
                   >
                     複製
                   </button>
+                  <button
+                    onClick={() => setShowWritingQRCode(!showWritingQRCode)}
+                    className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex items-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5H8.25v1.5H13.5V13.5ZM13.5 16.5H8.25V18H13.5v-1.5ZM16.5 16.5h1.5V18h-1.5v-1.5ZM16.5 13.5h1.5v1.5h-1.5v-1.5Z" />
+                    </svg>
+                    QR Code
+                  </button>
                 </div>
+                
+                {/* QR Code 顯示區域 */}
+                {showWritingQRCode && (
+                  <div className="mt-4 flex justify-center">
+                    <QRCodeDisplay
+                      url={writingShareUrl}
+                      title="寫作練習分享 QR Code"
+                      size={200}
+                      className="bg-white p-4 rounded-lg shadow-sm"
+                    />
+                  </div>
+                )}
                 {apiKey && (
                   <p className="text-xs text-purple-600 mt-2">
                     💡 此連結包含您的 API Key，學生可直接使用 AI 批改功能
@@ -755,7 +780,29 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
                 >
                   複製
                 </button>
+                <button
+                  onClick={() => setShowQuizQRCode(!showQuizQRCode)}
+                  className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5H8.25v1.5H13.5V13.5ZM13.5 16.5H8.25V18H13.5v-1.5ZM16.5 16.5h1.5V18h-1.5v-1.5ZM16.5 13.5h1.5v1.5h-1.5v-1.5Z" />
+                  </svg>
+                  QR Code
+                </button>
               </div>
+              
+              {/* QR Code 顯示區域 */}
+              {showQuizQRCode && (
+                <div className="mt-4 flex justify-center">
+                  <QRCodeDisplay
+                    url={quizShareUrl}
+                    title="測驗分享 QR Code"
+                    size={200}
+                    className="bg-white p-4 rounded-lg shadow-sm"
+                  />
+                </div>
+              )}
               {apiKey && (
                 <p className="text-xs text-orange-600 mt-2">
                   💡 此連結包含您的 API Key，學生可直接使用 AI 學習診斷功能

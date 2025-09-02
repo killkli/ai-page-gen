@@ -9,6 +9,7 @@ import LearningDiagnosticReport from './LearningDiagnosticReport';
 import { PuzzlePieceIcon, AcademicCapIcon, ChartBarIcon } from './icons';
 import { saveStudentResults } from '../services/jsonbinService';
 import { calculateOverallScore } from '../services/diagnosticService';
+import QRCodeDisplay from './QRCodeDisplay';
 
 interface StudentQuizViewProps {
   quiz: OnlineInteractiveQuiz;
@@ -26,6 +27,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
   const [sharing, setSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [showNameInput, setShowNameInput] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const handleQuestionResponse = useCallback((
     questionType: QuizContentKey,
@@ -472,8 +474,31 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                 >
                   複製
                 </button>
+                <button
+                  onClick={() => setShowQRCode(!showQRCode)}
+                  className="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5H8.25v1.5H13.5V13.5ZM13.5 16.5H8.25V18H13.5v-1.5ZM16.5 16.5h1.5V18h-1.5v-1.5ZM16.5 13.5h1.5v1.5h-1.5v-1.5Z" />
+                  </svg>
+                  QR Code
+                </button>
               </div>
             </div>
+            
+            {/* QR Code 顯示區域 */}
+            {showQRCode && (
+              <div className="mb-4 flex justify-center">
+                <QRCodeDisplay
+                  url={shareUrl}
+                  title="作答結果分享 QR Code"
+                  size={200}
+                  className="bg-white"
+                />
+              </div>
+            )}
+            
             <div className="bg-blue-50 p-3 rounded-lg mb-4">
               <p className="text-sm text-blue-700">
                 💡 <strong>給老師的說明：</strong><br/>
