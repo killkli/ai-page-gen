@@ -141,6 +141,7 @@ export async function saveStudentResults(resultData: {
   overallScore: number;
   completedAt: string;
   quizBinId?: string; // 原始測驗的 binId
+  quizContent?: any; // 完整的測驗題目內容供老師查看
   metadata?: any;
 }): Promise<string> {
   const resultPayload = {
@@ -174,6 +175,7 @@ export async function getStudentResults(binId: string): Promise<{
   overallScore: number;
   completedAt: string;
   quizBinId?: string;
+  quizContent?: any; // 完整的測驗題目內容
   metadata?: any;
 }> {
   const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
@@ -198,6 +200,7 @@ export async function getStudentResults(binId: string): Promise<{
     overallScore: data.overallScore,
     completedAt: data.completedAt,
     quizBinId: data.quizBinId,
+    quizContent: data.quizContent, // 包含完整的測驗題目內容
     metadata: data.metadata
   };
 }

@@ -107,6 +107,9 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
       const difficultyLabel = selectedDifficulty === QuizDifficulty.Easy ? '簡單' : 
                             selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難';
       
+      // 獲取當前難度的完整測驗內容，供老師查看題目
+      const currentQuizContent = quiz?.[selectedDifficulty] || {};
+      
       const resultBinId = await saveStudentResults({
         studentName: studentName.trim(),
         topic,
@@ -115,9 +118,11 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         overallScore,
         completedAt: new Date().toISOString(),
         quizBinId,
+        quizContent: currentQuizContent, // 包含完整的測驗題目內容
         metadata: {
           totalQuestions: currentResponses.length,
-          correctAnswers: currentResponses.filter(r => r.isCorrect).length
+          correctAnswers: currentResponses.filter(r => r.isCorrect).length,
+          selectedDifficulty // 保存難度選擇
         }
       });
 
