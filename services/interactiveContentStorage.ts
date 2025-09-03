@@ -6,7 +6,10 @@ export interface TransformedVersion {
   description?: string;
   createdAt: string;
   lastModifiedAt: string;
-  transformedData: { [stepId: string]: any };
+  transformedData: { [stepId: string]: any } | {
+    transformedData: { [stepId: string]: any };
+    quizData?: { [stepId: string]: any };
+  };
   selectedSteps: string[];
   publishedUrl?: string;
 }
@@ -62,57 +65,87 @@ class InteractiveContentStorage {
   async saveVersion(
     lessonPlanId: string,
     topic: string,
-    transformedData: { [stepId: string]: any },
+    transformedData: { [stepId: string]: any } | {
+      transformedData: { [stepId: string]: any };
+      quizData?: { [stepId: string]: any };
+    },
     selectedSteps: string[],
     versionName?: string,
     description?: string
   ): Promise<string> {
-    const db = this.ensureDB();
-    const versionId = `version_${Date.now()}`;
-    const now = new Date().toISOString();
-
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(['interactiveContent'], 'readwrite');
-      const store = transaction.objectStore('interactiveContent');
-
-      // 先嘗試獲取現有記錄
-      const getRequest = store.get(lessonPlanId);
+    console.log('=== interactiveContentStorage.saveVersion 開始 ===');
+    console.log('參數:', { lessonPlanId, topic, transformedData, selectedSteps, versionName, description });
+    
+    try {
+      const db = this.ensureDB();
+      console.log('✅ 獲取資料庫連接成功');
       
-      getRequest.onsuccess = () => {
-        const existingRecord: InteractiveContentRecord | undefined = getRequest.result;
+      const versionId = `version_${Date.now()}`;
+      const now = new Date().toISOString();
+      console.log('生成版本ID:', versionId);
+
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(['interactiveContent'], 'readwrite');
+        const store = transaction.objectStore('interactiveContent');
+        console.log('✅ 開始資料庫事務');
+
+        // 先嘗試獲取現有記錄
+        const getRequest = store.get(lessonPlanId);
+        console.log('查詢現有記錄:', lessonPlanId);
         
-        const newVersion: TransformedVersion = {
-          id: versionId,
-          name: versionName || `版本 ${now.slice(0, 19).replace('T', ' ')}`,
-          description: description,
-          createdAt: now,
-          lastModifiedAt: now,
-          transformedData: transformedData,
-          selectedSteps: selectedSteps
+        getRequest.onsuccess = () => {
+          console.log('✅ 查詢現有記錄成功');
+          const existingRecord: InteractiveContentRecord | undefined = getRequest.result;
+          console.log('現有記錄:', existingRecord ? `存在，包含 ${existingRecord.versions.length} 個版本` : '不存在');
+          
+          const newVersion: TransformedVersion = {
+            id: versionId,
+            name: versionName || `版本 ${now.slice(0, 19).replace('T', ' ')}`,
+            description: description,
+            createdAt: now,
+            lastModifiedAt: now,
+            transformedData: transformedData,
+            selectedSteps: selectedSteps
+          };
+          console.log('新版本物件:', newVersion);
+
+          const record: InteractiveContentRecord = {
+            lessonPlanId: lessonPlanId,
+            topic: topic,
+            versions: existingRecord ? [...existingRecord.versions, newVersion] : [newVersion],
+            lastAccessedAt: now
+          };
+          console.log('準備保存記錄:', record);
+
+          const putRequest = store.put(record);
+          
+          putRequest.onsuccess = () => {
+            console.log('✅ 版本保存成功');
+            resolve(versionId);
+          };
+          
+          putRequest.onerror = (event) => {
+            console.error('❌ 保存版本失敗:', event);
+            console.error('putRequest.error:', putRequest.error);
+            reject(new Error(`Failed to save interactive content version: ${putRequest.error?.message || 'Unknown error'}`));
+          };
         };
 
-        const record: InteractiveContentRecord = {
-          lessonPlanId: lessonPlanId,
-          topic: topic,
-          versions: existingRecord ? [...existingRecord.versions, newVersion] : [newVersion],
-          lastAccessedAt: now
+        getRequest.onerror = (event) => {
+          console.error('❌ 查詢現有記錄失敗:', event);
+          console.error('getRequest.error:', getRequest.error);
+          reject(new Error(`Failed to get existing interactive content: ${getRequest.error?.message || 'Unknown error'}`));
         };
 
-        const putRequest = store.put(record);
-        
-        putRequest.onsuccess = () => {
-          resolve(versionId);
+        transaction.onerror = (event) => {
+          console.error('❌ 資料庫事務失敗:', event);
+          reject(new Error(`Database transaction failed: ${transaction.error?.message || 'Unknown error'}`));
         };
-        
-        putRequest.onerror = () => {
-          reject(new Error('Failed to save interactive content version'));
-        };
-      };
-
-      getRequest.onerror = () => {
-        reject(new Error('Failed to get existing interactive content'));
-      };
-    });
+      });
+    } catch (error) {
+      console.error('❌ interactiveContentStorage.saveVersion 異常:', error);
+      throw error;
+    }
   }
 
   // 獲取教案的所有版本

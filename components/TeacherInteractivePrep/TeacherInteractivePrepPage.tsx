@@ -109,8 +109,9 @@ const TeacherInteractivePrepPage: React.FC = () => {
       initializePrepSteps(loadedContent);
       
       // 加載現有版本（如果有的話）
-      if (contentId) {
-        await loadExistingVersions(contentId);
+      const effectiveContentId = getEffectiveContentId();
+      if (effectiveContentId) {
+        await loadExistingVersions(effectiveContentId);
       }
       
     } catch (err: any) {
@@ -556,6 +557,11 @@ const TeacherInteractivePrepPage: React.FC = () => {
     }
   };
 
+  // 獲取有效的 content ID 
+  const getEffectiveContentId = (): string | null => {
+    return contentId || binId;
+  };
+
   // 版本管理函數
   const loadExistingVersions = async (lessonPlanId: string) => {
     try {
@@ -568,13 +574,38 @@ const TeacherInteractivePrepPage: React.FC = () => {
   };
 
   const saveCurrentAsVersion = async () => {
-    if (!content || !contentId) return;
+    console.log('=== 開始保存版本 ===');
+    console.log('content:', !!content);
+    console.log('contentId:', contentId);
+    console.log('transformations:', transformations);
+    
+    if (!content) {
+      console.log('❌ 缺少 content');
+      alert('缺少教案內容，無法保存版本');
+      return;
+    }
+    
+    // 獲取有效的 content ID
+    const actualContentId = getEffectiveContentId();
+    if (!actualContentId) {
+      console.log('❌ 無法取得有效的 contentId');
+      alert('無法識別當前教案，請重新進入頁面');
+      return;
+    }
+    console.log('使用的 contentId:', actualContentId);
     
     // 收集目前已轉換的數據和測驗資料
     const transformedData: { [stepId: string]: any } = {};
     const quizData: { [stepId: string]: any } = {};
     
     Object.entries(transformations).forEach(([stepId, transformation]) => {
+      console.log(`檢查步驟 ${stepId}:`, {
+        isTransformed: transformation.isTransformed,
+        hasTransformed: !!transformation.transformed,
+        hasQuiz: transformation.hasQuiz,
+        hasQuizData: !!transformation.quiz
+      });
+      
       if (transformation.isTransformed && transformation.transformed) {
         transformedData[stepId] = transformation.transformed;
       }
@@ -583,21 +614,39 @@ const TeacherInteractivePrepPage: React.FC = () => {
       }
     });
 
+    console.log('收集到的資料:', {
+      transformedDataCount: Object.keys(transformedData).length,
+      quizDataCount: Object.keys(quizData).length,
+      selectedStepsCount: selectedSteps.size
+    });
+
     if (Object.keys(transformedData).length === 0) {
+      console.log('❌ 沒有已轉換的內容');
       alert('請先轉換一些內容再保存版本');
       return;
     }
 
     try {
+      console.log('初始化 interactiveContentStorage...');
       await interactiveContentStorage.init();
+      console.log('✅ 初始化成功');
+      
       const versionName = saveVersionName || `版本 ${new Date().toLocaleString('zh-TW')}`;
       const versionData = {
         transformedData,
         quizData
       };
       
+      console.log('準備保存版本:', {
+        actualContentId,
+        topic: content.topic || '無標題教案',
+        versionName,
+        versionData,
+        selectedSteps: Array.from(selectedSteps)
+      });
+      
       const versionId = await interactiveContentStorage.saveVersion(
-        contentId,
+        actualContentId,
         content.topic || '無標題教案',
         versionData,
         Array.from(selectedSteps),
@@ -605,21 +654,28 @@ const TeacherInteractivePrepPage: React.FC = () => {
         `包含 ${Object.keys(transformedData).length} 個已轉換步驟，${Object.keys(quizData).length} 個測驗`
       );
       
+      console.log('✅ 版本保存成功，ID:', versionId);
+      
       setSaveVersionName('');
-      await loadExistingVersions(contentId);
+      await loadExistingVersions(actualContentId);
       alert('版本保存成功！');
+      
     } catch (error) {
-      console.error('保存版本失敗:', error);
-      alert('保存版本失敗，請重試');
+      console.error('❌ 保存版本失敗:', error);
+      console.error('錯誤堆棧:', error.stack);
+      alert(`保存版本失敗：${error.message || error}`);
     }
+    
+    console.log('=== 保存版本結束 ===');
   };
 
   const loadVersion = async (versionId: string) => {
-    if (!contentId) return;
+    const effectiveContentId = getEffectiveContentId();
+    if (!effectiveContentId) return;
     
     try {
       await interactiveContentStorage.init();
-      const version = await interactiveContentStorage.getVersion(contentId, versionId);
+      const version = await interactiveContentStorage.getVersion(effectiveContentId, versionId);
       
       if (version) {
         // 重置當前狀態
@@ -673,7 +729,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         setCurrentVersionId(versionId);
         setShowVersionSelector(false);
         
-        await interactiveContentStorage.updateLastAccessed(contentId);
+        await interactiveContentStorage.updateLastAccessed(effectiveContentId);
       }
     } catch (error) {
       console.error('載入版本失敗:', error);
@@ -682,7 +738,8 @@ const TeacherInteractivePrepPage: React.FC = () => {
   };
 
   const deleteVersion = async (versionId: string) => {
-    if (!contentId) return;
+    const effectiveContentId = getEffectiveContentId();
+    if (!effectiveContentId) return;
     
     const version = availableVersions.find(v => v.id === versionId);
     if (!version) return;
@@ -693,8 +750,8 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
     try {
       await interactiveContentStorage.init();
-      await interactiveContentStorage.deleteVersion(contentId, versionId);
-      await loadExistingVersions(contentId);
+      await interactiveContentStorage.deleteVersion(effectiveContentId, versionId);
+      await loadExistingVersions(effectiveContentId);
       
       if (currentVersionId === versionId) {
         setCurrentVersionId(null);
@@ -1037,7 +1094,10 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   className="px-2 py-1 text-xs border border-slate-300 rounded w-20"
                 />
                 <button
-                  onClick={saveCurrentAsVersion}
+                  onClick={() => {
+                    console.log('🔴 保存版本按鈕被點擊了！');
+                    saveCurrentAsVersion();
+                  }}
                   className="text-green-600 hover:text-green-800 font-medium"
                 >
                   保存版本
