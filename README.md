@@ -69,7 +69,7 @@
 
 1. **克隆專案**
    ```bash
-   git clone https://github.com/your-org/ai-page-gen.git
+   git clone https://github.com/killkli/ai-page-gen.git
    cd ai-page-gen
    ```
 
@@ -106,7 +106,6 @@
 1. 前往 [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. 建立新的 API 密鑰
 3. 在應用程式中點擊「設定 API Key」按鈕輸入密鑰
-4. 或在 `.env` 文件中設定 `VITE_GEMINI_API_KEY`
 
 ## 🛠️ 技術架構
 
@@ -231,9 +230,6 @@ ai-page-gen/
 ### 環境變數設定
 
 ```bash
-# Google Gemini API 設定
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
-
 # JSONBin 服務設定（用於分享功能）
 VITE_JSONBIN_API_KEY=your_jsonbin_key_here
 
