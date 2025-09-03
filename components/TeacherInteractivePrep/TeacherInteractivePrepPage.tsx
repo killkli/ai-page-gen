@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ExtendedLearningContent } from '../../types';
 import { getLearningContent, saveLearningContent } from '../../services/jsonbinService';
 import { lessonPlanStorage } from '../../services/lessonPlanStorage';
-import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent } from '../../services/geminiService';
+import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent, generateStepQuiz } from '../../services/geminiService';
 import { interactiveContentStorage, TransformedVersion } from '../../services/interactiveContentStorage';
 import LoadingSpinner from '../LoadingSpinner';
 import MarkdownRenderer from '../MarkdownRenderer';
@@ -15,6 +15,9 @@ type TransformationState = {
     transformed: any | null;
     isTransformed: boolean;
     isTransforming: boolean;
+    quiz: any | null;
+    hasQuiz: boolean;
+    isGeneratingQuiz: boolean;
   };
 };
 
@@ -125,7 +128,10 @@ const TeacherInteractivePrepPage: React.FC = () => {
           original: objective,
           transformed: null,
           isTransformed: false,
-          isTransforming: false
+          isTransforming: false,
+          quiz: null,
+          hasQuiz: false,
+          isGeneratingQuiz: false
         };
       });
     }
@@ -147,7 +153,10 @@ const TeacherInteractivePrepPage: React.FC = () => {
           original: item,
           transformed: null,
           isTransformed: false,
-          isTransforming: false
+          isTransforming: false,
+          quiz: null,
+          hasQuiz: false,
+          isGeneratingQuiz: false
         };
       });
     }
@@ -169,7 +178,10 @@ const TeacherInteractivePrepPage: React.FC = () => {
           original: item,
           transformed: null,
           isTransformed: false,
-          isTransforming: false
+          isTransforming: false,
+          quiz: null,
+          hasQuiz: false,
+          isGeneratingQuiz: false
         };
       });
     }
@@ -241,7 +253,85 @@ const TeacherInteractivePrepPage: React.FC = () => {
       [stepId]: {
         ...prev[stepId],
         transformed: null,
-        isTransformed: false
+        isTransformed: false,
+        quiz: null,
+        hasQuiz: false
+      }
+    }));
+  };
+
+  // 生成步驟測驗
+  const generateStepQuizForStep = async (stepId: string) => {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      alert('請先設定 Gemini API 金鑰');
+      return;
+    }
+
+    // stepId 格式是 "step_0", "step_1" 等，需要轉換為索引來找對應的步驟
+    const stepIndex = parseInt(stepId.replace('step_', ''));
+    const step = prepSteps[stepIndex];
+    const transformation = transformations[stepId];
+    
+    console.log('生成測驗 - stepId:', stepId, 'stepIndex:', stepIndex, 'step:', step, 'transformation:', transformation);
+    
+    if (!step || !transformation?.isTransformed || !transformation.transformed) {
+      console.error('測驗生成條件檢查失敗:', {
+        step: !!step,
+        isTransformed: transformation?.isTransformed,
+        hasTransformed: !!transformation?.transformed
+      });
+      alert('請先轉換內容後再生成測驗');
+      return;
+    }
+
+    setTransformations(prev => ({
+      ...prev,
+      [stepId]: { ...prev[stepId], isGeneratingQuiz: true }
+    }));
+
+    try {
+      const quizConfig = {
+        trueFalse: 3,
+        multipleChoice: 3, 
+        memoryCardGame: 1
+      };
+      
+      const quizData = await generateStepQuiz(
+        transformation.transformed,
+        step.type,
+        apiKey,
+        quizConfig
+      );
+      
+      setTransformations(prev => ({
+        ...prev,
+        [stepId]: {
+          ...prev[stepId],
+          quiz: quizData,
+          hasQuiz: true,
+          isGeneratingQuiz: false
+        }
+      }));
+      
+    } catch (error) {
+      console.error('測驗生成失敗:', error);
+      setTransformations(prev => ({
+        ...prev,
+        [stepId]: { ...prev[stepId], isGeneratingQuiz: false }
+      }));
+      alert('測驗生成失敗，請重試');
+    }
+  };
+
+  // 重置步驟測驗
+  const resetStepQuiz = (stepId: string) => {
+    setTransformations(prev => ({
+      ...prev,
+      [stepId]: {
+        ...prev[stepId],
+        quiz: null,
+        hasQuiz: false
       }
     }));
   };
@@ -458,11 +548,16 @@ const TeacherInteractivePrepPage: React.FC = () => {
   const saveCurrentAsVersion = async () => {
     if (!content || !contentId) return;
     
-    // 收集目前已轉換的數據
+    // 收集目前已轉換的數據和測驗資料
     const transformedData: { [stepId: string]: any } = {};
+    const quizData: { [stepId: string]: any } = {};
+    
     Object.entries(transformations).forEach(([stepId, transformation]) => {
       if (transformation.isTransformed && transformation.transformed) {
         transformedData[stepId] = transformation.transformed;
+      }
+      if (transformation.hasQuiz && transformation.quiz) {
+        quizData[stepId] = transformation.quiz;
       }
     });
 
@@ -474,13 +569,18 @@ const TeacherInteractivePrepPage: React.FC = () => {
     try {
       await interactiveContentStorage.init();
       const versionName = saveVersionName || `版本 ${new Date().toLocaleString('zh-TW')}`;
+      const versionData = {
+        transformedData,
+        quizData
+      };
+      
       const versionId = await interactiveContentStorage.saveVersion(
         contentId,
         content.topic || '無標題教案',
-        transformedData,
+        versionData,
         Array.from(selectedSteps),
         versionName,
-        `包含 ${Object.keys(transformedData).length} 個已轉換步驟`
+        `包含 ${Object.keys(transformedData).length} 個已轉換步驟，${Object.keys(quizData).length} 個測驗`
       );
       
       setSaveVersionName('');
@@ -513,17 +613,35 @@ const TeacherInteractivePrepPage: React.FC = () => {
             original: step.data,
             transformed: null,
             isTransformed: false,
-            isTransforming: false
+            isTransforming: false,
+            quiz: null,
+            hasQuiz: false,
+            isGeneratingQuiz: false
           };
         });
         
+        // 處理版本資料格式 (支援新舊格式)
+        const versionTransformedData = version.transformedData?.transformedData || version.transformedData;
+        const versionQuizData = version.transformedData?.quizData || {};
+        
         // 然後加載版本中的轉換數據
-        Object.entries(version.transformedData).forEach(([stepId, transformedData]) => {
+        Object.entries(versionTransformedData || {}).forEach(([stepId, transformedData]) => {
           if (newTransformations[stepId]) {
             newTransformations[stepId] = {
               ...newTransformations[stepId],
               transformed: transformedData,
               isTransformed: true
+            };
+          }
+        });
+        
+        // 加載版本中的測驗資料
+        Object.entries(versionQuizData || {}).forEach(([stepId, quizData]) => {
+          if (newTransformations[stepId]) {
+            newTransformations[stepId] = {
+              ...newTransformations[stepId],
+              quiz: quizData,
+              hasQuiz: true
             };
           }
         });
@@ -593,13 +711,19 @@ const TeacherInteractivePrepPage: React.FC = () => {
     setPublishStatus('publishing');
     
     try {
-      // 只收集已轉換的內容
+      // 只收集已轉換的內容和測驗
       const transformedStepsData: { [stepId: string]: any } = {};
+      const stepQuizData: { [stepId: string]: any } = {};
       const transformedOriginalContent: any = {};
 
       Object.entries(transformations).forEach(([stepId, transformation]) => {
         if (transformation.isTransformed && transformation.transformed) {
           transformedStepsData[stepId] = transformation.transformed;
+          
+          // 收集測驗資料
+          if (transformation.hasQuiz && transformation.quiz) {
+            stepQuizData[stepId] = transformation.quiz;
+          }
           
           // 根據步驟類型，也保留對應的原始內容
           const stepIndex = parseInt(stepId.replace('step_', ''));
@@ -643,6 +767,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         // 標記為已轉換的互動內容
         isInteractive: true,
         transformedData: transformedStepsData,
+        stepQuizData: stepQuizData,
         // 記錄哪些步驟被包含
         includedSteps: Object.keys(transformedStepsData)
       };
@@ -938,6 +1063,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                       {/* 個別步驟控制按鈕 */}
                       {transformations[stepId]?.isTransformed ? (
                         <div className="flex items-center gap-1 ml-2">
+                          {/* 轉換控制 */}
                           <button
                             onClick={() => transformStep(stepId)}
                             className="text-xs text-blue-600 hover:text-blue-800 font-medium px-1 py-0.5 rounded hover:bg-blue-50"
@@ -952,6 +1078,37 @@ const TeacherInteractivePrepPage: React.FC = () => {
                           >
                             🗑️
                           </button>
+                          
+                          {/* 測驗控制 */}
+                          {transformations[stepId]?.hasQuiz ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-orange-600" title="已生成測驗">🧠</span>
+                              <button
+                                onClick={() => generateStepQuizForStep(stepId)}
+                                disabled={transformations[stepId]?.isGeneratingQuiz}
+                                className="text-xs text-orange-600 hover:text-orange-800 font-medium px-1 py-0.5 rounded hover:bg-orange-50"
+                                title="重新生成測驗"
+                              >
+                                {transformations[stepId]?.isGeneratingQuiz ? '⏳' : '🔄'}
+                              </button>
+                              <button
+                                onClick={() => resetStepQuiz(stepId)}
+                                className="text-xs text-red-600 hover:text-red-800 font-medium px-1 py-0.5 rounded hover:bg-red-50"
+                                title="刪除測驗"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => generateStepQuizForStep(stepId)}
+                              disabled={transformations[stepId]?.isGeneratingQuiz}
+                              className="text-xs text-orange-600 hover:text-orange-800 font-medium px-1 py-0.5 rounded hover:bg-orange-50 disabled:opacity-50"
+                              title="生成測驗"
+                            >
+                              {transformations[stepId]?.isGeneratingQuiz ? '⏳' : '🧠'}
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <button

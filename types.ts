@@ -235,6 +235,7 @@ export interface WritingPracticeContent {
 // Extended learning content with writing practice
 export interface ExtendedLearningContent extends GeneratedLearningContent {
   writingPractice?: WritingPracticeContent;
+  stepQuizData?: { [stepId: string]: any };
 }
 
 // 互動學習相關類型定義

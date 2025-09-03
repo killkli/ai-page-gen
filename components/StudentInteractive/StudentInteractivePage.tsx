@@ -4,6 +4,9 @@ import { ExtendedLearningContent, InteractiveLearningSession } from '../../types
 import { getLearningContent } from '../../services/jsonbinService';
 import LoadingSpinner from '../LoadingSpinner';
 import MarkdownRenderer from '../MarkdownRenderer';
+import TrueFalseQuizItem from '../quizTypes/TrueFalseQuizItem';
+import MultipleChoiceQuizItem from '../quizTypes/MultipleChoiceQuizItem';
+import MemoryCardGameQuizItem from '../quizTypes/MemoryCardGameQuizItem';
 
 // 定義學習步驟類型
 type StudentLearningStep = {
@@ -26,6 +29,8 @@ const StudentInteractivePage: React.FC = () => {
   const [learningSession, setLearningSession] = useState<InteractiveLearningSession | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [learningSteps, setLearningSteps] = useState<StudentLearningStep[]>([]);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [currentStepQuiz, setCurrentStepQuiz] = useState<any | null>(null);
 
   useEffect(() => {
     if (binId) {
@@ -308,6 +313,30 @@ const StudentInteractivePage: React.FC = () => {
     }
   };
 
+  // 顯示當前步驟的測驗
+  const showStepQuiz = () => {
+    const currentStep = learningSteps[currentStepIndex];
+    if (!currentStep || !content?.stepQuizData) return;
+    
+    const stepQuiz = content.stepQuizData[currentStep.id];
+    if (stepQuiz) {
+      setCurrentStepQuiz(stepQuiz);
+      setShowQuiz(true);
+    }
+  };
+
+  // 隱藏測驗
+  const hideQuiz = () => {
+    setShowQuiz(false);
+    setCurrentStepQuiz(null);
+  };
+
+  // 檢查當前步驟是否有測驗
+  const hasCurrentStepQuiz = () => {
+    const currentStep = learningSteps[currentStepIndex];
+    return currentStep && content?.stepQuizData && content.stepQuizData[currentStep.id];
+  };
+
   // 檢測和渲染 Markdown
   const containsMarkdown = (text: string): boolean => {
     if (!text) return false;
@@ -437,8 +466,8 @@ const StudentInteractivePage: React.FC = () => {
               )}
             </div>
 
-            {/* 完成按鈕 */}
-            <div className="text-center">
+            {/* 完成按鈕和測驗 */}
+            <div className="text-center space-y-4">
               {isCompleted ? (
                 <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-8">
                   <div className="text-5xl mb-4">✅</div>
@@ -458,6 +487,24 @@ const StudentInteractivePage: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     我理解了！
+                  </button>
+                </div>
+              )}
+              
+              {/* 測驗按鈕 */}
+              {hasCurrentStepQuiz() && (
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6">
+                  <h4 className="text-lg font-semibold text-orange-700 mb-3">
+                    想測試一下你的理解嗎？
+                  </h4>
+                  <button
+                    onClick={showStepQuiz}
+                    className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium text-lg rounded-xl transition-colors flex items-center gap-2 mx-auto"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    開始練習測驗
                   </button>
                 </div>
               )}
@@ -566,8 +613,8 @@ const StudentInteractivePage: React.FC = () => {
               )}
             </div>
 
-            {/* 完成按鈕 */}
-            <div className="text-center">
+            {/* 完成按鈕和測驗 */}
+            <div className="text-center space-y-4">
               {isCompleted ? (
                 <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-8">
                   <div className="text-5xl mb-4">✅</div>
@@ -587,6 +634,24 @@ const StudentInteractivePage: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     我學會了！
+                  </button>
+                </div>
+              )}
+              
+              {/* 測驗按鈕 */}
+              {hasCurrentStepQuiz() && (
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6">
+                  <h4 className="text-lg font-semibold text-orange-700 mb-3">
+                    想測試一下你的理解嗎？
+                  </h4>
+                  <button
+                    onClick={showStepQuiz}
+                    className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium text-lg rounded-xl transition-colors flex items-center gap-2 mx-auto"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    開始練習測驗
                   </button>
                 </div>
               )}
@@ -748,8 +813,8 @@ const StudentInteractivePage: React.FC = () => {
               )}
             </div>
 
-            {/* 完成按鈕 */}
-            <div className="text-center">
+            {/* 完成按鈕和測驗 */}
+            <div className="text-center space-y-4">
               {isCompleted ? (
                 <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-8">
                   <div className="text-5xl mb-4">✅</div>
@@ -769,6 +834,24 @@ const StudentInteractivePage: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     我記住了！
+                  </button>
+                </div>
+              )}
+              
+              {/* 測驗按鈕 */}
+              {hasCurrentStepQuiz() && (
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6">
+                  <h4 className="text-lg font-semibold text-orange-700 mb-3">
+                    想測試一下你的記憶嗎？
+                  </h4>
+                  <button
+                    onClick={showStepQuiz}
+                    className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium text-lg rounded-xl transition-colors flex items-center gap-2 mx-auto"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    開始練習測驗
                   </button>
                 </div>
               )}
@@ -936,6 +1019,100 @@ const StudentInteractivePage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* 測驗模態窗口 */}
+      {showQuiz && currentStepQuiz && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* 測驗標題欄 */}
+            <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between rounded-t-2xl">
+              <h2 className="text-2xl font-bold text-slate-800">
+                📝 步驟練習測驗
+              </h2>
+              <button
+                onClick={hideQuiz}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 測驗內容 */}
+            <div className="p-6 space-y-8">
+              {/* 是非題 */}
+              {currentStepQuiz.trueFalse && currentStepQuiz.trueFalse.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                    <span>✓</span> 是非判斷題
+                  </h3>
+                  <div className="space-y-4">
+                    {currentStepQuiz.trueFalse.map((question, index) => (
+                      <TrueFalseQuizItem
+                        key={`tf-${index}`}
+                        question={question}
+                        questionIndex={index}
+                        showExplanations={true}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 選擇題 */}
+              {currentStepQuiz.multipleChoice && currentStepQuiz.multipleChoice.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                    <span>📝</span> 選擇題
+                  </h3>
+                  <div className="space-y-4">
+                    {currentStepQuiz.multipleChoice.map((question, index) => (
+                      <MultipleChoiceQuizItem
+                        key={`mc-${index}`}
+                        question={question}
+                        questionIndex={index}
+                        showExplanations={true}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 記憶卡配對 */}
+              {currentStepQuiz.memoryCardGame && currentStepQuiz.memoryCardGame.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                    <span>🧠</span> 記憶卡配對
+                  </h3>
+                  <div className="space-y-4">
+                    {currentStepQuiz.memoryCardGame.map((game, index) => (
+                      <MemoryCardGameQuizItem
+                        key={`mcg-${index}`}
+                        question={game}
+                        questionIndex={index}
+                        showExplanations={true}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 測驗底部 */}
+            <div className="sticky bottom-0 bg-slate-50 p-6 border-t rounded-b-2xl">
+              <div className="text-center">
+                <button
+                  onClick={hideQuiz}
+                  className="px-8 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-xl transition-colors"
+                >
+                  完成練習
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
