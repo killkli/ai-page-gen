@@ -1090,8 +1090,7 @@ const StudentInteractivePage: React.FC = () => {
                       <MemoryCardGameQuizItem
                         key={`mcg-${index}`}
                         question={game}
-                        questionIndex={index}
-                        showExplanations={true}
+                        itemNumber={index + 1}
                       />
                     ))}
                   </div>

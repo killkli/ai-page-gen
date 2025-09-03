@@ -58,6 +58,20 @@ const TeacherInteractivePrepPage: React.FC = () => {
   const [showVersionSelector, setShowVersionSelector] = useState(false);
   const [saveVersionName, setSaveVersionName] = useState('');
 
+  // 測驗設定狀態
+  const [showQuizSettings, setShowQuizSettings] = useState(false);
+  const [quizSettingsStepId, setQuizSettingsStepId] = useState<string>('');
+  const [quizConfig, setQuizConfig] = useState({
+    trueFalse: 3,
+    multipleChoice: 3,
+    memoryCardGame: 1
+  });
+  
+  // 測驗預覽狀態
+  const [showQuizPreview, setShowQuizPreview] = useState(false);
+  const [previewQuizData, setPreviewQuizData] = useState<any>(null);
+  const [previewStepId, setPreviewStepId] = useState<string>('');
+
   useEffect(() => {
     loadContent();
   }, [contentId, binId]);
@@ -260,8 +274,14 @@ const TeacherInteractivePrepPage: React.FC = () => {
     }));
   };
 
+  // 顯示測驗設定對話框
+  const showQuizSettingsDialog = (stepId: string) => {
+    setQuizSettingsStepId(stepId);
+    setShowQuizSettings(true);
+  };
+
   // 生成步驟測驗
-  const generateStepQuizForStep = async (stepId: string) => {
+  const generateStepQuizForStep = async (stepId: string, customConfig?: any) => {
     const apiKey = getApiKey();
     if (!apiKey) {
       alert('請先設定 Gemini API 金鑰');
@@ -273,14 +293,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
     const step = prepSteps[stepIndex];
     const transformation = transformations[stepId];
     
-    console.log('生成測驗 - stepId:', stepId, 'stepIndex:', stepIndex, 'step:', step, 'transformation:', transformation);
-    
     if (!step || !transformation?.isTransformed || !transformation.transformed) {
-      console.error('測驗生成條件檢查失敗:', {
-        step: !!step,
-        isTransformed: transformation?.isTransformed,
-        hasTransformed: !!transformation?.transformed
-      });
       alert('請先轉換內容後再生成測驗');
       return;
     }
@@ -291,17 +304,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
     }));
 
     try {
-      const quizConfig = {
-        trueFalse: 3,
-        multipleChoice: 3, 
-        memoryCardGame: 1
-      };
+      const configToUse = customConfig || quizConfig;
       
       const quizData = await generateStepQuiz(
         transformation.transformed,
         step.type,
         apiKey,
-        quizConfig
+        configToUse
       );
       
       setTransformations(prev => ({
@@ -314,6 +323,9 @@ const TeacherInteractivePrepPage: React.FC = () => {
         }
       }));
       
+      // 關閉設定對話框
+      setShowQuizSettings(false);
+      
     } catch (error) {
       console.error('測驗生成失敗:', error);
       setTransformations(prev => ({
@@ -321,6 +333,16 @@ const TeacherInteractivePrepPage: React.FC = () => {
         [stepId]: { ...prev[stepId], isGeneratingQuiz: false }
       }));
       alert('測驗生成失敗，請重試');
+    }
+  };
+
+  // 預覽測驗
+  const previewQuiz = (stepId: string) => {
+    const transformation = transformations[stepId];
+    if (transformation?.hasQuiz && transformation.quiz) {
+      setPreviewQuizData(transformation.quiz);
+      setPreviewStepId(stepId);
+      setShowQuizPreview(true);
     }
   };
 
@@ -1084,12 +1106,24 @@ const TeacherInteractivePrepPage: React.FC = () => {
                             <div className="flex items-center gap-1">
                               <span className="text-xs text-orange-600" title="已生成測驗">🧠</span>
                               <button
-                                onClick={() => generateStepQuizForStep(stepId)}
+                                onClick={() => previewQuiz(stepId)}
+                                className="text-xs text-blue-600 hover:text-blue-800 font-medium px-1 py-0.5 rounded hover:bg-blue-50"
+                                title="預覽測驗"
+                              >
+                                👁️
+                              </button>
+                              <button
+                                onClick={() => showQuizSettingsDialog(stepId)}
                                 disabled={transformations[stepId]?.isGeneratingQuiz}
                                 className="text-xs text-orange-600 hover:text-orange-800 font-medium px-1 py-0.5 rounded hover:bg-orange-50"
                                 title="重新生成測驗"
                               >
-                                {transformations[stepId]?.isGeneratingQuiz ? '⏳' : '🔄'}
+                                {transformations[stepId]?.isGeneratingQuiz ? (
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 bg-orange-600 rounded-full animate-pulse"></div>
+                                    <span>生成中</span>
+                                  </div>
+                                ) : '🔄'}
                               </button>
                               <button
                                 onClick={() => resetStepQuiz(stepId)}
@@ -1101,12 +1135,17 @@ const TeacherInteractivePrepPage: React.FC = () => {
                             </div>
                           ) : (
                             <button
-                              onClick={() => generateStepQuizForStep(stepId)}
+                              onClick={() => showQuizSettingsDialog(stepId)}
                               disabled={transformations[stepId]?.isGeneratingQuiz}
                               className="text-xs text-orange-600 hover:text-orange-800 font-medium px-1 py-0.5 rounded hover:bg-orange-50 disabled:opacity-50"
                               title="生成測驗"
                             >
-                              {transformations[stepId]?.isGeneratingQuiz ? '⏳' : '🧠'}
+                              {transformations[stepId]?.isGeneratingQuiz ? (
+                                <div className="flex items-center gap-1">
+                                  <div className="w-2 h-2 bg-orange-600 rounded-full animate-pulse"></div>
+                                  <span className="text-xs">生成中</span>
+                                </div>
+                              ) : '🧠'}
                             </button>
                           )}
                         </div>
@@ -1385,6 +1424,232 @@ const TeacherInteractivePrepPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* 測驗設定對話框 */}
+      {showQuizSettings && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-slate-800">測驗設定</h3>
+                <button
+                  onClick={() => setShowQuizSettings(false)}
+                  className="p-1 hover:bg-slate-100 rounded-full"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  是非題數量
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={quizConfig.trueFalse}
+                  onChange={(e) => setQuizConfig(prev => ({
+                    ...prev,
+                    trueFalse: parseInt(e.target.value) || 1
+                  }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  選擇題數量
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={quizConfig.multipleChoice}
+                  onChange={(e) => setQuizConfig(prev => ({
+                    ...prev,
+                    multipleChoice: parseInt(e.target.value) || 1
+                  }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  記憶卡遊戲組數
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="3"
+                  value={quizConfig.memoryCardGame}
+                  onChange={(e) => setQuizConfig(prev => ({
+                    ...prev,
+                    memoryCardGame: parseInt(e.target.value) || 1
+                  }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            
+            <div className="p-6 border-t bg-slate-50 rounded-b-2xl">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowQuizSettings(false)}
+                  className="flex-1 px-4 py-2 bg-slate-500 text-white font-medium rounded-lg hover:bg-slate-600 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => generateStepQuizForStep(quizSettingsStepId, quizConfig)}
+                  disabled={transformations[quizSettingsStepId]?.isGeneratingQuiz}
+                  className="flex-1 px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+                >
+                  {transformations[quizSettingsStepId]?.isGeneratingQuiz ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      生成中...
+                    </div>
+                  ) : '生成測驗'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 測驗預覽對話框 */}
+      {showQuizPreview && previewQuizData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-xl font-bold text-slate-800">📝 測驗預覽</h3>
+              <button
+                onClick={() => setShowQuizPreview(false)}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* 是非題預覽 */}
+              {previewQuizData.trueFalse && previewQuizData.trueFalse.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                    <span>✓</span> 是非判斷題 ({previewQuizData.trueFalse.length} 題)
+                  </h4>
+                  <div className="space-y-3">
+                    {previewQuizData.trueFalse.map((question, index) => (
+                      <div key={index} className="bg-slate-50 p-4 rounded-lg">
+                        <div className="font-medium text-slate-800 mb-2">
+                          {index + 1}. {question.statement}
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          <strong>答案：</strong> {question.isTrue ? '正確' : '錯誤'}
+                        </div>
+                        {question.explanation && (
+                          <div className="text-sm text-slate-600 mt-1">
+                            <strong>解釋：</strong> {question.explanation}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 選擇題預覽 */}
+              {previewQuizData.multipleChoice && previewQuizData.multipleChoice.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                    <span>📝</span> 選擇題 ({previewQuizData.multipleChoice.length} 題)
+                  </h4>
+                  <div className="space-y-3">
+                    {previewQuizData.multipleChoice.map((question, index) => (
+                      <div key={index} className="bg-slate-50 p-4 rounded-lg">
+                        <div className="font-medium text-slate-800 mb-2">
+                          {index + 1}. {question.question}
+                        </div>
+                        <div className="ml-4 space-y-1">
+                          {question.options.map((option, optIndex) => (
+                            <div key={optIndex} className={`text-sm ${optIndex === question.correctAnswerIndex ? 'text-green-700 font-medium' : 'text-slate-600'}`}>
+                              {String.fromCharCode(65 + optIndex)}. {option} 
+                              {optIndex === question.correctAnswerIndex && ' ✓'}
+                            </div>
+                          ))}
+                        </div>
+                        {question.explanation && (
+                          <div className="text-sm text-slate-600 mt-2">
+                            <strong>解釋：</strong> {question.explanation}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 記憶卡遊戲預覽 */}
+              {previewQuizData.memoryCardGame && previewQuizData.memoryCardGame.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
+                    <span>🧠</span> 記憶卡配對 ({previewQuizData.memoryCardGame.length} 組)
+                  </h4>
+                  <div className="space-y-3">
+                    {previewQuizData.memoryCardGame.map((game, index) => (
+                      <div key={index} className="bg-slate-50 p-4 rounded-lg">
+                        <div className="font-medium text-slate-800 mb-3">
+                          第 {index + 1} 組：{game.title || '配對遊戲'}
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-2">
+                          {game.pairs.map((pair, pairIndex) => (
+                            <div key={pairIndex} className="flex items-center gap-2 text-sm">
+                              <div className="bg-blue-100 px-2 py-1 rounded flex-1">
+                                {pair.left}
+                              </div>
+                              <div className="text-slate-400">⟷</div>
+                              <div className="bg-green-100 px-2 py-1 rounded flex-1">
+                                {pair.right}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 bg-slate-50 p-6 border-t rounded-b-2xl">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowQuizPreview(false)}
+                  className="flex-1 px-4 py-2 bg-slate-500 text-white font-medium rounded-lg hover:bg-slate-600 transition-colors"
+                >
+                  關閉預覽
+                </button>
+                <button
+                  onClick={() => {
+                    setShowQuizPreview(false);
+                    showQuizSettingsDialog(previewStepId);
+                  }}
+                  className="flex-1 px-4 py-2 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  重新生成
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

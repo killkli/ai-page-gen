@@ -26,8 +26,14 @@ export interface DialogueLine {
 }
 
 export interface MemoryCardGameQuestion {
-  pairs: { question: string; answer: string }[]; // Each pair is a card match (e.g., word/definition, term/translation)
+  pairs: { 
+    question?: string; 
+    answer?: string;
+    left?: string;
+    right?: string;
+  }[]; // Each pair is a card match - supports both old (question/answer) and new (left/right) format
   instructions?: string; // Optional instructions for the memory game
+  title?: string; // Optional title for the memory game
 }
 
 export interface QuizDifficultyContent {

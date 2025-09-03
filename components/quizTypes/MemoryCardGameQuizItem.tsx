@@ -36,8 +36,8 @@ const MemoryCardGameQuizItem: React.FC<MemoryCardGameQuizItemProps> = ({ questio
   useEffect(() => {
     let id = 0;
     const cardList: CardData[] = (question.pairs || []).flatMap((pair, idx) => [
-      { id: id++, content: pair.question, pairId: idx, isFlipped: false, isMatched: false },
-      { id: id++, content: pair.answer, pairId: idx, isFlipped: false, isMatched: false },
+      { id: id++, content: pair.left || pair.question, pairId: idx, isFlipped: false, isMatched: false },
+      { id: id++, content: pair.right || pair.answer, pairId: idx, isFlipped: false, isMatched: false },
     ]);
     setCards(shuffleArray(cardList));
     setFlippedIndices([]);
