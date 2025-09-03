@@ -285,6 +285,9 @@ const StudentInteractivePage: React.FC = () => {
     if (stepIndex >= 0 && stepIndex < learningSteps.length && learningSteps[stepIndex]) {
       setCurrentStepIndex(stepIndex);
       
+      // 自動捲動到頂端
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
       if (learningSession) {
         const updatedSession = { ...learningSession };
         updatedSession.progress.currentObjectiveIndex = stepIndex;
@@ -853,18 +856,18 @@ const StudentInteractivePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100">
       {/* 頂部進度條 */}
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-2">
+          <div className="flex items-center justify-between mb-2">
             <div>
-              <h1 className="text-xl font-bold text-slate-800">{content.topic}</h1>
-              <p className="text-sm text-slate-600">
+              <h1 className="text-lg font-semibold text-slate-800">{content.topic}</h1>
+              <p className="text-xs text-slate-500">
                 第 {currentStepIndex + 1} 步，共 {learningSteps.length} 步
               </p>
             </div>
             
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <div className="flex items-center gap-1 text-xs text-slate-500">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               {Math.round((Date.now() - learningSession.progress.startTime) / 60000)} 分鐘
@@ -872,17 +875,17 @@ const StudentInteractivePage: React.FC = () => {
           </div>
 
           {/* 進度條 */}
-          <div className="w-full bg-slate-200 rounded-full h-2 mb-3">
+          <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
             <div 
-              className="bg-gradient-to-r from-indigo-500 to-sky-500 h-2 rounded-full transition-all duration-500 ease-out"
+              className="bg-gradient-to-r from-indigo-500 to-sky-500 h-1.5 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${((currentStepIndex + 1) / learningSteps.length) * 100}%` }}
             />
           </div>
           
           {/* 學習進度指示 */}
           <div className="text-center">
-            <span className="text-xs text-slate-500">
-              已完成 {completedSteps} 個學習步驟 • 學習進度 {Math.round(progressPercentage)}%
+            <span className="text-xs text-slate-400">
+              完成 {completedSteps}/{totalLearningSteps} • {Math.round(progressPercentage)}%
             </span>
           </div>
         </div>
