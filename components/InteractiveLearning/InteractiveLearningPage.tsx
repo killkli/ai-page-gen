@@ -7,6 +7,7 @@ import { transformLearningObjectiveForStudent, transformContentBreakdownForStude
 import LoadingSpinner from '../LoadingSpinner';
 import ProgressTracker from './ProgressTracker';
 import LearningObjectiveCard from './LearningObjectiveCard';
+import MarkdownRenderer from '../MarkdownRenderer';
 
 // 定義學習步驟類型
 type LearningStep = {
@@ -302,6 +303,35 @@ const InteractiveLearningPage: React.FC = () => {
     return transformedContent[transformKey] || null;
   };
 
+  // 檢測文字是否包含 Markdown 格式
+  const containsMarkdown = (text: string): boolean => {
+    if (!text) return false;
+    
+    // 檢測常見的 Markdown 語法
+    const markdownPatterns = [
+      /#+\s/,           // 標題 (# ## ###)
+      /\*\*.*\*\*/,     // 粗體 (**text**)
+      /\*.*\*/,         // 斜體 (*text*)
+      /`.*`/,           // 程式碼 (`code`)
+      /^\s*[-*+]\s/m,   // 清單項目
+      /^\s*\d+\.\s/m,   // 數字清單
+      /\[.*\]\(.*\)/,   // 連結 [text](url)
+      /^\s*>/m,         // 引用 (>)
+      /```[\s\S]*?```/, // 程式碼區塊
+      /\n\s*\n/,        // 多個換行（段落分隔）
+    ];
+    
+    return markdownPatterns.some(pattern => pattern.test(text));
+  };
+
+  // 智能文字渲染器 - 自動判斷是否使用 Markdown
+  const renderText = (text: string, className?: string) => {
+    if (containsMarkdown(text)) {
+      return <MarkdownRenderer content={text} className={className} />;
+    }
+    return <span className={className}>{text}</span>;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -406,13 +436,13 @@ const InteractiveLearningPage: React.FC = () => {
             {/* 大版面學習目標卡片 */}
             <div className="bg-gradient-to-br from-indigo-500 to-sky-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
               <div className="text-6xl mb-6">🎯</div>
-              <h3 className="text-4xl font-bold mb-6 leading-tight">
-                {displayObjective.objective}
-              </h3>
+              <div className="text-4xl font-bold mb-6 leading-tight">
+                {renderText(displayObjective.objective, "text-4xl font-bold leading-tight")}
+              </div>
               {displayObjective.description && (
-                <p className="text-xl text-indigo-100 leading-relaxed max-w-3xl mx-auto">
-                  {displayObjective.description}
-                </p>
+                <div className="text-xl text-indigo-100 leading-relaxed max-w-3xl mx-auto">
+                  {renderText(displayObjective.description, "text-xl text-indigo-100 leading-relaxed")}
+                </div>
               )}
             </div>
 
@@ -427,7 +457,7 @@ const InteractiveLearningPage: React.FC = () => {
                       對你的意義
                     </h4>
                     <div className="bg-purple-50 rounded-xl p-6 text-lg leading-relaxed text-purple-900">
-                      {transformedData.personalRelevance}
+                      {renderText(transformedData.personalRelevance, "text-lg leading-relaxed text-purple-900")}
                     </div>
                   </div>
                 )}
@@ -440,7 +470,7 @@ const InteractiveLearningPage: React.FC = () => {
                       實際應用
                     </h4>
                     <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed text-green-900">
-                      {transformedData.teachingExample}
+                      {renderText(transformedData.teachingExample, "text-lg leading-relaxed text-green-900")}
                     </div>
                   </div>
                 )}
@@ -453,7 +483,7 @@ const InteractiveLearningPage: React.FC = () => {
                       給你的鼓勵
                     </h4>
                     <div className="text-lg leading-relaxed text-sky-900 font-medium">
-                      {transformedData.encouragement}
+                      {renderText(transformedData.encouragement, "text-lg leading-relaxed text-sky-900 font-medium")}
                     </div>
                   </div>
                 )}
@@ -465,7 +495,7 @@ const InteractiveLearningPage: React.FC = () => {
                   教學示例
                 </h4>
                 <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed">
-                  {displayObjective.teachingExample}
+                  {renderText(displayObjective.teachingExample, "text-lg leading-relaxed")}
                 </div>
               </div>
             )}
@@ -579,13 +609,16 @@ const InteractiveLearningPage: React.FC = () => {
             {/* 主題標題卡片 */}
             <div className="bg-gradient-to-br from-sky-500 to-blue-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
               <div className="text-6xl mb-6">📖</div>
-              <h3 className="text-4xl font-bold mb-6 leading-tight">
-                {isTransformed && transformedData?.title ? transformedData.title : breakdownItem.topic}
-              </h3>
+              <div className="text-4xl font-bold mb-6 leading-tight">
+                {isTransformed && transformedData?.title 
+                  ? renderText(transformedData.title, "text-4xl font-bold leading-tight") 
+                  : renderText(breakdownItem.topic, "text-4xl font-bold leading-tight")
+                }
+              </div>
               {isTransformed && transformedData?.introduction && (
-                <p className="text-xl text-sky-100 leading-relaxed max-w-3xl mx-auto">
-                  {transformedData.introduction}
-                </p>
+                <div className="text-xl text-sky-100 leading-relaxed max-w-3xl mx-auto">
+                  {renderText(transformedData.introduction, "text-xl text-sky-100 leading-relaxed")}
+                </div>
               )}
             </div>
 
@@ -606,9 +639,9 @@ const InteractiveLearningPage: React.FC = () => {
                             <span className="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                               {pointIndex + 1}
                             </span>
-                            <p className="text-lg text-indigo-900 leading-relaxed">
-                              {point}
-                            </p>
+                            <div className="text-lg text-indigo-900 leading-relaxed">
+                              {renderText(point, "text-lg text-indigo-900 leading-relaxed")}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -630,9 +663,9 @@ const InteractiveLearningPage: React.FC = () => {
                             <span className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                               {exampleIndex + 1}
                             </span>
-                            <p className="text-lg text-green-900 leading-relaxed">
-                              {example}
-                            </p>
+                            <div className="text-lg text-green-900 leading-relaxed">
+                              {renderText(example, "text-lg text-green-900 leading-relaxed")}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -648,7 +681,7 @@ const InteractiveLearningPage: React.FC = () => {
                       學習技巧
                     </h4>
                     <div className="bg-purple-50 rounded-xl p-6 text-lg leading-relaxed text-purple-900">
-                      {transformedData.learningTips}
+                      {renderText(transformedData.learningTips, "text-lg leading-relaxed text-purple-900")}
                     </div>
                   </div>
                 )}
@@ -661,7 +694,7 @@ const InteractiveLearningPage: React.FC = () => {
                       下一步探索
                     </h4>
                     <div className="text-lg leading-relaxed text-cyan-900">
-                      {transformedData.nextSteps}
+                      {renderText(transformedData.nextSteps, "text-lg leading-relaxed text-cyan-900")}
                     </div>
                   </div>
                 )}
@@ -686,7 +719,7 @@ const InteractiveLearningPage: React.FC = () => {
                   詳細說明
                 </h4>
                 <div className="text-lg leading-relaxed text-slate-700 bg-slate-50 rounded-xl p-6">
-                  {breakdownItem.details}
+                  {renderText(breakdownItem.details, "text-lg leading-relaxed text-slate-700")}
                 </div>
               </div>
             )}
@@ -703,7 +736,7 @@ const InteractiveLearningPage: React.FC = () => {
                         核心概念
                       </h4>
                       <div className="bg-sky-50 rounded-xl p-6 text-lg leading-relaxed text-sky-900">
-                        {breakdownItem.coreConcept}
+                        {renderText(breakdownItem.coreConcept, "text-lg leading-relaxed text-sky-900")}
                       </div>
                     </div>
                   )}
@@ -715,7 +748,7 @@ const InteractiveLearningPage: React.FC = () => {
                         教學示例
                       </h4>
                       <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed text-green-900">
-                        {breakdownItem.teachingExample}
+                        {renderText(breakdownItem.teachingExample, "text-lg leading-relaxed text-green-900")}
                       </div>
                     </div>
                   )}
@@ -735,9 +768,9 @@ const InteractiveLearningPage: React.FC = () => {
                             <span className="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                               {sentenceIndex + 1}
                             </span>
-                            <p className="text-lg text-indigo-900 leading-relaxed">
-                              {sentence}
-                            </p>
+                            <div className="text-lg text-indigo-900 leading-relaxed">
+                              {renderText(sentence, "text-lg text-indigo-900 leading-relaxed")}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -752,9 +785,9 @@ const InteractiveLearningPage: React.FC = () => {
                       <span className="text-2xl mr-3">💡</span>
                       教學提示
                     </h4>
-                    <p className="text-lg text-amber-800 leading-relaxed">
-                      {breakdownItem.teachingTips}
-                    </p>
+                    <div className="text-lg text-amber-800 leading-relaxed">
+                      {renderText(breakdownItem.teachingTips, "text-lg text-amber-800 leading-relaxed")}
+                    </div>
                   </div>
                 )}
               </>
@@ -826,9 +859,12 @@ const InteractiveLearningPage: React.FC = () => {
             {/* 易混淆點標題卡片 */}
             <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
               <div className="text-6xl mb-6">⚡</div>
-              <h3 className="text-4xl font-bold mb-6 leading-tight">
-                {isTransformed && transformedData?.title ? transformedData.title : confusingItem.point}
-              </h3>
+              <div className="text-4xl font-bold mb-6 leading-tight">
+                {isTransformed && transformedData?.title 
+                  ? renderText(transformedData.title, "text-4xl font-bold leading-tight") 
+                  : renderText(confusingItem.point, "text-4xl font-bold leading-tight")
+                }
+              </div>
               <p className="text-xl text-amber-100 leading-relaxed max-w-3xl mx-auto">
                 {isTransformed && transformedData?.normalizeConfusion 
                   ? transformedData.normalizeConfusion 
@@ -848,7 +884,7 @@ const InteractiveLearningPage: React.FC = () => {
                       為什麼會有這種混淆？
                     </h4>
                     <div className="bg-amber-50 rounded-xl p-6 text-lg leading-relaxed text-amber-900">
-                      {transformedData.whyItHappens}
+                      {renderText(transformedData.whyItHappens, "text-lg leading-relaxed text-amber-900")}
                     </div>
                   </div>
                 )}
@@ -861,7 +897,7 @@ const InteractiveLearningPage: React.FC = () => {
                       正確理解
                     </h4>
                     <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed text-green-900">
-                      {transformedData.clearExplanation}
+                      {renderText(transformedData.clearExplanation, "text-lg leading-relaxed text-green-900")}
                     </div>
                   </div>
                 )}
@@ -880,9 +916,9 @@ const InteractiveLearningPage: React.FC = () => {
                             <span className="flex-shrink-0 w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                               {trickIndex + 1}
                             </span>
-                            <p className="text-lg text-purple-900 leading-relaxed">
-                              {trick}
-                            </p>
+                            <div className="text-lg text-purple-900 leading-relaxed">
+                              {renderText(trick, "text-lg text-purple-900 leading-relaxed")}
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -901,7 +937,7 @@ const InteractiveLearningPage: React.FC = () => {
                         
                         <div className="bg-slate-50 rounded-xl p-6 mb-6">
                           <h5 className="text-lg font-bold text-slate-700 mb-3">情境：</h5>
-                          <p className="text-lg text-slate-800">{example.situation}</p>
+                          <div className="text-lg text-slate-800">{renderText(example.situation, "text-lg text-slate-800")}</div>
                         </div>
                         
                         <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -912,9 +948,9 @@ const InteractiveLearningPage: React.FC = () => {
                               </div>
                               <h5 className="text-xl font-bold text-red-700">錯誤想法</h5>
                             </div>
-                            <p className="text-lg text-red-900 bg-white rounded-lg p-4">
-                              {example.wrongThinking}
-                            </p>
+                            <div className="text-lg text-red-900 bg-white rounded-lg p-4">
+                              {renderText(example.wrongThinking, "text-lg text-red-900")}
+                            </div>
                           </div>
 
                           <div className="bg-green-50 border-3 border-green-300 rounded-2xl p-6">
@@ -924,17 +960,17 @@ const InteractiveLearningPage: React.FC = () => {
                               </div>
                               <h5 className="text-xl font-bold text-green-700">正確想法</h5>
                             </div>
-                            <p className="text-lg text-green-900 bg-white rounded-lg p-4">
-                              {example.rightThinking}
-                            </p>
+                            <div className="text-lg text-green-900 bg-white rounded-lg p-4">
+                              {renderText(example.rightThinking, "text-lg text-green-900")}
+                            </div>
                           </div>
                         </div>
 
                         <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
                           <h5 className="text-lg font-bold text-blue-700 mb-3">解釋：</h5>
-                          <p className="text-lg text-blue-900 leading-relaxed">
-                            {example.explanation}
-                          </p>
+                          <div className="text-lg text-blue-900 leading-relaxed">
+                            {renderText(example.explanation, "text-lg text-blue-900 leading-relaxed")}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -949,7 +985,7 @@ const InteractiveLearningPage: React.FC = () => {
                       給你的鼓勵
                     </h4>
                     <div className="text-lg leading-relaxed text-sky-900 font-medium">
-                      {transformedData.confidenceBooster}
+                      {renderText(transformedData.confidenceBooster, "text-lg leading-relaxed text-sky-900 font-medium")}
                     </div>
                   </div>
                 )}
@@ -961,7 +997,7 @@ const InteractiveLearningPage: React.FC = () => {
                   詳細解釋
                 </h4>
                 <div className="text-lg leading-relaxed text-slate-700 bg-amber-50 rounded-xl p-6">
-                  {confusingItem.clarification}
+                  {renderText(confusingItem.clarification, "text-lg leading-relaxed text-slate-700")}
                 </div>
               </div>
             )}
@@ -974,7 +1010,7 @@ const InteractiveLearningPage: React.FC = () => {
                   錯誤類型
                 </h4>
                 <div className="bg-orange-50 rounded-xl p-6 text-lg leading-relaxed text-orange-900">
-                  {confusingItem.errorType}
+                  {renderText(confusingItem.errorType, "text-lg leading-relaxed text-orange-900")}
                 </div>
               </div>
             )}
@@ -997,9 +1033,9 @@ const InteractiveLearningPage: React.FC = () => {
                           </div>
                           <h5 className="text-xl font-bold text-green-700">正確用法</h5>
                         </div>
-                        <p className="text-xl font-semibold text-green-900 bg-white rounded-lg p-4">
-                          {comparison.correct}
-                        </p>
+                        <div className="text-xl font-semibold text-green-900 bg-white rounded-lg p-4">
+                          {renderText(comparison.correct, "text-xl font-semibold text-green-900")}
+                        </div>
                       </div>
 
                       {/* 錯誤用法 */}
@@ -1010,9 +1046,9 @@ const InteractiveLearningPage: React.FC = () => {
                           </div>
                           <h5 className="text-xl font-bold text-red-700">錯誤用法</h5>
                         </div>
-                        <p className="text-xl font-semibold text-red-900 bg-white rounded-lg p-4">
-                          {comparison.wrong}
-                        </p>
+                        <div className="text-xl font-semibold text-red-900 bg-white rounded-lg p-4">
+                          {renderText(comparison.wrong, "text-xl font-semibold text-red-900")}
+                        </div>
                       </div>
                     </div>
 
@@ -1022,9 +1058,9 @@ const InteractiveLearningPage: React.FC = () => {
                         <span className="text-xl mr-2">💡</span>
                         詳細說明
                       </h5>
-                      <p className="text-lg text-blue-900 leading-relaxed">
-                        {comparison.explanation}
-                      </p>
+                      <div className="text-lg text-blue-900 leading-relaxed">
+                        {renderText(comparison.explanation, "text-lg text-blue-900 leading-relaxed")}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1045,9 +1081,9 @@ const InteractiveLearningPage: React.FC = () => {
                         <span className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                           {errorIndex + 1}
                         </span>
-                        <p className="text-lg text-red-900 leading-relaxed">
-                          {error}
-                        </p>
+                        <div className="text-lg text-red-900 leading-relaxed">
+                          {renderText(error, "text-lg text-red-900 leading-relaxed")}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1064,7 +1100,7 @@ const InteractiveLearningPage: React.FC = () => {
                     預防策略
                   </h4>
                   <div className="bg-purple-50 rounded-xl p-6 text-lg leading-relaxed text-purple-900">
-                    {confusingItem.preventionStrategy}
+                    {renderText(confusingItem.preventionStrategy, "text-lg leading-relaxed text-purple-900")}
                   </div>
                 </div>
               )}
@@ -1076,7 +1112,7 @@ const InteractiveLearningPage: React.FC = () => {
                     糾正方法
                   </h4>
                   <div className="bg-indigo-50 rounded-xl p-6 text-lg leading-relaxed text-indigo-900">
-                    {confusingItem.correctionMethod}
+                    {renderText(confusingItem.correctionMethod, "text-lg leading-relaxed text-indigo-900")}
                   </div>
                 </div>
               )}
@@ -1096,9 +1132,9 @@ const InteractiveLearningPage: React.FC = () => {
                         <span className="flex-shrink-0 w-8 h-8 bg-cyan-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                           {activityIndex + 1}
                         </span>
-                        <p className="text-lg text-cyan-900 leading-relaxed">
-                          {activity}
-                        </p>
+                        <div className="text-lg text-cyan-900 leading-relaxed">
+                          {renderText(activity, "text-lg text-cyan-900 leading-relaxed")}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1277,7 +1313,7 @@ const InteractiveLearningPage: React.FC = () => {
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">{currentStep.icon}</div>
           <h2 className="text-3xl font-bold text-slate-800 mb-2">{currentStep.title}</h2>
-          <p className="text-lg text-slate-600">{currentStep.description}</p>
+          <div className="text-lg text-slate-600">{renderText(currentStep.description, "text-lg text-slate-600")}</div>
         </div>
 
         {/* 步驟內容 */}

@@ -210,10 +210,10 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         sharedAt: new Date().toISOString()
       };
       const binId = await saveLearningContent(shareData);
-      const url = `${window.location.origin}${import.meta.env.BASE_URL}interactive-learning?binId=${binId}`;
+      const url = `${window.location.origin}${import.meta.env.BASE_URL}teacher-interactive-prep?binId=${binId}`;
       setInteractiveLearningShareUrl(url);
     } catch (e: any) {
-      setInteractiveLearningShareError(e.message || '分享互動學習失敗');
+      setInteractiveLearningShareError(e.message || '分享教材準備失敗');
     } finally {
       setInteractiveLearningShareLoading(false);
     }
@@ -305,7 +305,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
         <button
           onClick={handleInteractiveLearningShare}
           className="px-4 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors flex items-center text-sm disabled:opacity-60"
-          aria-label="分享互動學習"
+          aria-label="分享教材準備"
           disabled={interactiveLearningShareLoading}
         >
           {interactiveLearningShareLoading ? (
@@ -315,7 +315,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
               </svg>
-              互動學習
+              教材準備
             </span>
           )}
         </button>
@@ -350,7 +350,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
       {/* Interactive Learning Share URL Display */}
       {interactiveLearningShareUrl && (
         <div className="mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-          <p className="text-sm text-emerald-700 mb-2">互動學習連結已生成：</p>
+          <p className="text-sm text-emerald-700 mb-2">教材準備連結已生成：</p>
           <div className="flex items-center gap-2 mb-3">
             <input
               type="text"
@@ -381,7 +381,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
             <div className="mt-4 flex justify-center">
               <QRCodeDisplay
                 url={interactiveLearningShareUrl}
-                title="互動學習分享 QR Code"
+                title="教材準備分享 QR Code"
                 size={200}
                 className="bg-white p-4 rounded-lg shadow-sm"
               />
@@ -389,7 +389,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
           )}
           
           <div className="text-xs text-emerald-600 bg-emerald-100 px-3 py-2 rounded-lg">
-            💡 學生可以通過此連結進行沈浸式互動學習，包含翻卡學習、進度追蹤等功能
+            💡 教師可以通過此連結準備互動教材，包含內容轉換、檢查和發布功能
           </div>
         </div>
       )}
