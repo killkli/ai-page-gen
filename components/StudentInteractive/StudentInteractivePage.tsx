@@ -36,6 +36,13 @@ const StudentInteractivePage: React.FC = () => {
     }
   }, [binId]);
 
+  // 當學習步驟設置完成後初始化學習會話
+  useEffect(() => {
+    if (content && learningSteps.length > 0) {
+      initializeLearningSession(content);
+    }
+  }, [content, learningSteps, binId]);
+
   const loadInteractiveContent = async () => {
     try {
       setLoading(true);
@@ -50,7 +57,6 @@ const StudentInteractivePage: React.FC = () => {
 
       setContent(loadedContent);
       initializeLearningSteps(loadedContent);
-      initializeLearningSession(loadedContent);
 
     } catch (err: any) {
       console.error('載入互動內容失敗:', err);
@@ -66,94 +72,126 @@ const StudentInteractivePage: React.FC = () => {
     
     console.log('Initial content:', content);
     console.log('Transformed data keys:', Object.keys(transformedData));
+    console.log('Transformed data:', transformedData);
     
-    // 創建一個索引映射，根據原始內容的順序和類型
-    let stepIndex = 0;
+    // 直接根據轉換數據的鍵來創建步驟
+    const sortedStepIds = Object.keys(transformedData).sort((a, b) => {
+      const aNum = parseInt(a.replace('step_', ''));
+      const bNum = parseInt(b.replace('step_', ''));
+      return aNum - bNum;
+    });
     
-    // 學習目標步驟
-    if (content.learningObjectives && content.learningObjectives.length > 0) {
-      content.learningObjectives.forEach((objective, index) => {
-        const stepId = `step_${stepIndex}`;
-        const transformedContent = transformedData[stepId];
-        
-        console.log(`Objective ${index}: stepId=${stepId}, hasTransformed=${!!transformedContent}`, transformedContent);
-        
-        if (transformedContent) {
-          steps.push({
-            id: stepId,
-            title: `📚 學習目標 ${index + 1}`,
-            type: 'objective',
-            icon: '🎯',
-            description: transformedContent.objective?.length > 50 
-              ? `${transformedContent.objective.substring(0, 50)}...` 
-              : transformedContent.objective || objective.objective,
-            content: transformedContent,
-            originalIndex: index
-          });
-        }
-        stepIndex++;
+    console.log('Sorted step IDs:', sortedStepIds);
+    
+    // 直接使用 includedSteps 來建立正確的映射關係
+    const includedSteps = content.includedSteps || Object.keys(transformedData);
+    console.log('Included steps:', includedSteps);
+    
+    // 建立原始內容的查找表，根據實際的includedSteps順序
+    const originalLookup: {[key: string]: {content: any, type: string, index: number}} = {};
+    
+    // 重新建立所有原始內容的完整列表
+    const allOriginalContent: {content: any, type: string, typeIndex: number}[] = [];
+    
+    // 學習目標
+    if (content.learningObjectives) {
+      content.learningObjectives.forEach((obj, index) => {
+        allOriginalContent.push({ content: obj, type: 'objective', typeIndex: index });
       });
     }
     
-    // 深度學習步驟
-    if (content.contentBreakdown && content.contentBreakdown.length > 0) {
+    // 深度學習
+    if (content.contentBreakdown) {
       content.contentBreakdown.forEach((item, index) => {
-        const stepId = `step_${stepIndex}`;
-        const transformedContent = transformedData[stepId];
-        
-        console.log(`Breakdown ${index}: stepId=${stepId}, hasTransformed=${!!transformedContent}`, transformedContent);
-        
-        if (transformedContent) {
-          steps.push({
-            id: stepId,
-            title: `🔍 深度學習 ${index + 1}`,
-            type: 'breakdown',
-            icon: '📖',
-            description: transformedContent.title?.length > 50 
-              ? `${transformedContent.title.substring(0, 50)}...` 
-              : transformedContent.title || item.topic,
-            content: transformedContent,
-            originalIndex: index
-          });
-        }
-        stepIndex++;
+        allOriginalContent.push({ content: item, type: 'breakdown', typeIndex: index });
       });
     }
     
-    // 易混淆點步驟
-    if (content.confusingPoints && content.confusingPoints.length > 0) {
+    // 易混淆點
+    if (content.confusingPoints) {
       content.confusingPoints.forEach((item, index) => {
-        const stepId = `step_${stepIndex}`;
-        const transformedContent = transformedData[stepId];
-        
-        console.log(`Confusing ${index}: stepId=${stepId}, hasTransformed=${!!transformedContent}`, transformedContent);
-        
-        if (transformedContent) {
-          steps.push({
-            id: stepId,
-            title: `⚡ 重要提醒 ${index + 1}`,
-            type: 'confusing',
-            icon: '💡',
-            description: transformedContent.title?.length > 50 
-              ? `${transformedContent.title.substring(0, 50)}...` 
-              : transformedContent.title || item.point,
-            content: transformedContent,
-            originalIndex: index
-          });
-        }
-        stepIndex++;
+        allOriginalContent.push({ content: item, type: 'confusing', typeIndex: index });
       });
     }
+    
+    console.log('All original content:', allOriginalContent);
+    
+    // 根據 includedSteps 建立查找表 - 使用步驟ID中的數字作為原始內容的索引
+    includedSteps.forEach((stepId) => {
+      // 從 stepId (如 "step_4") 中提取數字索引
+      const stepIndex = parseInt(stepId.replace('step_', ''));
+      
+      if (stepIndex >= 0 && stepIndex < allOriginalContent.length) {
+        const originalItem = allOriginalContent[stepIndex];
+        originalLookup[stepId] = {
+          content: originalItem.content,
+          type: originalItem.type,
+          index: originalItem.typeIndex
+        };
+      }
+    });
+    
+    console.log('Original lookup:', originalLookup);
+    
+    // 根據轉換數據創建步驟
+    sortedStepIds.forEach((stepId) => {
+      const transformedContent = transformedData[stepId];
+      const original = originalLookup[stepId];
+      
+      if (transformedContent && original) {
+        let title = '';
+        let icon = '';
+        let description = '';
+        
+        switch (original.type) {
+          case 'objective':
+            title = `📚 學習目標 ${original.index + 1}`;
+            icon = '🎯';
+            description = transformedContent.objective?.length > 50 
+              ? `${transformedContent.objective.substring(0, 50)}...` 
+              : transformedContent.objective || original.content.objective;
+            break;
+          case 'breakdown':
+            title = `🔍 深度學習 ${original.index + 1}`;
+            icon = '📖';
+            description = transformedContent.title?.length > 50 
+              ? `${transformedContent.title.substring(0, 50)}...` 
+              : transformedContent.title || original.content.topic;
+            break;
+          case 'confusing':
+            title = `⚡ 重要提醒 ${original.index + 1}`;
+            icon = '💡';
+            description = transformedContent.title?.length > 50 
+              ? `${transformedContent.title.substring(0, 50)}...` 
+              : transformedContent.title || original.content.point;
+            break;
+        }
+        
+        console.log(`Creating step: ${stepId}, type: ${original.type}, title: ${title}`);
+        
+        steps.push({
+          id: stepId,
+          title: title,
+          type: original.type as 'objective' | 'breakdown' | 'confusing',
+          icon: icon,
+          description: description,
+          content: transformedContent,
+          originalIndex: original.index
+        });
+      }
+    });
     
     // 學習總結步驟
-    steps.push({
-      id: 'summary',
-      title: '🎯 學習完成',
-      type: 'summary',
-      icon: '🏆',
-      description: '恭喜完成學習，開始實踐應用！',
-      content: null
-    });
+    if (steps.length > 0) {
+      steps.push({
+        id: 'summary',
+        title: '🎯 學習完成',
+        type: 'summary',
+        icon: '🏆',
+        description: '恭喜完成學習，開始實踐應用！',
+        content: null
+      });
+    }
     
     console.log('Final steps:', steps);
     setLearningSteps(steps);
@@ -168,8 +206,10 @@ const StudentInteractivePage: React.FC = () => {
       if (existingSession) {
         const session: InteractiveLearningSession = JSON.parse(existingSession);
         setLearningSession(session);
-        // 恢復學習進度
-        setCurrentStepIndex(session.progress.currentObjectiveIndex || 0);
+        // 恢復學習進度，確保索引有效
+        const savedIndex = session.progress.currentObjectiveIndex || 0;
+        const validIndex = Math.min(Math.max(0, savedIndex), learningSteps.length - 1);
+        setCurrentStepIndex(validIndex);
       } else {
         const newSession: InteractiveLearningSession = {
           contentId: binId || 'unknown',
@@ -219,7 +259,7 @@ const StudentInteractivePage: React.FC = () => {
 
   // 導航函數
   const goToStep = (stepIndex: number) => {
-    if (stepIndex >= 0 && stepIndex < learningSteps.length) {
+    if (stepIndex >= 0 && stepIndex < learningSteps.length && learningSteps[stepIndex]) {
       setCurrentStepIndex(stepIndex);
       
       if (learningSession) {
@@ -290,6 +330,21 @@ const StudentInteractivePage: React.FC = () => {
   }
 
   const currentStep = learningSteps[currentStepIndex];
+  
+  // 如果沒有當前步驟，顯示錯誤
+  if (!currentStep) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-lg shadow-md">
+            <h3 className="font-bold text-lg mb-2">沒有可用的學習步驟</h3>
+            <p>此互動教材可能還沒有轉換任何內容，或者內容載入有問題。</p>
+            <p className="mt-2 text-sm">請確認教師已經轉換並發布了學習內容。</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // 計算學習進度
   const completedSteps = learningSession.progress.completedObjectives.length;
