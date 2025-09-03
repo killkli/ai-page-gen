@@ -74,6 +74,11 @@ const StudentInteractivePage: React.FC = () => {
     console.log('Transformed data keys:', Object.keys(transformedData));
     console.log('Transformed data:', transformedData);
     
+    // 檢查是否有 originalContent 來幫助映射
+    if (content.originalContent) {
+      console.log('Original content from JSON:', content.originalContent);
+    }
+    
     // 直接根據轉換數據的鍵來創建步驟
     const sortedStepIds = Object.keys(transformedData).sort((a, b) => {
       const aNum = parseInt(a.replace('step_', ''));
@@ -87,49 +92,67 @@ const StudentInteractivePage: React.FC = () => {
     const includedSteps = content.includedSteps || Object.keys(transformedData);
     console.log('Included steps:', includedSteps);
     
-    // 建立原始內容的查找表，根據實際的includedSteps順序
+    // 建立原始內容的查找表
     const originalLookup: {[key: string]: {content: any, type: string, index: number}} = {};
     
-    // 重新建立所有原始內容的完整列表
-    const allOriginalContent: {content: any, type: string, typeIndex: number}[] = [];
-    
-    // 學習目標
-    if (content.learningObjectives) {
-      content.learningObjectives.forEach((obj, index) => {
-        allOriginalContent.push({ content: obj, type: 'objective', typeIndex: index });
-      });
-    }
-    
-    // 深度學習
-    if (content.contentBreakdown) {
-      content.contentBreakdown.forEach((item, index) => {
-        allOriginalContent.push({ content: item, type: 'breakdown', typeIndex: index });
-      });
-    }
-    
-    // 易混淆點
-    if (content.confusingPoints) {
-      content.confusingPoints.forEach((item, index) => {
-        allOriginalContent.push({ content: item, type: 'confusing', typeIndex: index });
-      });
-    }
-    
-    console.log('All original content:', allOriginalContent);
-    
-    // 根據 includedSteps 建立查找表 - 使用步驟ID中的數字作為原始內容的索引
-    includedSteps.forEach((stepId) => {
-      // 從 stepId (如 "step_4") 中提取數字索引
-      const stepIndex = parseInt(stepId.replace('step_', ''));
+    // 如果有 originalContent，使用它來建立映射
+    if (content.originalContent) {
+      console.log('Using originalContent from JSON for mapping');
       
-      if (stepIndex >= 0 && stepIndex < allOriginalContent.length) {
-        const originalItem = allOriginalContent[stepIndex];
-        originalLookup[stepId] = {
-          content: originalItem.content,
-          type: originalItem.type,
-          index: originalItem.typeIndex
-        };
+      // originalContent 應該是一個物件，每個 stepId 對應一個原始內容
+      Object.keys(content.originalContent).forEach((stepId) => {
+        const originalItem = content.originalContent[stepId];
+        if (originalItem && includedSteps.includes(stepId)) {
+          originalLookup[stepId] = {
+            content: originalItem.content,
+            type: originalItem.type,
+            index: originalItem.index || 0
+          };
+        }
+      });
+    } else {
+      // 備用方案：重新建立所有原始內容的完整列表
+      console.log('Using fallback method to build original content mapping');
+      
+      const allOriginalContent: {content: any, type: string, typeIndex: number}[] = [];
+      
+      // 學習目標
+      if (content.learningObjectives) {
+        content.learningObjectives.forEach((obj, index) => {
+          allOriginalContent.push({ content: obj, type: 'objective', typeIndex: index });
+        });
       }
-    });
+      
+      // 深度學習
+      if (content.contentBreakdown) {
+        content.contentBreakdown.forEach((item, index) => {
+          allOriginalContent.push({ content: item, type: 'breakdown', typeIndex: index });
+        });
+      }
+      
+      // 易混淆點
+      if (content.confusingPoints) {
+        content.confusingPoints.forEach((item, index) => {
+          allOriginalContent.push({ content: item, type: 'confusing', typeIndex: index });
+        });
+      }
+      
+      console.log('All original content (fallback):', allOriginalContent);
+      
+      // 根據 includedSteps 的順序建立查找表
+      // 由於只收到了部分原始內容，我們按照 includedSteps 的順序來映射
+      includedSteps.forEach((stepId, arrayIndex) => {
+        if (arrayIndex < allOriginalContent.length) {
+          const originalItem = allOriginalContent[arrayIndex];
+          originalLookup[stepId] = {
+            content: originalItem.content,
+            type: originalItem.type,
+            index: originalItem.typeIndex
+          };
+          console.log(`Mapping ${stepId} to original content at index ${arrayIndex}:`, originalItem);
+        }
+      });
+    }
     
     console.log('Original lookup:', originalLookup);
     
@@ -514,6 +537,30 @@ const StudentInteractivePage: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {currentStep.content.nextSteps && (
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <h3 className="text-2xl font-bold text-orange-700 mb-6 flex items-center">
+                    <span className="text-3xl mr-3">🚀</span>
+                    下一步挑戰
+                  </h3>
+                  <div className="bg-orange-50 rounded-xl p-6 text-lg leading-relaxed text-orange-900">
+                    {renderText(currentStep.content.nextSteps, "text-lg leading-relaxed text-orange-900")}
+                  </div>
+                </div>
+              )}
+
+              {currentStep.content.encouragement && (
+                <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-8">
+                  <h3 className="text-2xl font-bold text-pink-700 mb-6 flex items-center">
+                    <span className="text-3xl mr-3">💪</span>
+                    給你的鼓勵
+                  </h3>
+                  <div className="text-lg leading-relaxed text-pink-900 font-medium">
+                    {renderText(currentStep.content.encouragement, "text-lg leading-relaxed text-pink-900 font-medium")}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 完成按鈕 */}
@@ -562,6 +609,18 @@ const StudentInteractivePage: React.FC = () => {
 
             {/* 學習內容 */}
             <div className="space-y-6">
+              {currentStep.content.commonMistake && (
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <h3 className="text-2xl font-bold text-red-700 mb-6 flex items-center">
+                    <span className="text-3xl mr-3">⚠️</span>
+                    常見錯誤
+                  </h3>
+                  <div className="bg-red-50 rounded-xl p-6 text-lg leading-relaxed text-red-900">
+                    {renderText(currentStep.content.commonMistake, "text-lg leading-relaxed text-red-900")}
+                  </div>
+                </div>
+              )}
+
               {currentStep.content.whyItHappens && (
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                   <h3 className="text-2xl font-bold text-amber-700 mb-6 flex items-center">
@@ -582,6 +641,70 @@ const StudentInteractivePage: React.FC = () => {
                   </h3>
                   <div className="bg-green-50 rounded-xl p-6 text-lg leading-relaxed text-green-900">
                     {renderText(currentStep.content.clearExplanation, "text-lg leading-relaxed text-green-900")}
+                  </div>
+                </div>
+              )}
+
+              {currentStep.content.practiceExamples && currentStep.content.practiceExamples.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <h3 className="text-2xl font-bold text-blue-700 mb-6 flex items-center">
+                    <span className="text-3xl mr-3">📝</span>
+                    練習範例
+                  </h3>
+                  <div className="bg-blue-50 rounded-xl p-6">
+                    <div className="space-y-6">
+                      {currentStep.content.practiceExamples.map((example, index) => (
+                        <div key={index} className="border-l-4 border-blue-400 pl-4">
+                          <div className="flex items-start mb-3">
+                            <span className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
+                              {index + 1}
+                            </span>
+                            <div className="flex-1">
+                              {typeof example === 'string' ? (
+                                <div className="text-lg text-blue-900 leading-relaxed">
+                                  {renderText(example, "text-lg text-blue-900 leading-relaxed")}
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  {example.situation && (
+                                    <div>
+                                      <strong className="text-blue-800">情境：</strong>
+                                      <span className="text-blue-900 ml-2">
+                                        {renderText(example.situation, "text-blue-900")}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {example.wrongThinking && (
+                                    <div>
+                                      <strong className="text-red-600">❌ 錯誤想法：</strong>
+                                      <span className="text-red-700 ml-2">
+                                        {renderText(example.wrongThinking, "text-red-700")}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {example.rightThinking && (
+                                    <div>
+                                      <strong className="text-green-600">✅ 正確想法：</strong>
+                                      <span className="text-green-700 ml-2">
+                                        {renderText(example.rightThinking, "text-green-700")}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {example.explanation && (
+                                    <div>
+                                      <strong className="text-purple-600">💡 解釋：</strong>
+                                      <span className="text-purple-700 ml-2">
+                                        {renderText(example.explanation, "text-purple-700")}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
