@@ -1539,6 +1539,34 @@ const TeacherInteractivePrepPage: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-6">
+              {/* 驗證警告 */}
+              {previewQuizData._validationWarnings && previewQuizData._validationWarnings.length > 0 && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h4 className="text-sm font-medium text-yellow-800">
+                        ⚠️ 發現記憶卡內容問題
+                      </h4>
+                      <div className="mt-2 text-sm text-yellow-700">
+                        <ul className="list-disc list-inside space-y-1">
+                          {previewQuizData._validationWarnings.map((warning, index) => (
+                            <li key={index}>{warning}</li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 font-medium">
+                          建議重新生成測驗以確保學生體驗良好！
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 是非題預覽 */}
               {previewQuizData.trueFalse && previewQuizData.trueFalse.length > 0 && (
                 <div>

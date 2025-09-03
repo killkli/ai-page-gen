@@ -1288,6 +1288,38 @@ export const transformConfusingPointForStudent = async (
   return await callGemini(prompt, apiKey);
 };
 
+// 檢查記憶卡遊戲是否有重複內容
+const validateMemoryCardGame = (memoryCardData: any[]): { isValid: boolean; issues: string[] } => {
+  const issues: string[] = [];
+  
+  for (const game of memoryCardData) {
+    if (!game.pairs || !Array.isArray(game.pairs)) continue;
+    
+    const leftContents = game.pairs.map(pair => pair.left?.toLowerCase().trim()).filter(Boolean);
+    const rightContents = game.pairs.map(pair => pair.right?.toLowerCase().trim()).filter(Boolean);
+    
+    // 檢查左側內容重複
+    const leftDuplicates = leftContents.filter((item, index) => leftContents.indexOf(item) !== index);
+    if (leftDuplicates.length > 0) {
+      issues.push(`記憶卡左側有重複內容: ${leftDuplicates.join(', ')}`);
+    }
+    
+    // 檢查右側內容重複
+    const rightDuplicates = rightContents.filter((item, index) => rightContents.indexOf(item) !== index);
+    if (rightDuplicates.length > 0) {
+      issues.push(`記憶卡右側有重複內容: ${rightDuplicates.join(', ')}`);
+    }
+    
+    // 檢查左右側交叉重複
+    const crossDuplicates = leftContents.filter(left => rightContents.includes(left));
+    if (crossDuplicates.length > 0) {
+      issues.push(`記憶卡左右側有交叉重複內容: ${crossDuplicates.join(', ')}`);
+    }
+  }
+  
+  return { isValid: issues.length === 0, issues };
+};
+
 // 為特定學習步驟生成測驗
 export const generateStepQuiz = async (
   stepContent: any,
@@ -1318,6 +1350,15 @@ export const generateStepQuiz = async (
     5. For memory card games, create concept-definition or question-answer pairs
     6. Avoid trick questions; focus on genuine comprehension
     
+    CRITICAL for Memory Card Games:
+    - Each "left" and "right" content must be COMPLETELY UNIQUE across all pairs
+    - NO duplicate content on either left or right side
+    - Each pair should test a different concept or knowledge point
+    - Students should never be confused about which card matches which
+    - All content in left column must be distinct from each other
+    - All content in right column must be distinct from each other
+    - Create clear, unambiguous one-to-one relationships
+    
     Output MUST be a valid JSON object with this exact structure:
     {
       "trueFalse": [
@@ -1341,11 +1382,11 @@ export const generateStepQuiz = async (
         {
           "title": "配對遊戲標題",
           "pairs": [
-            { "left": "概念或問題", "right": "定義或答案" },
-            { "left": "概念或問題", "right": "定義或答案" },
-            { "left": "概念或問題", "right": "定義或答案" },
-            { "left": "概念或問題", "right": "定義或答案" },
-            { "left": "概念或問題", "right": "定義或答案" }
+            { "left": "第一個概念", "right": "第一個概念的定義或對應" },
+            { "left": "第二個概念", "right": "第二個概念的定義或對應" },
+            { "left": "第三個概念", "right": "第三個概念的定義或對應" },
+            { "left": "第四個概念", "right": "第四個概念的定義或對應" },
+            { "left": "第五個概念", "right": "第五個概念的定義或對應" }
             // at least 5 pairs per game
           ]
         }
@@ -1358,5 +1399,21 @@ export const generateStepQuiz = async (
     Do NOT include any explanation or extra text outside the JSON structure.
   `;
   
-  return await callGemini(prompt, apiKey);
+  // 生成測驗內容
+  const quizData = await callGemini(prompt, apiKey);
+  
+  // 驗證記憶卡遊戲內容
+  if (quizData.memoryCardGame && Array.isArray(quizData.memoryCardGame)) {
+    const validation = validateMemoryCardGame(quizData.memoryCardGame);
+    
+    if (!validation.isValid) {
+      console.warn('記憶卡遊戲驗證失敗:', validation.issues);
+      
+      // 可選：如果驗證失敗，重新生成或給出警告
+      // 這裡我們選擇記錄警告但仍返回結果，讓老師能在預覽中看到問題
+      quizData._validationWarnings = validation.issues;
+    }
+  }
+  
+  return quizData;
 };
