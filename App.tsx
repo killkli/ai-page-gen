@@ -18,6 +18,8 @@ import LessonPlanManager from './components/LessonPlanManager';
 import InteractiveLearningPage from './components/InteractiveLearning/InteractiveLearningPage';
 import TeacherInteractivePrepPage from './components/TeacherInteractivePrep/TeacherInteractivePrepPage';
 import StudentInteractivePage from './components/StudentInteractive/StudentInteractivePage';
+import ConversationPrepPage from './components/EnglishConversation/ConversationPrepPage';
+import ConversationPracticePage from './components/EnglishConversation/ConversationPracticePage';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
 
@@ -372,6 +374,8 @@ const App: React.FC = () => {
         <Route path="interactive-learning" element={<InteractiveLearningPage />} />
         <Route path="teacher-interactive-prep" element={<TeacherInteractivePrepPage />} />
         <Route path="student-interactive" element={<StudentInteractivePage />} />
+        <Route path="conversation-prep" element={<ConversationPrepPage />} />
+        <Route path="conversation-practice/:binId" element={<ConversationPracticePage />} />
         <Route path="/" element={
           <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
@@ -395,18 +399,27 @@ const App: React.FC = () => {
             </header>
 
             {/* Navigation Bar */}
-            <div className="max-w-4xl mx-auto mb-8">
-              <div className="flex justify-center gap-4">
+            <div className="max-w-6xl mx-auto mb-8">
+              <div className="flex justify-center gap-3 flex-wrap">
                 <a 
                   href={`${import.meta.env.BASE_URL}lesson-plans`}
-                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+                  className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
                 >
                   <AcademicCapIcon className="w-5 h-5" />
                   我的教案庫
                 </a>
+                <a 
+                  href={`${import.meta.env.BASE_URL}conversation-prep`}
+                  className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+                  </svg>
+                  英文對話練習
+                </a>
                 <button
                   onClick={handleShareLink}
-                  className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+                  className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />

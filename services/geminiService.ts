@@ -2,7 +2,7 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { GeneratedLearningContent, LearningLevelSuggestions, VocabularyLevel, LearningObjectiveItem, QuizCustomConfig, QuizTypeConfig, QUIZ_TYPE_LIMITS, WritingPracticeContent, SentencePracticePrompt, WritingPracticePrompt, AIFeedback } from '../types';
 
 // 單一欄位生成工具
-const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
+export const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
   const ai = new GoogleGenAI({ apiKey });
   const model = 'gemini-2.5-flash';
   try {

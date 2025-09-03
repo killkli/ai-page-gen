@@ -248,7 +248,54 @@ export async function updateStudentResults(binId: string, diagnosticReport: any)
   }
 }
 
-// 通用分享內容獲取函數（支援完整教案、測驗、寫作練習）
+// 專門用於分享英文對話練習內容的函數
+export async function saveConversationPracticeContent(conversationData: { practice: any, metadata?: any }): Promise<string> {
+  const conversationPayload = {
+    type: 'conversation-practice', // 標識這是英文對話練習專用分享
+    practice: conversationData.practice,
+    metadata: conversationData.metadata,
+    createdAt: new Date().toISOString()
+  };
+
+  const response = await fetch(JSONBIN_API, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': JSONBIN_KEY,
+      'X-Bin-Private': 'false', // 公開 bin 方便分享
+    },
+    body: JSON.stringify(conversationPayload),
+  });
+  const result = await response.json();
+  if (!result || !result.metadata || !result.metadata.id) {
+    throw new Error('無法儲存英文對話練習內容');
+  }
+  return result.metadata.id; // binId
+}
+
+// 專門用於獲取英文對話練習內容的函數
+export async function getConversationPracticeContent(binId: string): Promise<{ practice: any, metadata?: any }> {
+  const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+    // 公開 bin 可不帶 X-Master-Key
+    // headers: { 'X-Master-Key': JSONBIN_KEY },
+  });
+  const result = await response.json();
+  if (!result || !result.record) {
+    throw new Error('找不到對應的英文對話練習內容');
+  }
+  
+  const data = result.record;
+  if (data.type !== 'conversation-practice') {
+    throw new Error('此連結不是英文對話練習專用分享');
+  }
+  
+  return {
+    practice: data.practice,
+    metadata: data.metadata
+  };
+}
+
+// 通用分享內容獲取函數（支援完整教案、測驗、寫作練習、對話練習）
 export async function getSharedContent(binId: string): Promise<any> {
   const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
     // 公開 bin 可不帶 X-Master-Key

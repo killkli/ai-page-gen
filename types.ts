@@ -419,3 +419,115 @@ export interface DiagnosticReportConfig {
   language: 'zh-TW' | 'en' | 'zh-CN';   // 報告語言
   reportFormat: 'standard' | 'detailed' | 'summary'; // 報告格式
 }
+
+// 英文對話練習相關類型定義
+
+// 對話回合
+export interface ConversationTurn {
+  id: string;
+  speaker: string;                      // 說話者角色
+  text: string;                        // 對話內容
+  translation: string;                 // 中文翻譯
+  pronunciation?: string;              // IPA 音標
+  keyWords: string[];                  // 關鍵詞彙
+  difficulty: 'easy' | 'normal' | 'hard'; // 難度
+  practicePoint: string;               // 練習重點
+  expectedResponseHints?: string[];    // 期待學生回應的提示
+}
+
+// 詞彙項目
+export interface ConversationVocabulary {
+  word: string;                        // 單詞
+  pronunciation: string;               // 音標
+  meaning: string;                     // 中文意思
+  example: string;                     // 例句
+  difficulty: 'easy' | 'normal' | 'hard';
+}
+
+// 對話練習內容
+export interface ConversationPractice {
+  id: string;                          // 對話練習ID
+  title: string;                       // 對話標題
+  scenario: string;                    // 情境描述
+  description: string;                 // 學習描述
+  difficulty: 'easy' | 'normal' | 'hard'; // 整體難度
+  duration: number;                    // 預估時間（分鐘）
+  participants: string[];              // 參與角色列表
+  dialogue: ConversationTurn[];        // 對話內容
+  vocabulary: ConversationVocabulary[]; // 相關詞彙
+  practiceGoals: string[];            // 練習目標
+  evaluationCriteria: {               // 評估標準
+    pronunciation: number;             // 發音權重
+    grammar: number;                   // 語法權重
+    fluency: number;                   // 流暢度權重
+    appropriateness: number;           // 適切性權重
+  };
+  culturalNotes?: string[];           // 文化背景說明
+  commonMistakes?: string[];          // 常見錯誤
+}
+
+// 對話練習生成選項
+export interface ConversationGenerationOptions {
+  topic: string;                       // 主題
+  scenario: string;                    // 情境
+  difficulty: 'easy' | 'normal' | 'hard'; // 難度等級
+  participantCount: 2 | 3;             // 參與人數
+  duration: number;                    // 目標時長
+  focusAreas?: string[];              // 重點練習領域
+  culturalContext?: string;            // 文化背景
+}
+
+// 學生語音回應記錄
+export interface StudentVoiceResponse {
+  turnId: string;                      // 對話回合ID
+  text: string;                        // 識別文字
+  confidence: number;                  // 信心度 (0-1)
+  audioBlob?: Blob;                    // 音頻數據
+  timestamp: number;                   // 時間戳
+  feedback?: ConversationFeedback;     // AI 回饋
+}
+
+// 對話練習回饋
+export interface ConversationFeedback {
+  overallScore: number;                // 整體得分 (0-100)
+  pronunciationScore: number;          // 發音得分
+  grammarScore: number;                // 語法得分
+  fluencyScore: number;                // 流暢度得分
+  appropriatenessScore: number;        // 適切性得分
+  feedback: string[];                  // 回饋意見
+  suggestions: string[];               // 改進建議
+  encouragement: string;               // 鼓勵話語
+}
+
+// 對話練習會話
+export interface ConversationSession {
+  practiceId: string;                  // 練習ID
+  startTime: number;                   // 開始時間
+  currentTurnIndex: number;            // 當前回合索引
+  studentRole: string;                 // 學生角色
+  responses: StudentVoiceResponse[];   // 回應記錄
+  completed: boolean;                  // 是否完成
+}
+
+// 語音設定
+export interface VoiceSettings {
+  lang: string;                        // 語言設定
+  rate: number;                        // 語速 (0.1-10)
+  pitch: number;                       // 音調 (0-2)
+  volume: number;                      // 音量 (0-1)
+}
+
+// 語音識別結果
+export interface SpeechRecognitionResult {
+  text: string;                        // 識別文字
+  confidence: number;                  // 信心度
+  isFinal: boolean;                    // 是否最終結果
+}
+
+// 語音識別選項
+export interface SpeechRecognitionOptions {
+  lang: string;                        // 語言
+  continuous: boolean;                 // 連續識別
+  interimResults: boolean;             // 中間結果
+  maxAlternatives: number;             // 最大候選數
+}
