@@ -232,17 +232,17 @@ export class UnifiedConfigManager {
 
       if (mainConfig) {
         const mainManager = await this.getConfigManager('main');
-        mainManager.importConfig(JSON.stringify(mainConfig));
+        mainManager.merge(mainConfig);
       }
 
       if (englishConfig) {
         const englishManager = await this.getConfigManager('english');
-        englishManager.importConfig(JSON.stringify(englishConfig));
+        englishManager.merge(englishConfig);
       }
 
       if (mathConfig) {
         const mathManager = await this.getConfigManager('math');
-        mathManager.importConfig(JSON.stringify(mathConfig));
+        mathManager.merge(mathConfig);
       }
 
       return { success: true, message: '配置匯入成功' };

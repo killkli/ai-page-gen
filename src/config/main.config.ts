@@ -3,7 +3,7 @@
  * 繼承基礎配置，保持跨領域通用性和向專業分支的橋接功能
  */
 
-import { BaseConfig, baseConfig } from './base.config';
+import { BaseConfig, baseConfig, ConfigManager } from './base.config';
 import { Subject } from '../core/types';
 
 // 通用分支配置介面
@@ -614,12 +614,14 @@ export const mainConfig: MainConfig = {
 };
 
 // 通用配置管理器
-export class MainConfigManager {
+export class MainConfigManager extends ConfigManager {
   private static instance: MainConfigManager;
-  private config: MainConfig;
+  private mainSpecificConfig: MainConfig;
 
   private constructor() {
-    this.config = { ...mainConfig };
+    super();
+    this.mainSpecificConfig = { ...mainConfig };
+    this.merge(mainConfig);
   }
 
   public static getInstance(): MainConfigManager {
@@ -630,106 +632,106 @@ export class MainConfigManager {
   }
 
   public getConfig(): MainConfig {
-    return this.config;
+    return this.mainSpecificConfig;
   }
 
   public getMainConfig() {
-    return this.config.main;
+    return this.mainSpecificConfig.main;
   }
 
   // 學科分類相關
   public getSubjectClassificationConfig() {
-    return this.config.main.subjectClassification;
+    return this.mainSpecificConfig.main.subjectClassification;
   }
 
   public getSupportedSubjects(): Subject[] {
-    return this.config.main.subjectClassification.supportedSubjects;
+    return this.mainSpecificConfig.main.subjectClassification.supportedSubjects;
   }
 
   public getSubjectKeywords(subject: Subject): string[] {
-    return this.config.main.subjectClassification.keywordSets[subject] || [];
+    return this.mainSpecificConfig.main.subjectClassification.keywordSets[subject] || [];
   }
 
   // 內容適應相關
   public getContentAdaptationConfig() {
-    return this.config.main.contentAdaptation;
+    return this.mainSpecificConfig.main.contentAdaptation;
   }
 
   public getTemplateConfig(type: 'science' | 'humanities' | 'socialStudies' | 'arts' | 'general') {
-    return this.config.main.contentAdaptation.templates[type];
+    return this.mainSpecificConfig.main.contentAdaptation.templates[type];
   }
 
   // 增強測驗相關
   public getEnhancedQuizConfig() {
-    return this.config.main.enhancedQuiz;
+    return this.mainSpecificConfig.main.enhancedQuiz;
   }
 
   public isQuizTypeEnabled(type: 'matching' | 'sequencing' | 'annotation' | 'openEnded'): boolean {
-    return this.config.main.enhancedQuiz.newTypes[type].enabled;
+    return this.mainSpecificConfig.main.enhancedQuiz.newTypes[type].enabled;
   }
 
   // 品質保證相關
   public getQualityAssuranceConfig() {
-    return this.config.main.qualityAssurance;
+    return this.mainSpecificConfig.main.qualityAssurance;
   }
 
   // 分支推薦相關
   public getBranchRecommendationConfig() {
-    return this.config.main.branchRecommendation;
+    return this.mainSpecificConfig.main.branchRecommendation;
   }
 
   public isBranchRecommendationEnabled(): boolean {
-    return this.config.main.branchRecommendation.enabled;
+    return this.mainSpecificConfig.main.branchRecommendation.enabled;
   }
 
   // 遷移相關
   public getMigrationConfig() {
-    return this.config.main.migration;
+    return this.mainSpecificConfig.main.migration;
   }
 
   // 社群相關
   public getCommunityConfig() {
-    return this.config.main.community;
+    return this.mainSpecificConfig.main.community;
   }
 
   public isContentSharingEnabled(): boolean {
-    return this.config.main.community.contentSharing.enabled;
+    return this.mainSpecificConfig.main.community.contentSharing.enabled;
   }
 
   // 分析相關
   public getAnalyticsConfig() {
-    return this.config.main.analytics;
+    return this.mainSpecificConfig.main.analytics;
   }
 
   // 無障礙相關
   public getAccessibilityConfig() {
-    return this.config.main.accessibility;
+    return this.mainSpecificConfig.main.accessibility;
   }
 
   // 整合相關
   public getIntegrationsConfig() {
-    return this.config.main.integrations;
+    return this.mainSpecificConfig.main.integrations;
   }
 
   // 離線功能相關
   public getOfflineConfig() {
-    return this.config.main.offline;
+    return this.mainSpecificConfig.main.offline;
   }
 
   public isOfflineEnabled(): boolean {
-    return this.config.main.offline.enabled;
+    return this.mainSpecificConfig.main.offline.enabled;
   }
 
   // 設定更新方法
   public updateSubjectClassification(updates: Partial<typeof this.config.main.subjectClassification>): void {
-    this.config.main.subjectClassification = {
+    this.mainSpecificConfig.main.subjectClassification = {
       ...this.config.main.subjectClassification,
       ...updates
     };
   }
 
   public enableBranchRecommendation(enabled: boolean): void {
-    this.config.main.branchRecommendation.enabled = enabled;
+    this.mainSpecificConfig.main.branchRecommendation.enabled = enabled;
   }
 
   // 匯出配置

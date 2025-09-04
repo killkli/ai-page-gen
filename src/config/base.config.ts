@@ -2,7 +2,6 @@
  * 基礎配置 - 所有分支共享的配置項目
  */
 
-import { BranchType } from '../core/types';
 
 // 基礎應用配置介面
 export interface BaseConfig {
@@ -257,9 +256,9 @@ export const baseConfig: BaseConfig = {
 // 配置工具函數
 export class ConfigManager {
   private static instance: ConfigManager;
-  private config: BaseConfig;
+  protected config: BaseConfig;
 
-  private constructor() {
+  protected constructor() {
     this.config = { ...baseConfig };
   }
 

@@ -15,24 +15,17 @@ export * from './math';
 // 為了向後兼容，重新匯出一些常用的舊類型別名
 import {
   BaseQuizQuestion,
-  QuizType,
   DifficultyLevel,
   BaseLearningContent,
   BaseUserInteraction
 } from './base';
 
 import {
-  EnglishLearningContent,
-  VocabularyItem,
-  DialoguePractice,
-  CEFRLevel
+  EnglishLearningContent
 } from './english';
 
 import {
-  MathLearningContent,
-  MathConcept,
-  MathFormula,
-  MathDomain
+  MathLearningContent
 } from './math';
 
 // 舊版兼容性類型別名

@@ -295,7 +295,25 @@ export interface EnglishLearningStats {
   streakDays: number;
   totalSessions: number;
   averageSessionTime: number; // 分鐘
-  achievements: Achievement[];
+  achievements: EnglishAchievement[];
+}
+
+// 英語成就系統
+export interface EnglishAchievement {
+  id: string;
+  name: string;
+  description: string;
+  type: 'vocabulary' | 'grammar' | 'speaking' | 'listening' | 'reading' | 'writing' | 'streak' | 'accuracy';
+  criteria: {
+    target: number;
+    unit: string;
+    timeframe?: string;
+  };
+  earned: boolean;
+  earnedDate?: string;
+  progress: number; // 0-100
+  icon?: string;
+  category: 'bronze' | 'silver' | 'gold' | 'platinum';
 }
 
 // 英語互動記錄

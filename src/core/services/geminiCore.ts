@@ -6,7 +6,6 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { 
   BaseApiResponse, 
-  ApiError, 
   BranchType,
   OperationResult,
   ValidationResult
@@ -164,7 +163,7 @@ export abstract class BaseGeminiService {
         responseMimeType: options.responseMimeType,
         temperature: options.temperature,
         topP: options.topP,
-        maxTokens: options.maxTokens,
+        maxOutputTokens: options.maxTokens,
         stopSequences: options.stopSequences,
       },
     });

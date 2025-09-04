@@ -12,7 +12,9 @@ export * from './src/core/types';
 // 保持向後兼容性的舊版接口定義
 // 這些接口現在映射到新的類型系統，但保持原有的接口不變
 
-import { BaseQuizQuestion, DifficultyLevel } from './src/core/types';
+import { 
+  DifficultyLevel
+} from './src/core/types';
 
 // 舊版測驗題目接口 - 向後兼容
 export interface TrueFalseQuestion {
@@ -115,6 +117,9 @@ export interface DialogueLine {
 }
 
 export interface GeneratedLearningContent {
+  topic?: string;
+  selectedLevel?: LearningLevel | null;
+  selectedVocabularyLevel?: VocabularyLevel | null;
   learningObjectives: LearningObjectiveItem[];
   contentBreakdown: ContentBreakdownItem[];
   confusingPoints: ConfusingPointItem[];
@@ -557,4 +562,23 @@ export interface SpeechRecognitionOptions {
   continuous: boolean;                 // 連續識別
   interimResults: boolean;             // 中間結果
   maxAlternatives: number;             // 最大候選數
+}
+
+// Stored lesson plan interface - for backward compatibility
+export interface StoredLessonPlan {
+  id: string;
+  topic: string;
+  selectedLevel?: LearningLevel | null;
+  selectedVocabularyLevel?: VocabularyLevel | null;
+  learningObjectives: LearningObjectiveItem[];
+  contentBreakdown: ContentBreakdownItem[];
+  confusingPoints: ConfusingPointItem[];
+  classroomActivities: ClassroomActivity[];
+  onlineInteractiveQuiz: OnlineInteractiveQuiz;
+  englishConversation?: DialogueLine[];
+  learningLevels?: LearningLevelSuggestions;
+  writingPractice?: WritingPracticeContent;
+  stepQuizData?: { [stepId: string]: any };
+  createdAt?: string;
+  updatedAt?: string;
 }

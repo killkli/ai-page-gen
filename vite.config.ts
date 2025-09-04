@@ -49,10 +49,23 @@ export default defineConfig(({ mode }) => {
       build: {
         rollupOptions: {
           output: {
-            manualChunks: {
-              vendor: ['react', 'react-dom', 'react-router-dom'],
-              ai: ['@google/genai'],
-              core: ['src/core/types', 'src/core/services', 'src/config'],
+            manualChunks: (id) => {
+              // React 相關庫
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'vendor';
+              }
+              // AI 相關庫
+              if (id.includes('@google/genai')) {
+                return 'ai';
+              }
+              // 大型組件庫
+              if (id.includes('markdown') || id.includes('qrcode')) {
+                return 'utilities';
+              }
+              // Node modules 分到 vendor chunk
+              if (id.includes('node_modules')) {
+                return 'vendor';
+              }
             }
           }
         },

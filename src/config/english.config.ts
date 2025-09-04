@@ -3,7 +3,7 @@
  * 繼承基礎配置並添加英語學習特有功能
  */
 
-import { BaseConfig, baseConfig } from './base.config';
+import { BaseConfig, baseConfig, ConfigManager } from './base.config';
 import { CEFRLevel, EnglishAccent } from '../core/types/english';
 
 // 英文分支專業配置介面
@@ -508,123 +508,125 @@ export const englishConfig: EnglishConfig = {
 };
 
 // 英文配置管理器
-export class EnglishConfigManager {
-  private static instance: EnglishConfigManager;
-  private config: EnglishConfig;
+export class EnglishConfigManager extends ConfigManager {
+  private static englishInstance: EnglishConfigManager;
+  private englishSpecificConfig: EnglishConfig;
 
-  private constructor() {
-    this.config = { ...englishConfig };
+  protected constructor() {
+    super();
+    this.englishSpecificConfig = { ...englishConfig };
+    this.merge(englishConfig);
   }
 
   public static getInstance(): EnglishConfigManager {
-    if (!EnglishConfigManager.instance) {
-      EnglishConfigManager.instance = new EnglishConfigManager();
+    if (!EnglishConfigManager.englishInstance) {
+      EnglishConfigManager.englishInstance = new EnglishConfigManager();
     }
-    return EnglishConfigManager.instance;
+    return EnglishConfigManager.englishInstance;
   }
 
   public getConfig(): EnglishConfig {
-    return this.config;
+    return this.englishSpecificConfig;
   }
 
   public getEnglishConfig() {
-    return this.config.english;
+    return this.englishSpecificConfig.english;
   }
 
   // 語音設定相關
   public getSpeechConfig() {
-    return this.config.english.speech;
+    return this.englishSpecificConfig.english.speech;
   }
 
   public getRecognitionConfig() {
-    return this.config.english.speech.recognition;
+    return this.englishSpecificConfig.english.speech.recognition;
   }
 
   public getSynthesisConfig() {
-    return this.config.english.speech.synthesis;
+    return this.englishSpecificConfig.english.speech.synthesis;
   }
 
   // 詞彙設定相關
   public getVocabularyConfig() {
-    return this.config.english.vocabulary;
+    return this.englishSpecificConfig.english.vocabulary;
   }
 
   public getDailyVocabularyGoal(): number {
-    return this.config.english.vocabulary.dailyGoal;
+    return this.englishSpecificConfig.english.vocabulary.dailyGoal;
   }
 
   public getReviewSchedule() {
-    return this.config.english.vocabulary.reviewSchedule;
+    return this.englishSpecificConfig.english.vocabulary.reviewSchedule;
   }
 
   // 對話設定相關
   public getConversationConfig() {
-    return this.config.english.conversation;
+    return this.englishSpecificConfig.english.conversation;
   }
 
   public getEnabledScenarios(): string[] {
-    return this.config.english.conversation.scenarios.enabled;
+    return this.englishSpecificConfig.english.conversation.scenarios.enabled;
   }
 
   // 評估設定相關
   public getAssessmentConfig() {
-    return this.config.english.assessment;
+    return this.englishSpecificConfig.english.assessment;
   }
 
   public isSkillEnabled(skill: 'listening' | 'speaking' | 'reading' | 'writing'): boolean {
-    return this.config.english.assessment.skills[skill].enabled;
+    return this.englishSpecificConfig.english.assessment.skills[skill].enabled;
   }
 
   // CEFR 等級相關
   public getDefaultCEFRLevel(): CEFRLevel {
-    return this.config.english.defaultCEFRLevel;
+    return this.englishSpecificConfig.english.defaultCEFRLevel;
   }
 
   public getSupportedCEFRLevels(): CEFRLevel[] {
-    return this.config.english.supportedCEFRLevels;
+    return this.englishSpecificConfig.english.supportedCEFRLevels;
   }
 
   public isCEFRLevelSupported(level: CEFRLevel): boolean {
-    return this.config.english.supportedCEFRLevels.includes(level);
+    return this.englishSpecificConfig.english.supportedCEFRLevels.includes(level);
   }
 
   // 遊戲化相關
   public getGamificationConfig() {
-    return this.config.english.gamification;
+    return this.englishSpecificConfig.english.gamification;
   }
 
   public isGamificationEnabled(): boolean {
-    return this.config.english.gamification.enabled;
+    return this.englishSpecificConfig.english.gamification.enabled;
   }
 
   // 個人化設定相關
   public getPersonalizationConfig() {
-    return this.config.english.personalization;
+    return this.englishSpecificConfig.english.personalization;
   }
 
   public isAdaptiveLearning(): boolean {
-    return this.config.english.personalization.learningPath.adaptive;
+    return this.englishSpecificConfig.english.personalization.learningPath.adaptive;
   }
 
   // 文化學習相關
   public getCultureConfig() {
-    return this.config.english.culture;
+    return this.englishSpecificConfig.english.culture;
   }
 
   public getSupportedRegions(): string[] {
-    return this.config.english.culture.regions;
+    return this.englishSpecificConfig.english.culture.regions;
   }
 
   // 設定更新方法
   public updateSpeechConfig(updates: Partial<typeof this.config.english.speech>): void {
-    this.config.english.speech = {
+    this.englishSpecificConfig.english.speech = {
       ...this.config.english.speech,
       ...updates
     };
   }
 
   public updateVocabularyConfig(updates: Partial<typeof this.config.english.vocabulary>): void {
-    this.config.english.vocabulary = {
+    this.englishSpecificConfig.english.vocabulary = {
       ...this.config.english.vocabulary,
       ...updates
     };
@@ -632,13 +634,13 @@ export class EnglishConfigManager {
 
   public updateDefaultCEFRLevel(level: CEFRLevel): void {
     if (this.isCEFRLevelSupported(level)) {
-      this.config.english.defaultCEFRLevel = level;
+      this.englishSpecificConfig.english.defaultCEFRLevel = level;
     }
   }
 
   // 匯出配置
   public exportConfig(): string {
-    return JSON.stringify(this.config, null, 2);
+    return JSON.stringify(this.englishSpecificConfig, null, 2);
   }
 }
 

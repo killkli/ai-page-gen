@@ -3,7 +3,7 @@
  * 繼承基礎配置並添加數學學習特有功能
  */
 
-import { BaseConfig, baseConfig } from './base.config';
+import { BaseConfig, baseConfig, ConfigManager } from './base.config';
 import { MathDomain, MathGradeLevel } from '../core/types/math';
 
 // 數學分支專業配置介面
@@ -764,12 +764,14 @@ export const mathConfig: MathConfig = {
 };
 
 // 數學配置管理器
-export class MathConfigManager {
+export class MathConfigManager extends ConfigManager {
   private static instance: MathConfigManager;
-  private config: MathConfig;
+  private mathSpecificConfig: MathConfig;
 
   private constructor() {
-    this.config = { ...mathConfig };
+    super();
+    this.mathSpecificConfig = { ...mathConfig };
+    this.merge(mathConfig);
   }
 
   public static getInstance(): MathConfigManager {
@@ -780,151 +782,151 @@ export class MathConfigManager {
   }
 
   public getConfig(): MathConfig {
-    return this.config;
+    return this.mathSpecificConfig;
   }
 
   public getMathConfig() {
-    return this.config.math;
+    return this.mathSpecificConfig.math;
   }
 
   // 領域和等級相關
   public getDefaultDomain(): MathDomain {
-    return this.config.math.defaultDomain;
+    return this.mathSpecificConfig.math.defaultDomain;
   }
 
   public getDefaultGradeLevel(): MathGradeLevel {
-    return this.config.math.defaultGradeLevel;
+    return this.mathSpecificConfig.math.defaultGradeLevel;
   }
 
   public getSupportedDomains(): MathDomain[] {
-    return this.config.math.supportedDomains;
+    return this.mathSpecificConfig.math.supportedDomains;
   }
 
   public getSupportedGradeLevels(): MathGradeLevel[] {
-    return this.config.math.supportedGradeLevels;
+    return this.mathSpecificConfig.math.supportedGradeLevels;
   }
 
   public isDomainSupported(domain: MathDomain): boolean {
-    return this.config.math.supportedDomains.includes(domain);
+    return this.mathSpecificConfig.math.supportedDomains.includes(domain);
   }
 
   public isGradeLevelSupported(level: MathGradeLevel): boolean {
-    return this.config.math.supportedGradeLevels.includes(level);
+    return this.mathSpecificConfig.math.supportedGradeLevels.includes(level);
   }
 
   // 渲染引擎相關
   public getRenderingConfig() {
-    return this.config.math.rendering;
+    return this.mathSpecificConfig.math.rendering;
   }
 
   public getRenderingEngine(): 'katex' | 'mathjax' | 'both' {
-    return this.config.math.rendering.engine;
+    return this.mathSpecificConfig.math.rendering.engine;
   }
 
   public getKatexConfig() {
-    return this.config.math.rendering.katex;
+    return this.mathSpecificConfig.math.rendering.katex;
   }
 
   public getMathJaxConfig() {
-    return this.config.math.rendering.mathjax;
+    return this.mathSpecificConfig.math.rendering.mathjax;
   }
 
   // 工具相關
   public getToolsConfig() {
-    return this.config.math.tools;
+    return this.mathSpecificConfig.math.tools;
   }
 
   public getCalculatorConfig() {
-    return this.config.math.tools.calculator;
+    return this.mathSpecificConfig.math.tools.calculator;
   }
 
   public getGeometryConfig() {
-    return this.config.math.tools.geometry;
+    return this.mathSpecificConfig.math.tools.geometry;
   }
 
   public getVisualizationConfig() {
-    return this.config.math.tools.visualization;
+    return this.mathSpecificConfig.math.tools.visualization;
   }
 
   // 解題系統相關
   public getProblemSolvingConfig() {
-    return this.config.math.problemSolving;
+    return this.mathSpecificConfig.math.problemSolving;
   }
 
   public isStepByStepEnabled(): boolean {
-    return this.config.math.problemSolving.stepByStep.enabled;
+    return this.mathSpecificConfig.math.problemSolving.stepByStep.enabled;
   }
 
   public getHintsConfig() {
-    return this.config.math.problemSolving.stepByStep.hints;
+    return this.mathSpecificConfig.math.problemSolving.stepByStep.hints;
   }
 
   // 概念映射相關
   public getConceptMappingConfig() {
-    return this.config.math.conceptMapping;
+    return this.mathSpecificConfig.math.conceptMapping;
   }
 
   // 評估相關
   public getAssessmentConfig() {
-    return this.config.math.assessment;
+    return this.mathSpecificConfig.math.assessment;
   }
 
   public isAssessmentTypeEnabled(type: 'diagnostic' | 'formative' | 'summative' | 'adaptive'): boolean {
-    return this.config.math.assessment.types[type];
+    return this.mathSpecificConfig.math.assessment.types[type];
   }
 
   // 錯誤分析相關
   public getErrorAnalysisConfig() {
-    return this.config.math.errorAnalysis;
+    return this.mathSpecificConfig.math.errorAnalysis;
   }
 
   // 3D 視覺化相關
   public get3DVisualizationConfig() {
-    return this.config.math.visualization3D;
+    return this.mathSpecificConfig.math.visualization3D;
   }
 
   public is3DVisualizationEnabled(): boolean {
-    return this.config.math.visualization3D.enabled;
+    return this.mathSpecificConfig.math.visualization3D.enabled;
   }
 
   // 個人化相關
   public getPersonalizationConfig() {
-    return this.config.math.personalization;
+    return this.mathSpecificConfig.math.personalization;
   }
 
   public isAdaptiveDifficulty(): boolean {
-    return this.config.math.personalization.difficulty.adaptive;
+    return this.mathSpecificConfig.math.personalization.difficulty.adaptive;
   }
 
   // 遊戲化相關
   public getGamificationConfig() {
-    return this.config.math.gamification;
+    return this.mathSpecificConfig.math.gamification;
   }
 
   public isGamificationEnabled(): boolean {
-    return this.config.math.gamification.enabled;
+    return this.mathSpecificConfig.math.gamification.enabled;
   }
 
   // 整合功能相關
   public getIntegrationConfig() {
-    return this.config.math.integration;
+    return this.mathSpecificConfig.math.integration;
   }
 
   // 設定更新方法
   public updateDefaultDomain(domain: MathDomain): void {
     if (this.isDomainSupported(domain)) {
-      this.config.math.defaultDomain = domain;
+      this.mathSpecificConfig.math.defaultDomain = domain;
     }
   }
 
   public updateDefaultGradeLevel(level: MathGradeLevel): void {
     if (this.isGradeLevelSupported(level)) {
-      this.config.math.defaultGradeLevel = level;
+      this.mathSpecificConfig.math.defaultGradeLevel = level;
     }
   }
 
   public updateRenderingEngine(engine: 'katex' | 'mathjax' | 'both'): void {
-    this.config.math.rendering.engine = engine;
+    this.mathSpecificConfig.math.rendering.engine = engine;
   }
 
   // 匯出配置

@@ -35,11 +35,32 @@ export interface MathLearningContent extends BaseLearningContent {
   concepts: MathConcept[];
   theorems: MathTheorem[];
   formulas: MathFormula[];
-  examples: WorkedExample[];
+  examples: MathWorkedExample[];
   exercises: MathExercise[];
   visualizations: MathVisualization[];
   prerequisites: string[]; // 前置概念ID
   applications: RealWorldApplication[];
+}
+
+// 數學教學範例
+export interface MathWorkedExample extends BaseEntity {
+  title: string;
+  problem: string;
+  solution: MathSolutionStep[];
+  difficulty: DifficultyLevel;
+  concepts: string[]; // 相關概念ID
+  tips?: string[];
+  commonMistakes?: string[];
+}
+
+// 解題步驟
+export interface MathSolutionStep {
+  stepNumber: number;
+  description: string;
+  formula?: string;
+  calculation?: string;
+  reasoning: string;
+  visualization?: string;
 }
 
 // 數學概念
@@ -546,8 +567,8 @@ export interface InteractiveElement {
   onChange: string; // 回調函數名
 }
 
-// 互動類型
-export type InteractionType = 
+// 數學互動類型
+export type MathInteractionType = 
   | 'slider'
   | 'checkbox'
   | 'dropdown'
