@@ -1,28 +1,40 @@
+/**
+ * 主要類型定義檔案
+ * 使用新的模組化架構，同時保持向後兼容性
+ * 
+ * ⚠️ 重要：這個文件現在是新模組化類型系統的入口點
+ * 所有新的類型定義都應該在 src/core/types/ 中進行
+ */
+
+// 重新匯出新的模組化類型系統
+export * from './src/core/types';
+
+// 保持向後兼容性的舊版接口定義
+// 這些接口現在映射到新的類型系統，但保持原有的接口不變
+
+import { BaseQuizQuestion, DifficultyLevel } from './src/core/types';
+
+// 舊版測驗題目接口 - 向後兼容
 export interface TrueFalseQuestion {
-  statement: string; // The statement to be evaluated
-  isTrue: boolean;   // Whether the statement is true or false
-  explanation?: string; // Optional explanation for the answer
+  statement: string;
+  isTrue: boolean;
+  explanation?: string;
 }
 
 export interface MultipleChoiceQuestion {
   question: string;
   options: string[];
-  correctAnswerIndex: number; // Index of the correct option in the options array
+  correctAnswerIndex: number;
 }
 
 export interface FillBlankQuestion {
-  sentenceWithBlank: string; // e.g., "The capital of France is ____."
+  sentenceWithBlank: string;
   correctAnswer: string;
 }
 
 export interface SentenceScrambleQuestion {
-  originalSentence: string; // The correct, unscrambled sentence
-  scrambledWords: string[]; // An array of words from the original sentence, in scrambled order
-}
-
-export interface DialogueLine {
-  speaker: string; // e.g., "A", "B", "Learner"
-  line: string;    // The text of the dialogue line
+  originalSentence: string;
+  scrambledWords: string[];
 }
 
 export interface MemoryCardGameQuestion {
@@ -31,17 +43,18 @@ export interface MemoryCardGameQuestion {
     answer?: string;
     left?: string;
     right?: string;
-  }[]; // Each pair is a card match - supports both old (question/answer) and new (left/right) format
-  instructions?: string; // Optional instructions for the memory game
-  title?: string; // Optional title for the memory game
+  }[];
+  instructions?: string;
+  title?: string;
 }
 
+// 舊版測驗結構 - 向後兼容
 export interface QuizDifficultyContent {
   trueFalse: TrueFalseQuestion[];
   multipleChoice: MultipleChoiceQuestion[];
   fillInTheBlanks: FillBlankQuestion[];
   sentenceScramble: SentenceScrambleQuestion[];
-  memoryCardGame?: MemoryCardGameQuestion[]; // Optional: memory card game questions
+  memoryCardGame?: MemoryCardGameQuestion[];
 }
 
 export interface OnlineInteractiveQuiz {
@@ -50,6 +63,7 @@ export interface OnlineInteractiveQuiz {
   hard: QuizDifficultyContent;
 }
 
+// 舊版學習內容接口 - 向後兼容
 export interface LearningObjectiveItem {
   objective: string;
   description: string;
@@ -61,37 +75,43 @@ export interface ContentBreakdownItem {
   details: string;
   teachingExample?: string;
   // Enhanced fields for English learning
-  coreConcept?: string;              // 核心概念 - 該要點的核心學習概念
-  teachingSentences?: string[];      // 教學例句 - 3~5句教學例句
-  teachingTips?: string;             // 教學要點提示 - 教學說明與要點
+  coreConcept?: string;
+  teachingSentences?: string[];
+  teachingTips?: string;
 }
 
 export interface ConfusingPointItem {
-  point: string;                        // 易混淆點標題
-  clarification: string;                // 澄清說明
-  teachingExample?: string;             // 教學示例（原有）
-  // Enhanced fields for more comprehensive teaching guidance
-  errorType?: string;                   // 誤區類型 - 概念性/程序性/語言性等
-  commonErrors?: string[];              // 常見錯誤示例 - 學生典型錯誤案例
-  correctVsWrong?: {                    // 正確與錯誤對比
-    correct: string;                    // 正確示例
-    wrong: string;                      // 錯誤示例
-    explanation: string;                // 對比說明
+  point: string;
+  clarification: string;
+  teachingExample?: string;
+  // Enhanced fields
+  errorType?: string;
+  commonErrors?: string[];
+  correctVsWrong?: {
+    correct: string;
+    wrong: string;
+    explanation: string;
   }[];
-  preventionStrategy?: string;          // 預防策略 - 如何防止學生犯錯
-  correctionMethod?: string;            // 糾正方法 - 發現錯誤後的補救措施
-  practiceActivities?: string[];       // 練習建議 - 針對性練習活動
+  preventionStrategy?: string;
+  correctionMethod?: string;
+  practiceActivities?: string[];
 }
 
 export interface ClassroomActivity {
-  title: string;                    // 活動名稱/主題
-  description: string;              // 活動的標題或核心概念
-  objective?: string;               // 學習目標
-  timing?: string;                  // 使用時機 - 適合在課程哪個階段使用
-  materials?: string;               // 所需教具 - 進行活動需要的工具或教材
-  environment?: string;             // 環境要求 - 座位安排、空間需求或設備條件
-  steps?: string[];                 // 活動步驟 - 條列式流程，教師與學生的互動方式
-  assessmentPoints?: string[];      // 評估重點 - 學生學習成效的觀察面向與評估標準
+  title: string;
+  description: string;
+  objective?: string;
+  timing?: string;
+  materials?: string;
+  environment?: string;
+  steps?: string[];
+  assessmentPoints?: string[];
+}
+
+// 對話相關 - 向後兼容
+export interface DialogueLine {
+  speaker: string;
+  line: string;
 }
 
 export interface GeneratedLearningContent {

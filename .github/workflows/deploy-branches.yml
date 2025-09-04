@@ -1,0 +1,348 @@
+name: Multi-Branch Deployment
+
+on:
+  push:
+    branches: 
+      - main
+      - feature/english-specialized
+      - feature/math-specialized
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  NODE_VERSION: '18'
+  PNPM_VERSION: '8'
+
+jobs:
+  # 代碼品質檢查
+  quality-check:
+    runs-on: ubuntu-latest
+    name: Code Quality Check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript type check
+        run: pnpm tsc --noEmit
+
+      - name: Lint check
+        run: pnpm lint || echo "Linting completed with warnings"
+
+      - name: Build test
+        run: pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ github.sha }}
+          path: dist/
+          retention-days: 1
+
+  # 主分支部署
+  deploy-main:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: quality-check
+    runs-on: ubuntu-latest
+    name: Deploy Main Branch
+    environment:
+      name: production-main
+      url: https://killkli.github.io/ai-page-gen/
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for Main Branch
+        run: |
+          echo "Building main branch..."
+          export VITE_BRANCH_TYPE=main
+          export VITE_APP_NAME="AI Learning Page Generator"
+          export VITE_BASE_URL="/ai-page-gen/"
+          pnpm build
+          
+      - name: Add 404.html for SPA routing
+        run: cp dist/index.html dist/404.html
+
+      - name: Deploy to GitHub Pages (Main)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          commit_message: "Deploy main branch: ${{ github.event.head_commit.message }}"
+
+  # 英文分支部署
+  deploy-english:
+    if: github.ref == 'refs/heads/feature/english-specialized' && github.event_name == 'push'
+    needs: quality-check
+    runs-on: ubuntu-latest
+    name: Deploy English Branch
+    environment:
+      name: production-english
+      url: https://killkli.github.io/ai-page-gen-english/
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for English Branch
+        run: |
+          echo "Building English specialized branch..."
+          export VITE_BRANCH_TYPE=english
+          export VITE_APP_NAME="AI English Learning Generator"
+          export VITE_BASE_URL="/ai-page-gen-english/"
+          pnpm build
+          
+      - name: Add 404.html for SPA routing
+        run: cp dist/index.html dist/404.html
+
+      - name: Deploy to GitHub Pages (English)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: english-gh-pages
+          commit_message: "Deploy English branch: ${{ github.event.head_commit.message }}"
+
+  # 數學分支部署
+  deploy-math:
+    if: github.ref == 'refs/heads/feature/math-specialized' && github.event_name == 'push'
+    needs: quality-check
+    runs-on: ubuntu-latest
+    name: Deploy Math Branch
+    environment:
+      name: production-math
+      url: https://killkli.github.io/ai-page-gen-math/
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for Math Branch
+        run: |
+          echo "Building Math specialized branch..."
+          export VITE_BRANCH_TYPE=math
+          export VITE_APP_NAME="AI Math Learning Generator"
+          export VITE_BASE_URL="/ai-page-gen-math/"
+          pnpm build
+          
+      - name: Add 404.html for SPA routing
+        run: cp dist/index.html dist/404.html
+
+      - name: Deploy to GitHub Pages (Math)
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: math-gh-pages
+          commit_message: "Deploy Math branch: ${{ github.event.head_commit.message }}"
+
+  # PR 預覽部署
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    needs: quality-check
+    runs-on: ubuntu-latest
+    name: Deploy PR Preview
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Determine branch type
+        id: branch-type
+        run: |
+          if [[ "${{ github.head_ref }}" == *"english"* ]]; then
+            echo "branch_type=english" >> $GITHUB_OUTPUT
+            echo "app_name=AI English Learning Generator" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.head_ref }}" == *"math"* ]]; then
+            echo "branch_type=math" >> $GITHUB_OUTPUT
+            echo "app_name=AI Math Learning Generator" >> $GITHUB_OUTPUT
+          else
+            echo "branch_type=main" >> $GITHUB_OUTPUT
+            echo "app_name=AI Learning Page Generator" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build PR Preview
+        run: |
+          export VITE_BRANCH_TYPE=${{ steps.branch-type.outputs.branch_type }}
+          export VITE_APP_NAME="${{ steps.branch-type.outputs.app_name }}"
+          export VITE_BASE_URL="/ai-page-gen-pr-${{ github.event.number }}/"
+          pnpm build
+
+      - name: Deploy PR Preview
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: pr-previews
+          destination_dir: pr-${{ github.event.number }}
+          commit_message: "Deploy PR #${{ github.event.number }} preview"
+
+      - name: Comment PR with preview link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const previewUrl = `https://killkli.github.io/ai-page-gen/pr-${{ github.event.number }}/`;
+            const comment = `
+            ## 🚀 PR Preview Deployed
+            
+            **Branch Type**: \`${{ steps.branch-type.outputs.branch_type }}\`
+            **App Name**: ${{ steps.branch-type.outputs.app_name }}
+            **Preview URL**: ${previewUrl}
+            
+            The preview will be available at the above URL once GitHub Pages updates (usually within a few minutes).
+            
+            ---
+            *This preview will be automatically cleaned up when the PR is merged or closed.*
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # 清理 PR 預覽
+  cleanup-preview:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Clean up PR Preview
+    
+    steps:
+      - name: Checkout pr-previews branch
+        uses: actions/checkout@v4
+        with:
+          ref: pr-previews
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove PR preview directory
+        run: |
+          if [ -d "pr-${{ github.event.number }}" ]; then
+            git rm -rf pr-${{ github.event.number }}
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "Clean up PR #${{ github.event.number }} preview"
+            git push
+          else
+            echo "Preview directory not found, nothing to clean up"
+          fi
+
+  # 部署狀態通知
+  deployment-notification:
+    if: always()
+    needs: [deploy-main, deploy-english, deploy-math, deploy-preview]
+    runs-on: ubuntu-latest
+    name: Deployment Notification
+    
+    steps:
+      - name: Deployment Status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const jobs = [
+              { name: 'Main Branch', needed: ${{ needs.deploy-main.result == 'success' }} },
+              { name: 'English Branch', needed: ${{ needs.deploy-english.result == 'success' }} },
+              { name: 'Math Branch', needed: ${{ needs.deploy-math.result == 'success' }} },
+              { name: 'PR Preview', needed: ${{ needs.deploy-preview.result == 'success' }} }
+            ];
+            
+            const successful = jobs.filter(job => job.needed);
+            const failed = jobs.filter(job => job.needed === false);
+            
+            if (successful.length > 0) {
+              console.log(`✅ Successful deployments: ${successful.map(j => j.name).join(', ')}`);
+            }
+            
+            if (failed.length > 0) {
+              console.log(`❌ Failed deployments: ${failed.map(j => j.name).join(', ')}`);
+              process.exit(1);
+            }
+            
+            console.log('🎉 All required deployments completed successfully!');
