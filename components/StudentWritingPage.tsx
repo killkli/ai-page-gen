@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ExtendedLearningContent, WritingPracticeContent } from '../types';
+import { HomeIcon } from './icons';
 import { getWritingPracticeContent } from '../services/jsonbinService';
 import { extractApiKeyFromParams } from '../utils/cryptoUtils';
 import WritingPracticeView from './WritingPracticeView';
@@ -36,7 +37,7 @@ const StudentWritingPage: React.FC = () => {
           if (urlApiKey) {
             setApiKey(urlApiKey);
             setApiKeySource('url');
-            localStorage.setItem('geminiApiKey', urlApiKey);
+            localStorage.setItem('gemini_api_key', urlApiKey);
             console.log('使用 URL 中的 API Key 進行 AI 批改');
           }
         } catch (error) {
@@ -56,7 +57,7 @@ const StudentWritingPage: React.FC = () => {
   useEffect(() => {
     // 只有在沒有從 URL 獲取到 API Key 時才從 localStorage 載入
     if (!apiKey) {
-      const savedApiKey = localStorage.getItem('geminiApiKey');
+      const savedApiKey = localStorage.getItem('gemini_api_key');
       if (savedApiKey) {
         setApiKey(savedApiKey);
         setApiKeySource('localStorage');
@@ -68,7 +69,7 @@ const StudentWritingPage: React.FC = () => {
     e.preventDefault();
     const trimmedKey = apiKey.trim();
     if (trimmedKey) {
-      localStorage.setItem('geminiApiKey', trimmedKey);
+      localStorage.setItem('gemini_api_key', trimmedKey);
       setApiKey(trimmedKey);
       setApiKeySource('manual');
     }
@@ -110,14 +111,23 @@ const StudentWritingPage: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         {/* 頁面標題 */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-blue-600">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-              </svg>
+          <div className="flex justify-between items-start mb-4">
+            <div className="flex-1 text-center">
+              <div className="flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-blue-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">📝 寫作練習平台</h1>
+              <p className="text-gray-600">完成練習後可獲得 AI 即時批改回饋</p>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">📝 寫作練習平台</h1>
-            <p className="text-gray-600">完成練習後可獲得 AI 即時批改回饋</p>
+            <a 
+              href={`${import.meta.env.BASE_URL}`}
+              className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              <HomeIcon className="w-4 h-4" />
+              返回首頁
+            </a>
           </div>
 
           {/* API Key 設定區域 */}
@@ -182,7 +192,7 @@ const StudentWritingPage: React.FC = () => {
                 </div>
                 <button
                   onClick={() => {
-                    localStorage.removeItem('geminiApiKey');
+                    localStorage.removeItem('gemini_api_key');
                     setApiKey('');
                     setApiKeySource('manual');
                   }}

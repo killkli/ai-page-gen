@@ -5,7 +5,7 @@ import { QuestionResponse } from '../types';
 import LearningDiagnosticReport from './LearningDiagnosticReport';
 import LoadingSpinner from './LoadingSpinner';
 import EnhancedStudentResultsDisplay from './EnhancedStudentResultsDisplay';
-import { ChartBarIcon, AcademicCapIcon, ClockIcon, CheckCircleIcon, XCircleIcon } from './icons';
+import { ChartBarIcon, AcademicCapIcon, ClockIcon, CheckCircleIcon, XCircleIcon, HomeIcon } from './icons';
 
 interface StudentResults {
   studentName?: string;
@@ -59,7 +59,7 @@ const StudentResultsPage: React.FC = () => {
 
   useEffect(() => {
     // 檢查本地存儲中的 API Key（兼容多種 key 名稱）
-    const savedApiKey = localStorage.getItem('geminiApiKey') || localStorage.getItem('gemini_api_key');
+    const savedApiKey = localStorage.getItem('gemini_api_key');
     if (savedApiKey) {
       setApiKey(savedApiKey);
       console.log('已從 localStorage 讀取 API Key');
@@ -72,7 +72,7 @@ const StudentResultsPage: React.FC = () => {
     e.preventDefault();
     const trimmedKey = apiKey.trim();
     if (trimmedKey) {
-      localStorage.setItem('geminiApiKey', trimmedKey);
+      localStorage.setItem('gemini_api_key', trimmedKey);
       setApiKey(trimmedKey);
       setShowApiKeyModal(false);
     }
@@ -168,9 +168,18 @@ const StudentResultsPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3 mb-2">
-            <AcademicCapIcon className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">學生作答結果檢視</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <AcademicCapIcon className="w-8 h-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">學生作答結果檢視</h1>
+            </div>
+            <a 
+              href={`${import.meta.env.BASE_URL}`}
+              className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              <HomeIcon className="w-4 h-4" />
+              返回首頁
+            </a>
           </div>
           <div className="flex items-center gap-2 text-gray-600">
             <span className="text-lg font-medium">教師版分析工具</span>

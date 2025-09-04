@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { lessonPlanStorage, StoredLessonPlan } from '../services/lessonPlanStorage';
 import { saveLearningContent } from '../services/jsonbinService';
-import { AcademicCapIcon, ClockIcon, ShareIcon, TrashIcon, EyeIcon } from './icons';
+import { AcademicCapIcon, ClockIcon, ShareIcon, TrashIcon, EyeIcon, HomeIcon } from './icons';
 import LoadingSpinner from './LoadingSpinner';
 import LearningContentDisplay from './LearningContentDisplay';
 
@@ -17,7 +17,7 @@ const LessonPlanManager: React.FC = () => {
 
   useEffect(() => {
     // 獲取 API Key
-    const storedKey = localStorage.getItem('gemini_api_key') || localStorage.getItem('geminiApiKey');
+    const storedKey = localStorage.getItem('gemini_api_key');
     setApiKey(storedKey);
     
     loadLessonPlans();
@@ -162,6 +162,13 @@ const LessonPlanManager: React.FC = () => {
                 </svg>
                 返回教案列表
               </button>
+              <a 
+                href={`${import.meta.env.BASE_URL}`}
+                className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <HomeIcon className="w-4 h-4" />
+                返回首頁
+              </a>
               <div className="flex-1">
                 <h1 className="text-xl font-bold text-gray-900">{selectedPlan.topic}</h1>
                 <p className="text-sm text-gray-600">
@@ -220,9 +227,18 @@ const LessonPlanManager: React.FC = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3 mb-4">
-            <AcademicCapIcon className="w-8 h-8 text-indigo-600" />
-            <h1 className="text-2xl font-bold text-gray-900">我的教案庫</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <AcademicCapIcon className="w-8 h-8 text-indigo-600" />
+              <h1 className="text-2xl font-bold text-gray-900">我的教案庫</h1>
+            </div>
+            <a 
+              href={`${import.meta.env.BASE_URL}`}
+              className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              <HomeIcon className="w-5 h-5" />
+              返回首頁
+            </a>
           </div>
           <p className="text-gray-600">管理您之前生成的所有教案，隨時查看和分享</p>
         </div>

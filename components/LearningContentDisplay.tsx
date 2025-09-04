@@ -233,9 +233,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
     }
 
     // 從 localStorage 獲取 API key（兼容多種 key 名稱）
-    const storedApiKey = localStorage.getItem('gemini_api_key') || 
-                        localStorage.getItem('geminiApiKey') || 
-                        apiKey;
+    const storedApiKey = localStorage.getItem('gemini_api_key') || apiKey;
     if (!storedApiKey) {
       alert('請先設定 Gemini API 金鑰');
       return;

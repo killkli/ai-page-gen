@@ -6,8 +6,9 @@ import LoadingSpinner from './components/LoadingSpinner';
 import LearningContentDisplay from './components/LearningContentDisplay';
 import LearningLevelSelector from './components/LearningLevelSelector';
 import VocabularyLevelSelector from './components/VocabularyLevelSelector';
-import { LightbulbIcon, AcademicCapIcon } from './components/icons';
+import { LightbulbIcon, AcademicCapIcon, HomeIcon } from './components/icons';
 import ApiKeyModal from './components/ApiKeyModal';
+import ApiKeyStatus from './components/ApiKeyStatus';
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import { getLearningContent } from './services/jsonbinService';
 import { lessonPlanStorage, createStoredLessonPlan } from './services/lessonPlanStorage';
@@ -135,6 +136,16 @@ const SharePage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
       <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
       <div className="max-w-4xl mx-auto">
+        {/* 導航區域 */}
+        <div className="mb-6">
+          <a 
+            href={`${import.meta.env.BASE_URL}`}
+            className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors shadow-sm"
+          >
+            <HomeIcon className="w-4 h-4" />
+            返回首頁
+          </a>
+        </div>
         {/* API Key 提示區域 */}
         {!apiKey && !showApiKeyModal && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -397,6 +408,13 @@ const App: React.FC = () => {
                 </ul>
               </div>
             </header>
+
+            {/* API Key Status */}
+            <div className="max-w-6xl mx-auto mb-6">
+              <div className="flex justify-center">
+                <ApiKeyStatus compact={true} />
+              </div>
+            </div>
 
             {/* Navigation Bar */}
             <div className="max-w-6xl mx-auto mb-8">

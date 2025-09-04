@@ -6,7 +6,7 @@ import FillBlankQuizItem from './quizTypes/FillBlankQuizItem';
 import SentenceScrambleQuizItem from './quizTypes/SentenceScrambleQuizItem';
 import MemoryCardGameQuizItem from './quizTypes/MemoryCardGameQuizItem';
 import LearningDiagnosticReport from './LearningDiagnosticReport';
-import { PuzzlePieceIcon, AcademicCapIcon, ChartBarIcon } from './icons';
+import { PuzzlePieceIcon, AcademicCapIcon, ChartBarIcon, HomeIcon } from './icons';
 import { saveStudentResults } from '../services/jsonbinService';
 import { calculateOverallScore } from '../services/diagnosticService';
 import QRCodeDisplay from './QRCodeDisplay';
@@ -298,9 +298,18 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3 mb-2">
-            <PuzzlePieceIcon className="w-8 h-8 text-indigo-600" />
-            <h1 className="text-2xl font-bold text-gray-900">互動測驗</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <PuzzlePieceIcon className="w-8 h-8 text-indigo-600" />
+              <h1 className="text-2xl font-bold text-gray-900">互動測驗</h1>
+            </div>
+            <a 
+              href={`${import.meta.env.BASE_URL}`}
+              className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              <HomeIcon className="w-4 h-4" />
+              返回首頁
+            </a>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-gray-600">
