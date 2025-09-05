@@ -5,30 +5,69 @@
   <meta charset="UTF-R-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Learning Page Generator</title>
+  <meta name="theme-color" content="#0ea5e9" />
+  <meta name="description" content="AI-powered educational content generator supporting multiple learning domains" />
+  
+  <!-- 預載入字體 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 主題系統樣式 -->
   <style>
-    body {
-      font-family: 'Inter', sans-serif; /* A nice default sans-serif font often used with Tailwind */
+    /* 基礎變量設定 - 將被主題管理器覆蓋 */
+    :root {
+      --color-primary: #0ea5e9;
+      --color-secondary: #64748b;
+      --color-accent: #f59e0b;
+      --color-background: #f8fafc;
+      --color-surface: #ffffff;
+      --color-text-primary: #0f172a;
+      --color-text-secondary: #334155;
+      --color-text-muted: #64748b;
     }
-    /* Custom scrollbar for better aesthetics */
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-text-primary);
+      transition: background-color 300ms ease, color 300ms ease;
+    }
+    
+    /* 自訂滾動條樣式 */
     ::-webkit-scrollbar {
       width: 8px;
       height: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
+      background: var(--color-background);
+      border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 10px;
+      background: var(--color-text-muted);
+      border-radius: 4px;
+      opacity: 0.6;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #555;
+      background: var(--color-secondary);
+      opacity: 0.8;
+    }
+    
+    /* 預防無樣式內容閃爍 */
+    .theme-loading {
+      visibility: hidden;
+    }
+    
+    /* 主題過渡動畫 */
+    * {
+      transition-property: background-color, border-color, color, fill, stroke;
+      transition-duration: 200ms;
+      transition-timing-function: ease-out;
     }
   </style>
 
-<link rel="stylesheet" href="/index.css">
 <script type="importmap">
 {
   "imports": {
@@ -39,7 +78,10 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/ai-page-gen/assets/index-DlVPuuoa.js"></script>
+  <script type="module" crossorigin src="/ai-page-gen/assets/index-B9xNU9zF.js"></script>
+  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/vendor-vmCsExVI.js">
+  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/utilities-BkxrxE9D.js">
+  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/ai-09tMth0v.js">
 </head>
 <body class="bg-slate-50 text-slate-800">
   <div id="root"></div>
