@@ -3,7 +3,7 @@ import { EncryptionService, EncryptedProviderShare, ProviderShareData } from './
 
 const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3';
 // 注意：這裡需要配置真實的 JSONBin API Key，或者使用其他分享服務
-const JSONBIN_API_KEY = process.env.VITE_JSONBIN_API_KEY || localStorage.getItem('jsonbin_api_key');
+const JSONBIN_API_KEY = import.meta.env.VITE_JSONBIN_API_KEY; // 請在 .env 設定 VITE_JSONBIN_API_KEY
 
 export class ProviderSharingService {
 

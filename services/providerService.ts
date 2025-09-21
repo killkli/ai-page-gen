@@ -16,6 +16,7 @@ import { ProviderManager } from '../src/core/providers/ProviderManager';
 
 // JSONBin 服務用於分享配置
 const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3';
+const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_API_KEY; // 請在 .env 設定 VITE_JSONBIN_API_KEY
 
 export class ProviderService {
   private manager: ProviderManager | null = null;
@@ -203,7 +204,7 @@ export class ProviderService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Master-Key': '$2a$10$...' // 需要配置 JSONBin API Key
+          'X-Master-Key': JSONBIN_KEY,
         },
         body: JSON.stringify(sharedConfig)
       });
@@ -225,7 +226,7 @@ export class ProviderService {
     try {
       const response = await fetch(`${JSONBIN_BASE_URL}/b/${binId}/latest`, {
         headers: {
-          'X-Master-Key': '$2a$10$...' // 需要配置 JSONBin API Key
+          'X-Master-Key': JSONBIN_KEY,
         }
       });
 
