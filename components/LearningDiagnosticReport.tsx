@@ -4,7 +4,6 @@ import {
   LearningDiagnosticResult, 
   DiagnosticSession,
   DiagnosticReportConfig,
-  QuizDifficulty,
   OnlineInteractiveQuiz
 } from '../types';
 import { 
@@ -21,7 +20,7 @@ interface LearningDiagnosticReportProps {
   topic: string;
   quizData?: OnlineInteractiveQuiz;
   studentId?: string;
-  apiKey: string;
+  apiKey?: string;
   mode?: 'student' | 'teacher' | 'both';
   onClose?: () => void;
   onRetakeQuiz?: () => void;
@@ -34,7 +33,6 @@ interface LearningDiagnosticReportProps {
 
 const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
   topic,
-  quizData,
   studentId,
   apiKey,
   mode = 'both',
@@ -116,23 +114,7 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
     }
   }, [topic, studentId, initialResponses, existingReport, generateDiagnosticReport]);
 
-  const handleRecordResponse = useCallback((response: QuestionResponse) => {
-    if (!session) return;
 
-    const updatedSession = {
-      ...session,
-      responses: [...session.responses, response]
-    };
-    setSession(updatedSession);
-  }, [session]);
-
-  const handleCompleteQuiz = useCallback(() => {
-    if (!session) return;
-
-    const completedSession = completeDiagnosticSession(session);
-    setSession(completedSession);
-    generateDiagnosticReport(completedSession);
-  }, [session, generateDiagnosticReport]);
 
   const handleExportReport = useCallback(() => {
     if (!diagnosticResult) return;

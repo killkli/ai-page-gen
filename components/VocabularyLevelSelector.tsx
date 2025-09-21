@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { VocabularyLevel } from '../types';
+import { VOCABULARY_LEVELS } from '../consts'
 import SectionCard from './SectionCard';
 import { BookOpenIcon } from './icons';
 
@@ -9,48 +10,9 @@ interface VocabularyLevelSelectorProps {
   isVisible?: boolean;
 }
 
-// Hard-coded vocabulary levels from 100-7000 words
-const VOCABULARY_LEVELS: VocabularyLevel[] = [
-  {
-    id: 'beginner',
-    name: '初級 (100-500詞)',
-    wordCount: 500,
-    description: '適合英語初學者，使用最基本的日常詞彙'
-  },
-  {
-    id: 'elementary',
-    name: '基礎 (500-1000詞)',
-    wordCount: 1000,
-    description: '掌握基本會話詞彙，能進行簡單交流'
-  },
-  {
-    id: 'pre-intermediate',
-    name: '初中級 (1000-2000詞)',
-    wordCount: 2000,
-    description: '能理解日常生活和工作中的常見詞彙'
-  },
-  {
-    id: 'intermediate',
-    name: '中級 (2000-3500詞)',
-    wordCount: 3500,
-    description: '能處理較複雜的文本和學術內容'
-  },
-  {
-    id: 'upper-intermediate',
-    name: '中高級 (3500-5000詞)',
-    wordCount: 5000,
-    description: '能理解專業文章和較複雜的語言結構'
-  },
-  {
-    id: 'advanced',
-    name: '高級 (5000-7000詞)',
-    wordCount: 7000,
-    description: '具備高水平的英語理解和表達能力'
-  }
-];
 
-const VocabularyLevelSelector: React.FC<VocabularyLevelSelectorProps> = ({ 
-  onVocabularyLevelSelect, 
+const VocabularyLevelSelector: React.FC<VocabularyLevelSelectorProps> = ({
+  onVocabularyLevelSelect,
   selectedLevel,
   isVisible = true
 }) => {
@@ -66,12 +28,12 @@ const VocabularyLevelSelector: React.FC<VocabularyLevelSelectorProps> = ({
   if (!isVisible) return null;
 
   return (
-    <SectionCard title="選擇英語單字程度" icon={<BookOpenIcon className="w-7 h-7"/>}>
+    <SectionCard title="選擇英語單字程度" icon={<BookOpenIcon className="w-7 h-7" />}>
       <div className="space-y-4">
         <p className="text-sm text-slate-600">
           請選擇您的英語單字量範圍，系統會根據此程度調整教學內容的複雜度：
         </p>
-        
+
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {VOCABULARY_LEVELS.map((level) => (
             <div
@@ -94,7 +56,7 @@ const VocabularyLevelSelector: React.FC<VocabularyLevelSelectorProps> = ({
                       : 'bg-slate-200 text-slate-700'
                     }
                   `}>
-                    {level.wordCount >= 1000 ? `${level.wordCount/1000}k` : level.wordCount}
+                    {level.wordCount >= 1000 ? `${level.wordCount / 1000}k` : level.wordCount}
                   </div>
                   <h4 className={`
                     text-sm font-semibold
@@ -110,7 +72,7 @@ const VocabularyLevelSelector: React.FC<VocabularyLevelSelectorProps> = ({
                   {level.description}
                 </p>
               </div>
-              
+
               {currentSelection === level.id && (
                 <div className="absolute top-2 right-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">

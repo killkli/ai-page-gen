@@ -53,7 +53,7 @@ const SentenceScrambleQuizItem: React.FC<SentenceScrambleQuizItemProps> = ({ que
     
     setFeedback({
       isCorrect,
-      message: isCorrect ? '答對了！' : `答錯了。正確句子是： \"${question.originalSentence}\"`,
+      message: isCorrect ? '答對了！' : `答錯了。正確句子是： "${question.originalSentence}"`,
     });
 
     // 計算答題時間

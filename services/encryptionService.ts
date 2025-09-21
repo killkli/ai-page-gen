@@ -145,7 +145,7 @@ export class EncryptionService {
       score += 1;
     }
 
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
       feedback.push('建議包含特殊字符');
     } else {
       score += 1;

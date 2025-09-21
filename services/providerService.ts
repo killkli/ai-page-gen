@@ -7,7 +7,6 @@ import {
   ProviderConfig,
   ProviderManagerConfig,
   SharedProviderConfig,
-  ProviderConfigExport,
   ProviderType,
   GeminiProviderConfig,
   OpenRouterProviderConfig

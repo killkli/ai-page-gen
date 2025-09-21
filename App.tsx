@@ -26,6 +26,7 @@ import ProviderShareModal from './components/ProviderShare/ProviderShareModal';
 import ProviderShareReceiver from './components/ProviderShare/ProviderShareReceiver';
 import { ProviderSharingService } from './services/providerSharingService';
 import ErrorBoundary from './components/ErrorBoundary';
+import { VOCABULARY_LEVELS } from './consts'
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
 
@@ -203,7 +204,7 @@ const SharePage: React.FC = () => {
             content={content}
             topic={content.topic || ''}
             selectedLevel={content.selectedLevel || null}
-            selectedVocabularyLevel={content.selectedVocabularyLevel || null}
+            selectedVocabularyLevel={content.selectedVocabularyLevel}
             apiKey={apiKey || undefined}
             onContentUpdate={setContent}
           />
@@ -232,7 +233,7 @@ const App: React.FC = () => {
   const [showingLevelSelection, setShowingLevelSelection] = useState<boolean>(false);
 
   // 新增：單字程度相關狀態 (僅適用於英語主題)
-  const [selectedVocabularyLevel, setSelectedVocabularyLevel] = useState<VocabularyLevel | null>(null);
+  const [selectedVocabularyLevel, setSelectedVocabularyLevel] = useState<VocabularyLevel>(VOCABULARY_LEVELS[0]);
   const [showingVocabularySelection, setShowingVocabularySelection] = useState<boolean>(false);
   const [isEnglishTopic, setIsEnglishTopic] = useState<boolean>(false);
 
@@ -325,7 +326,7 @@ const App: React.FC = () => {
     setLearningLevels(null);
     setGeneratedContent(null);
     setSelectedLevel(null);
-    setSelectedVocabularyLevel(null);
+    setSelectedVocabularyLevel(VOCABULARY_LEVELS[0]);
     setShowingVocabularySelection(false);
 
     // 檢測是否為英語相關主題
@@ -334,7 +335,7 @@ const App: React.FC = () => {
 
     try {
       // 使用 provider system 或 fallback 到舊版 API key
-      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : apiKey;
+      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : '';
       const levels = await generateLearningLevelSuggestions(topic, effectiveApiKey);
       setLearningLevels(levels);
       setShowingLevelSelection(true);
@@ -373,10 +374,11 @@ const App: React.FC = () => {
     setGeneratedContent(null);
 
     try {
-      let content: GeneratedLearningContent;
+      let content: ExtendedLearningContent;
 
       // 使用 provider system 或 fallback 到舊版 API key
       const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : apiKey;
+      if (effectiveApiKey === null) throw new Error('無API KEY 可用！')
 
       // 根據是否為英語主題選擇不同的生成方式
       if (isEnglishTopic && selectedVocabularyLevel) {
@@ -423,7 +425,7 @@ const App: React.FC = () => {
 
     try {
       // 使用 provider system 或 fallback 到舊版 API key
-      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : apiKey;
+      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : '';
       const content = await generateLearningPlan(topic, effectiveApiKey);
       setGeneratedContent(content);
 

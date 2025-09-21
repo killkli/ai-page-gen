@@ -1,5 +1,5 @@
 import React from 'react';
-import { GeneratedLearningContent, ExtendedLearningContent, LearningLevel, VocabularyLevel, QuizCustomConfig, DEFAULT_QUIZ_CONFIG, QUIZ_TYPE_LIMITS } from '../types';
+import {  ExtendedLearningContent, LearningLevel, VocabularyLevel, QuizCustomConfig, DEFAULT_QUIZ_CONFIG } from '../types';
 import SectionCard from './SectionCard';
 import DiagnosticQuizView from './DiagnosticQuizView';
 import ConversationPractice from './ConversationPractice';
@@ -18,7 +18,7 @@ interface LearningContentDisplayProps {
   content: ExtendedLearningContent;
   topic: string; // Added topic prop
   selectedLevel?: LearningLevel | null; // Added selected learning level
-  selectedVocabularyLevel?: VocabularyLevel | null; // Added selected vocabulary level
+  selectedVocabularyLevel?: VocabularyLevel; // Added selected vocabulary level
   apiKey?: string; // Added API key for writing practice AI feedback
   onContentUpdate?: (newContent: ExtendedLearningContent) => void; // Callback for content updates
 }

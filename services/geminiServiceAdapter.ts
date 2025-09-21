@@ -12,15 +12,9 @@ import { AIRequest, ProviderSelectionStrategy } from '../src/core/types/provider
 import {
   GeneratedLearningContent,
   LearningObjectiveItem,
-  LearningLevelSuggestions,
   VocabularyLevel,
-  QuizCustomConfig,
-  QuizTypeConfig,
-  QUIZ_TYPE_LIMITS,
-  WritingPracticeContent,
-  SentencePracticePrompt,
-  WritingPracticePrompt,
-  AIFeedback
+  // WritingPracticeContent,
+  // AIFeedback
 } from '../types';
 
 // Provider 系統的核心調用函數
@@ -374,9 +368,9 @@ export const generateLearningLevelSuggestions = async (topic: string, apiKey: st
 };
 
 // 檢查是否為英語相關主題
-export const isEnglishRelatedTopic = async (topic: string): Promise<boolean> => {
+export const isEnglishRelatedTopic =  (topic: string): boolean => {
   // 簡單的英語主題檢測邏輯
-  const englishKeywords = ['english', 'grammar', 'vocabulary', 'conversation', 'speaking', 'listening', 'reading', 'writing', 'toefl', 'ielts', 'business english'];
+  const englishKeywords = ['english', 'grammar', 'vocabulary', 'conversation', 'speaking', 'listening', 'reading', 'writing', 'toefl', 'ielts', 'business english','英文','英語'];
   const lowerTopic = topic.toLowerCase();
   return englishKeywords.some(keyword => lowerTopic.includes(keyword));
 };
@@ -473,24 +467,24 @@ export const generateLearningPlanWithVocabularyLevel = async (
   };
 };
 
-// 重新匯出其他可能需要的功能 (委託給原始服務)
-export const generateEnglishConversationForLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<any[]> => {
-  console.log('委託生成英語對話到原始服務');
-  const { generateEnglishConversationForLevel: original } = await import('./geminiService');
-  return await original(topic, selectedLevel, apiKey);
-};
-
-export const generateWritingPractice = async (topic: string, apiKey: string): Promise<WritingPracticeContent> => {
-  console.log('委託生成寫作練習到原始服務');
-  const { generateWritingPractice: original } = await import('./geminiService');
-  return await original(topic, apiKey);
-};
-
-export const generateAIFeedback = async (practiceType: string, userWork: string, prompt: any, apiKey: string): Promise<AIFeedback> => {
-  console.log('委託生成 AI 回饋到原始服務');
-  const { generateAIFeedback: original } = await import('./geminiService');
-  return await original(practiceType, userWork, prompt, apiKey);
-};
+// // 重新匯出其他可能需要的功能 (委託給原始服務)
+// export const generateEnglishConversationForLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<any[]> => {
+//   console.log('委託生成英語對話到原始服務');
+//   const { generateEnglishConversationForLevel: original } = await import('./geminiService');
+//   return await original(topic, selectedLevel, apiKey);
+// };
+//
+// export const generateWritingPractice = async (topic: string, apiKey: string): Promise<WritingPracticeContent> => {
+//   console.log('委託生成寫作練習到原始服務');
+//   const { generateWritingPractice: original } = await import('./geminiService');
+//   return await original(topic, apiKey);
+// };
+//
+// export const generateAIFeedback = async (practiceType: string, userWork: string, prompt: any, apiKey: string): Promise<AIFeedback> => {
+//   console.log('委託生成 AI 回饋到原始服務');
+//   const { generateAIFeedback: original } = await import('./geminiService');
+//   return await original(practiceType, userWork, prompt, apiKey);
+// };
 
 // Provider 管理函數
 export const hasConfiguredProviders = async (): Promise<boolean> => {
@@ -519,10 +513,6 @@ export const testAllProviders = async () => {
 
 export const setDefaultProvider = async (providerId: string) => {
   return await providerService.setDefaultProvider(providerId);
-};
-
-export const getConfiguredProviders = () => {
-  return providerService.getConfiguredProviders();
 };
 
 export const getUsageStats = async () => {

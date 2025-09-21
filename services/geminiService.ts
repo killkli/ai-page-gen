@@ -40,7 +40,7 @@ export const callGemini = async (prompt: string, apiKey: string): Promise<any> =
     }
     try {
       return JSON.parse(jsonStr);
-    } catch (err) {
+    } catch (_err) {
       // log 原始內容方便 debug
       console.error("AI 回傳原始內容 (JSON parse 失敗):", response.text);
       throw new Error("AI 模型傳回的資料格式無法解析 (可能不是有效的 JSON)。請嘗試修改您的主題或重試。");
@@ -1295,23 +1295,23 @@ const validateMemoryCardGame = (memoryCardData: any[]): { isValid: boolean; issu
   for (const game of memoryCardData) {
     if (!game.pairs || !Array.isArray(game.pairs)) continue;
     
-    const leftContents = game.pairs.map(pair => pair.left?.toLowerCase().trim()).filter(Boolean);
-    const rightContents = game.pairs.map(pair => pair.right?.toLowerCase().trim()).filter(Boolean);
+    const leftContents = game.pairs.map((pair:Record<string,string>) => pair.left?.toLowerCase().trim()).filter(Boolean);
+    const rightContents = game.pairs.map((pair:Record<string,string>) => pair.right?.toLowerCase().trim()).filter(Boolean);
     
     // 檢查左側內容重複
-    const leftDuplicates = leftContents.filter((item, index) => leftContents.indexOf(item) !== index);
+    const leftDuplicates = leftContents.filter((item:string, index:number) => leftContents.indexOf(item) !== index);
     if (leftDuplicates.length > 0) {
       issues.push(`記憶卡左側有重複內容: ${leftDuplicates.join(', ')}`);
     }
     
     // 檢查右側內容重複
-    const rightDuplicates = rightContents.filter((item, index) => rightContents.indexOf(item) !== index);
+    const rightDuplicates = rightContents.filter((item:string, index:number) => rightContents.indexOf(item) !== index);
     if (rightDuplicates.length > 0) {
       issues.push(`記憶卡右側有重複內容: ${rightDuplicates.join(', ')}`);
     }
     
     // 檢查左右側交叉重複
-    const crossDuplicates = leftContents.filter(left => rightContents.includes(left));
+    const crossDuplicates = leftContents.filter((left:string) => rightContents.includes(left));
     if (crossDuplicates.length > 0) {
       issues.push(`記憶卡左右側有交叉重複內容: ${crossDuplicates.join(', ')}`);
     }

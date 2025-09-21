@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TeacherDiagnosticReport as TeacherReportData, QuestionTypePerformance, LearningStrength, LearningWeakness, PersonalizedRecommendation } from '../types';
+import { TeacherDiagnosticReport as TeacherReportData } from '../types';
 
 interface TeacherDiagnosticReportProps {
   report: TeacherReportData;
@@ -88,7 +88,7 @@ const TeacherDiagnosticReport: React.FC<TeacherDiagnosticReportProps> = ({
               <p className="text-gray-600">學生ID：<span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{report.studentId}</span></p>
             )}
           </div>
-          
+
           {showExportOptions && (
             <div className="flex gap-3">
               <button
@@ -141,11 +141,10 @@ const TeacherDiagnosticReport: React.FC<TeacherDiagnosticReportProps> = ({
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex-shrink-0 px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
-                activeTab === tab.key
+              className={`flex-shrink-0 px-6 py-4 font-medium text-sm border-b-2 transition-colors ${activeTab === tab.key
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               <span className="mr-2">{tab.icon}</span>
               {tab.label}
@@ -223,7 +222,7 @@ const TeacherDiagnosticReport: React.FC<TeacherDiagnosticReportProps> = ({
                       {performance.accuracy}% 正確率
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div className="text-center">
                       <p className="text-sm text-gray-600">總題數</p>
@@ -395,21 +394,19 @@ const TeacherDiagnosticReport: React.FC<TeacherDiagnosticReportProps> = ({
                     <div>
                       <h4 className="text-lg font-semibold text-gray-800 mb-1">{rec.title}</h4>
                       <div className="flex gap-2 text-xs">
-                        <span className={`px-2 py-1 rounded-full border ${
-                          rec.category === 'immediate' ? 'text-red-600 bg-red-100 border-red-200' :
-                          rec.category === 'short-term' ? 'text-yellow-600 bg-yellow-100 border-yellow-200' :
-                          'text-blue-600 bg-blue-100 border-blue-200'
-                        }`}>
-                          {rec.category === 'immediate' ? '立即' : 
-                           rec.category === 'short-term' ? '短期' : '長期'}
+                        <span className={`px-2 py-1 rounded-full border ${rec.category === 'immediate' ? 'text-red-600 bg-red-100 border-red-200' :
+                            rec.category === 'short-term' ? 'text-yellow-600 bg-yellow-100 border-yellow-200' :
+                              'text-blue-600 bg-blue-100 border-blue-200'
+                          }`}>
+                          {rec.category === 'immediate' ? '立即' :
+                            rec.category === 'short-term' ? '短期' : '長期'}
                         </span>
-                        <span className={`px-2 py-1 rounded-full border ${
-                          rec.priority === 'high' ? 'text-red-600 bg-red-100 border-red-200' :
-                          rec.priority === 'medium' ? 'text-yellow-600 bg-yellow-100 border-yellow-200' :
-                          'text-green-600 bg-green-100 border-green-200'
-                        }`}>
-                          {rec.priority === 'high' ? '高優先' : 
-                           rec.priority === 'medium' ? '中優先' : '低優先'}
+                        <span className={`px-2 py-1 rounded-full border ${rec.priority === 'high' ? 'text-red-600 bg-red-100 border-red-200' :
+                            rec.priority === 'medium' ? 'text-yellow-600 bg-yellow-100 border-yellow-200' :
+                              'text-green-600 bg-green-100 border-green-200'
+                          }`}>
+                          {rec.priority === 'high' ? '高優先' :
+                            rec.priority === 'medium' ? '中優先' : '低優先'}
                         </span>
                       </div>
                     </div>
@@ -417,9 +414,9 @@ const TeacherDiagnosticReport: React.FC<TeacherDiagnosticReportProps> = ({
                       {rec.estimatedTime}
                     </span>
                   </div>
-                  
+
                   <p className="text-gray-700 mb-4">{rec.description}</p>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-2">具體步驟：</p>
@@ -434,11 +431,11 @@ const TeacherDiagnosticReport: React.FC<TeacherDiagnosticReportProps> = ({
                         ))}
                       </ol>
                     </div>
-                    
+
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-2">預期成果：</p>
                       <p className="text-sm text-gray-600 mb-3">{rec.expectedOutcome}</p>
-                      
+
                       {rec.resources && rec.resources.length > 0 && (
                         <div>
                           <p className="text-sm font-medium text-gray-700 mb-2">推薦資源：</p>

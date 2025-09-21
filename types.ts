@@ -115,7 +115,7 @@ export interface DialogueLine {
 export interface GeneratedLearningContent {
   topic?: string;
   selectedLevel?: LearningLevel | null;
-  selectedVocabularyLevel?: VocabularyLevel | null;
+  selectedVocabularyLevel?: VocabularyLevel;
   learningObjectives: LearningObjectiveItem[];
   contentBreakdown: ContentBreakdownItem[];
   confusingPoints: ConfusingPointItem[];
@@ -123,6 +123,7 @@ export interface GeneratedLearningContent {
   onlineInteractiveQuiz: OnlineInteractiveQuiz;
   englishConversation?: DialogueLine[]; // Added for English conversation practice
   learningLevels?: LearningLevelSuggestions; // Added for automatic learning level suggestions
+  writingPractice?: WritingPracticeContent;
 }
 
 export interface LearningLevel {

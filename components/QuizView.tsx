@@ -61,10 +61,6 @@ const QuizView: React.FC<QuizViewProps> = ({ quizzes }) => {
         <p>此難度級別沒有找到測驗題目。</p>
       ) : (
         (Object.keys(quizTypeLabels) as QuizContentKey[]).map((quizType) => {
-          // Explicitly check if currentQuizSet has the quizType property
-          if (!currentQuizSet.hasOwnProperty(quizType)) {
-            return null;
-          }
           const questions = currentQuizSet[quizType];
           if (!questions || !Array.isArray(questions) || questions.length === 0) {
             // If there are no questions for this type and difficulty, don't render the heading

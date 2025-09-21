@@ -1,4 +1,4 @@
-import { GeneratedLearningContent, QuizDifficulty, QuizDifficultyContent, TrueFalseQuestion, MultipleChoiceQuestion, FillBlankQuestion, SentenceScrambleQuestion, DialogueLine } from '../types';
+import { GeneratedLearningContent } from '../types';
 
 const generateInteractiveQuizHtml = (quizDataJson: string): string => {
   return `
@@ -105,7 +105,7 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
           ${item.correctVsWrong && item.correctVsWrong.length > 0 ? `
           <div style="background:#fefce8; border-left:4px solid #eab308; padding:12px; margin-bottom:12px; border-radius:4px;">
             <strong style="color:#a16207; font-size:0.8em; display:block; margin-bottom:8px;">正確與錯誤對比</strong>
-            ${item.correctVsWrong.map((comparison, compIndex) => `
+            ${item.correctVsWrong.map((comparison, _compIndex) => `
               <div style="border:1px solid #fde047; background:#fffbeb; padding:12px; margin-bottom:8px; border-radius:6px;">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:8px;">
                   <div style="background:#f0fdf4; padding:10px; border-radius:4px; border:1px solid #bbf7d0;">
@@ -211,16 +211,16 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
           <span class="speaker">${line.speaker}:</span> ${line.line}
         </div>`).join('') + '<p><small><em>注意：互動式語音朗讀和練習功能僅在線上應用程式中提供。</em></small></p>'
     : '<p>沒有提供英文對話內容。</p>';
-  
+
   const learningLevelsHtml = content.learningLevels && content.learningLevels.suggestedLevels && content.learningLevels.suggestedLevels.length > 0
     ? content.learningLevels.suggestedLevels
-        .sort((a, b) => a.order - b.order)
-        .map(level => `
-          <div class="level-item" style="border:1px solid #e0e7ef; border-radius:8px; padding:16px; margin-bottom:12px; background:${level.id === content.learningLevels.defaultLevelId ? '#eff8ff' : '#f8fafc'}; border-left: 4px solid ${level.id === content.learningLevels.defaultLevelId ? '#0ea5e9' : '#e2e8f0'};">
+      .sort((a, b) => a.order - b.order)
+      .map(level => `
+          <div class="level-item" style="border:1px solid #e0e7ef; border-radius:8px; padding:16px; margin-bottom:12px; background:${level.id === content.learningLevels?.defaultLevelId ? '#eff8ff' : '#f8fafc'}; border-left: 4px solid ${level.id === content.learningLevels?.defaultLevelId ? '#0ea5e9' : '#e2e8f0'};">
             <div style="display:flex; align-items:center; margin-bottom:8px;">
-              <div style="width:32px; height:32px; border-radius:50%; background-color:${level.id === content.learningLevels.defaultLevelId ? '#0ea5e9' : '#94a3b8'}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:12px;">${level.order}</div>
-              <h3 style="margin:0; color:${level.id === content.learningLevels.defaultLevelId ? '#0c4a6e' : '#334155'};">${level.name}</h3>
-              ${level.id === content.learningLevels.defaultLevelId ? '<span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; font-size:0.8em; margin-left:8px;">預設</span>' : ''}
+              <div style="width:32px; height:32px; border-radius:50%; background-color:${level.id === content.learningLevels?.defaultLevelId ? '#0ea5e9' : '#94a3b8'}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:12px;">${level.order}</div>
+              <h3 style="margin:0; color:${level.id === content.learningLevels?.defaultLevelId ? '#0c4a6e' : '#334155'};">${level.name}</h3>
+              ${level.id === content.learningLevels?.defaultLevelId ? '<span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; font-size:0.8em; margin-left:8px;">預設</span>' : ''}
             </div>
             <p style="margin:0; color:#64748b; line-height:1.5;">${level.description}</p>
           </div>
@@ -355,8 +355,8 @@ export const exportLearningContentToHtml = (content: GeneratedLearningContent, t
 
           const normalizeText = (str) => {
             if (typeof str !== 'string') return '';
-            // Corrected regex for multiple spaces: \s+ instead of \\s+
-            return str.toLowerCase().replace(/[.,!?;:'"‘'""]/g, '').replace(/\s+/g, ' ').trim();
+            // Corrected regex for multiple spaces: \\s+ instead of \\s+
+            return str.toLowerCase().replace(/[.,!?;:'"‘'""]/g, '').replace(/\\s+/g, ' ').trim();
           };
 
           const renderQuizzesForDifficulty = (difficulty) => {

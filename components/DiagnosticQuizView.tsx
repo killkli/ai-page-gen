@@ -21,7 +21,7 @@ interface DiagnosticQuizViewProps {
   quizzes: OnlineInteractiveQuiz | undefined;
   topic: string;
   studentId?: string;
-  apiKey: string;
+  apiKey?: string;
   onDiagnosticComplete?: (result: any) => void;
   enableDiagnostic?: boolean;
 }
