@@ -212,21 +212,31 @@ export class OpenRouterProvider extends BaseProvider {
     console.log('OpenRouter 回應內容前100字:', content.substring(0, 100));
     console.log('OpenRouter 回應內容後100字:', content.substring(Math.max(0, content.length - 100)));
 
+    // 先清理 JSON 格式標記，然後嘗試解析
+    let cleanedContent = content
+      .replace(/```json\n/g, '')       // 移除開頭的 ```json
+      .replace(/\n```/g, '')           // 移除結尾的 ```
+      .replace(/```\n/g, '')           // 移除其他 ```
+      .replace(/```/g, '')             // 移除剩餘的 ```
+      .trim();                         // 去除前後空白
+
+    console.log('OpenRouter 清理後內容前100字:', cleanedContent.substring(0, 100));
+
     // 嘗試解析 JSON（如果內容看起來像 JSON）
-    if (content.startsWith('{') || content.startsWith('[')) {
+    if (cleanedContent.startsWith('{') || cleanedContent.startsWith('[')) {
       try {
-        const parsed = JSON.parse(content);
+        const parsed = JSON.parse(cleanedContent);
         console.log('OpenRouter JSON 解析成功:', typeof parsed, Object.keys(parsed || {}));
         return parsed;
       } catch (error) {
         console.error('OpenRouter 回應 JSON 解析失敗:', error.message);
-        console.log('JSON 解析失敗的內容:', content);
-        return content;
+        console.log('JSON 解析失敗的內容:', cleanedContent);
+        return cleanedContent;
       }
     }
 
-    console.log('OpenRouter 回應不是 JSON 格式，返回原始文字');
-    return content;
+    console.log('OpenRouter 回應不是 JSON 格式，返回清理後文字');
+    return cleanedContent;
   }
 
   protected extractUsageInfo(rawData: any, ...args: any[]): { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined {
