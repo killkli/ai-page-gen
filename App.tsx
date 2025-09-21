@@ -22,6 +22,9 @@ import TeacherInteractivePrepPage from './components/TeacherInteractivePrep/Teac
 import StudentInteractivePage from './components/StudentInteractive/StudentInteractivePage';
 import ConversationPrepPage from './components/EnglishConversation/ConversationPrepPage';
 import ConversationPracticePage from './components/EnglishConversation/ConversationPracticePage';
+import ProviderShareModal from './components/ProviderShare/ProviderShareModal';
+import ProviderShareReceiver from './components/ProviderShare/ProviderShareReceiver';
+import { ProviderSharingService } from './services/providerSharingService';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
@@ -32,6 +35,7 @@ let providerSystemInitialized = false;
 const SharePage: React.FC = () => {
   const [params] = useSearchParams();
   const binId = params.get('binId');
+  const providerShareId = params.get('provider_share');
   const [content, setContent] = React.useState<ExtendedLearningContent | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState('');
@@ -39,6 +43,12 @@ const SharePage: React.FC = () => {
   const [showApiKeyModal, setShowApiKeyModal] = React.useState<boolean>(false);
 
   React.useEffect(() => {
+    // 檢查是否為 Provider 分享
+    if (providerShareId) {
+      // Provider 分享不需要在這裡處理，由 ProviderShareReceiver 處理
+      return;
+    }
+
     if (!binId) {
       setError('缺少 binId');
       return;
@@ -52,7 +62,7 @@ const SharePage: React.FC = () => {
       })
       .catch(e => setError(e.message || '讀取失敗'))
       .finally(() => setLoading(false));
-  }, [binId]);
+  }, [binId, providerShareId]);
 
   // 儲存分享的教案到本地存儲
   const saveSharedContentToLocal = async (content: ExtendedLearningContent, shareBinId: string) => {
@@ -135,6 +145,20 @@ const SharePage: React.FC = () => {
     </div>
   );
   
+  // 如果是 Provider 分享，顯示 ProviderShareReceiver
+  if (providerShareId) {
+    return (
+      <ErrorBoundary>
+        <ProviderShareReceiver
+          binId={providerShareId}
+          onProviderImported={(count) => {
+            console.log(`已導入 ${count} 個 Provider 配置`);
+          }}
+        />
+      </ErrorBoundary>
+    );
+  }
+
   if (!content) return null;
   
   return (
@@ -197,6 +221,10 @@ const App: React.FC = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showApiKeyModal, setShowApiKeyModal] = useState<boolean>(false);
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
+
+  // 新的分享功能狀態
+  const [showProviderShareModal, setShowProviderShareModal] = useState<boolean>(false);
+  const [availableProviders, setAvailableProviders] = useState<any[]>([]);
   
   // 新增：程度建議相關狀態
   const [learningLevels, setLearningLevels] = useState<LearningLevelSuggestions | null>(null);
@@ -211,11 +239,12 @@ const App: React.FC = () => {
   React.useEffect(() => {
     const initializeApp = async () => {
       // 1. 先檢查 URL 參數
-      const params = new URLSearchParams(window.location.search);
-      const urlApiKey = params.get('apikey');
-      if (urlApiKey) {
-        localStorage.setItem(LOCALSTORAGE_KEY, urlApiKey);
-        setApiKey(urlApiKey);
+      const shareInfo = ProviderSharingService.parseShareUrl();
+
+      // 處理舊版 API Key 分享
+      if (shareInfo.type === 'legacy' && shareInfo.value) {
+        localStorage.setItem(LOCALSTORAGE_KEY, shareInfo.value);
+        setApiKey(shareInfo.value);
         setShowApiKeyModal(false);
         // 清除網址參數但不刷新頁面
         const cleanUrl = window.location.origin + window.location.pathname;
@@ -244,6 +273,14 @@ const App: React.FC = () => {
         if (!hasProviders) {
           setShowApiKeyModal(true);
         }
+      }
+
+      // 載入可用的 Providers
+      try {
+        const providers = await providerService.getProviders();
+        setAvailableProviders(providers);
+      } catch (error) {
+        console.error('載入 Providers 失敗:', error);
       }
     };
 
@@ -401,12 +438,13 @@ const App: React.FC = () => {
     }
   }, [topic, apiKey]);
 
+  // 舊版 API Key 分享（向後兼容）
   const handleShareLink = async () => {
     if (!apiKey) {
       setCopySuccess('請先設定 API 金鑰');
       return;
     }
-    const url = `${window.location.origin}${import.meta.env.BASE_URL}?apikey=${encodeURIComponent(apiKey)}`;
+    const url = ProviderSharingService.createLegacyShare(apiKey);
     try {
       await navigator.clipboard.writeText(url);
       setCopySuccess('已複製分享連結！');
@@ -416,11 +454,23 @@ const App: React.FC = () => {
     setTimeout(() => setCopySuccess(null), 2000);
   };
 
+  // 新版 Provider 配置分享
+  const handleProviderShare = useCallback(() => {
+    setShowProviderShareModal(true);
+  }, []);
+
+  const handleProviderShareCreated = useCallback((_shareUrl: string) => {
+    setCopySuccess('Provider 配置分享已創建！');
+    setShowProviderShareModal(false);
+    setTimeout(() => setCopySuccess(null), 3000);
+  }, []);
+
   return (
     <Router basename={import.meta.env.BASE_URL}>
       <ErrorBoundary>
         <Routes>
           <Route path="share" element={<ErrorBoundary><SharePage /></ErrorBoundary>} />
+          <Route path="provider-share" element={<ErrorBoundary><SharePage /></ErrorBoundary>} />
           <Route path="quiz" element={<ErrorBoundary><QuizPage /></ErrorBoundary>} />
           <Route path="writing" element={<ErrorBoundary><StudentWritingPage /></ErrorBoundary>} />
           <Route path="student-results" element={<ErrorBoundary><StudentResultsPage /></ErrorBoundary>} />
@@ -480,13 +530,22 @@ const App: React.FC = () => {
                   英文對話練習
                 </a>
                 <button
-                  onClick={handleShareLink}
+                  onClick={handleProviderShare}
                   className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
                   </svg>
-                  分享應用程式
+                  分享 Provider 配置
+                </button>
+                <button
+                  onClick={handleShareLink}
+                  className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                  </svg>
+                  分享應用程式連結
                 </button>
               </div>
               {copySuccess && (
@@ -497,6 +556,14 @@ const App: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Provider 分享 Modal */}
+            <ProviderShareModal
+              isOpen={showProviderShareModal}
+              onClose={() => setShowProviderShareModal(false)}
+              providers={availableProviders}
+              onShareCreated={handleProviderShareCreated}
+            />
 
             <main className="max-w-4xl mx-auto">
               <InputBar

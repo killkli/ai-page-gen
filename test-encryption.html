@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>測試加密分享功能</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; }
+        textarea { width: 100%; height: 100px; margin: 10px 0; }
+        input { width: 300px; padding: 5px; margin: 5px; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Provider 配置加密分享功能測試</h1>
+
+    <div class="test-section info">
+        <h2>測試說明</h2>
+        <p>這個頁面用於測試新的加密分享功能，包括：</p>
+        <ul>
+            <li>Provider 配置的加密和解密</li>
+            <li>密碼強度驗證</li>
+            <li>分享 URL 生成和解析</li>
+            <li>數據完整性檢查</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>1. 加密/解密測試</h2>
+        <div>
+            <label>測試數據:</label>
+            <textarea id="testData">{
+  "providers": [
+    {
+      "type": "gemini",
+      "name": "測試 Gemini",
+      "model": "gemini-2.5-flash",
+      "apiKey": "test-api-key-123",
+      "settings": { "temperature": 0.7 }
+    }
+  ],
+  "sharedAt": "2025-09-21T12:00:00.000Z"
+}</textarea>
+        </div>
+        <div>
+            <label>密碼:</label>
+            <input type="password" id="testPassword" value="TestPassword123!" placeholder="輸入測試密碼">
+            <button onclick="generateRandomPassword()">生成隨機密碼</button>
+        </div>
+        <div>
+            <button onclick="testEncryption()">測試加密</button>
+            <button onclick="testDecryption()">測試解密</button>
+            <button onclick="testPasswordStrength()">檢查密碼強度</button>
+        </div>
+        <div id="encryptionResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 分享 URL 測試</h2>
+        <div>
+            <label>測試 Bin ID:</label>
+            <input type="text" id="testBinId" value="test-bin-12345" placeholder="輸入測試 Bin ID">
+        </div>
+        <div>
+            <button onclick="testUrlGeneration()">生成分享 URL</button>
+            <button onclick="testUrlParsing()">解析當前 URL</button>
+        </div>
+        <div id="urlResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 模擬分享流程</h2>
+        <div>
+            <button onclick="simulateShareFlow()">模擬完整分享流程</button>
+        </div>
+        <div id="simulationResult"></div>
+    </div>
+
+    <script type="module">
+        // 導入加密服務（需要適配瀏覽器環境）
+
+        // 簡化版加密服務用於測試
+        class TestEncryptionService {
+            static async encrypt(data, password) {
+                try {
+                    const salt = crypto.getRandomValues(new Uint8Array(16));
+                    const keyMaterial = await crypto.subtle.importKey(
+                        'raw',
+                        new TextEncoder().encode(password),
+                        { name: 'PBKDF2' },
+                        false,
+                        ['deriveKey']
+                    );
+
+                    const key = await crypto.subtle.deriveKey(
+                        {
+                            name: 'PBKDF2',
+                            salt: salt,
+                            iterations: 100000,
+                            hash: 'SHA-256'
+                        },
+                        keyMaterial,
+                        { name: 'AES-GCM', length: 256 },
+                        false,
+                        ['encrypt']
+                    );
+
+                    const iv = crypto.getRandomValues(new Uint8Array(12));
+                    const encrypted = await crypto.subtle.encrypt(
+                        { name: 'AES-GCM', iv: iv },
+                        key,
+                        new TextEncoder().encode(data)
+                    );
+
+                    const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+                    combined.set(salt, 0);
+                    combined.set(iv, salt.length);
+                    combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+                    return btoa(String.fromCharCode(...combined));
+                } catch (error) {
+                    throw new Error('加密失敗: ' + error.message);
+                }
+            }
+
+            static async decrypt(encryptedData, password) {
+                try {
+                    const combined = new Uint8Array(
+                        atob(encryptedData).split('').map(char => char.charCodeAt(0))
+                    );
+
+                    const salt = combined.slice(0, 16);
+                    const iv = combined.slice(16, 28);
+                    const encrypted = combined.slice(28);
+
+                    const keyMaterial = await crypto.subtle.importKey(
+                        'raw',
+                        new TextEncoder().encode(password),
+                        { name: 'PBKDF2' },
+                        false,
+                        ['deriveKey']
+                    );
+
+                    const key = await crypto.subtle.deriveKey(
+                        {
+                            name: 'PBKDF2',
+                            salt: salt,
+                            iterations: 100000,
+                            hash: 'SHA-256'
+                        },
+                        keyMaterial,
+                        { name: 'AES-GCM', length: 256 },
+                        false,
+                        ['decrypt']
+                    );
+
+                    const decrypted = await crypto.subtle.decrypt(
+                        { name: 'AES-GCM', iv: iv },
+                        key,
+                        encrypted
+                    );
+
+                    return new TextDecoder().decode(decrypted);
+                } catch (error) {
+                    throw new Error('解密失敗: ' + error.message);
+                }
+            }
+
+            static generateRandomPassword() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+                let result = '';
+                for (let i = 0; i < 16; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return result;
+            }
+
+            static validatePasswordStrength(password) {
+                const feedback = [];
+                let score = 0;
+
+                if (password.length < 8) {
+                    feedback.push('密碼長度至少需要 8 個字符');
+                } else {
+                    score += 1;
+                }
+
+                if (!/[a-z]/.test(password)) {
+                    feedback.push('需要包含小寫字母');
+                } else {
+                    score += 1;
+                }
+
+                if (!/[A-Z]/.test(password)) {
+                    feedback.push('需要包含大寫字母');
+                } else {
+                    score += 1;
+                }
+
+                if (!/[0-9]/.test(password)) {
+                    feedback.push('需要包含數字');
+                } else {
+                    score += 1;
+                }
+
+                if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+                    feedback.push('建議包含特殊字符');
+                } else {
+                    score += 1;
+                }
+
+                return {
+                    isValid: score >= 3,
+                    score,
+                    feedback
+                };
+            }
+        }
+
+        // 全局變數用於測試
+        let encryptedTestData = null;
+
+        // 測試函數
+        window.testEncryption = async function() {
+            try {
+                const data = document.getElementById('testData').value;
+                const password = document.getElementById('testPassword').value;
+
+                if (!password) {
+                    throw new Error('請輸入密碼');
+                }
+
+                const encrypted = await TestEncryptionService.encrypt(data, password);
+                encryptedTestData = encrypted;
+
+                document.getElementById('encryptionResult').innerHTML = `
+                    <div class="success">
+                        <h3>✅ 加密成功</h3>
+                        <p><strong>原始數據長度:</strong> ${data.length} 字符</p>
+                        <p><strong>加密後長度:</strong> ${encrypted.length} 字符</p>
+                        <p><strong>加密數據預覽:</strong></p>
+                        <pre>${encrypted.substring(0, 100)}${encrypted.length > 100 ? '...' : ''}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('encryptionResult').innerHTML = `
+                    <div class="error">
+                        <h3>❌ 加密失敗</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        window.testDecryption = async function() {
+            try {
+                if (!encryptedTestData) {
+                    throw new Error('請先執行加密測試');
+                }
+
+                const password = document.getElementById('testPassword').value;
+                const decrypted = await TestEncryptionService.decrypt(encryptedTestData, password);
+
+                document.getElementById('encryptionResult').innerHTML = `
+                    <div class="success">
+                        <h3>✅ 解密成功</h3>
+                        <p><strong>解密後數據:</strong></p>
+                        <pre>${decrypted}</pre>
+                        <p><strong>數據完整性:</strong> ${decrypted === document.getElementById('testData').value ? '✅ 一致' : '❌ 不一致'}</p>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('encryptionResult').innerHTML = `
+                    <div class="error">
+                        <h3>❌ 解密失敗</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        window.testPasswordStrength = function() {
+            const password = document.getElementById('testPassword').value;
+            const result = TestEncryptionService.validatePasswordStrength(password);
+
+            const strengthLabel = result.score >= 4 ? '強' : result.score >= 3 ? '中' : '弱';
+            const strengthColor = result.score >= 4 ? 'green' : result.score >= 3 ? 'orange' : 'red';
+
+            document.getElementById('encryptionResult').innerHTML = `
+                <div class="${result.isValid ? 'success' : 'error'}">
+                    <h3>🔒 密碼強度檢測</h3>
+                    <p><strong>密碼:</strong> ${password}</p>
+                    <p><strong>強度:</strong> <span style="color: ${strengthColor}; font-weight: bold;">${strengthLabel} (${result.score}/5)</span></p>
+                    <p><strong>有效性:</strong> ${result.isValid ? '✅ 有效' : '❌ 無效'}</p>
+                    ${result.feedback.length > 0 ? `
+                        <p><strong>建議:</strong></p>
+                        <ul>${result.feedback.map(f => `<li>${f}</li>`).join('')}</ul>
+                    ` : ''}
+                </div>
+            `;
+        };
+
+        window.generateRandomPassword = function() {
+            const password = TestEncryptionService.generateRandomPassword();
+            document.getElementById('testPassword').value = password;
+        };
+
+        window.testUrlGeneration = function() {
+            const binId = document.getElementById('testBinId').value;
+            const baseUrl = window.location.origin + window.location.pathname.replace('test-encryption.html', '');
+            const shareUrl = `${baseUrl}?provider_share=${encodeURIComponent(binId)}`;
+
+            document.getElementById('urlResult').innerHTML = `
+                <div class="success">
+                    <h3>✅ 分享 URL 生成成功</h3>
+                    <p><strong>Bin ID:</strong> ${binId}</p>
+                    <p><strong>分享 URL:</strong></p>
+                    <pre>${shareUrl}</pre>
+                    <button onclick="navigator.clipboard.writeText('${shareUrl}')">複製 URL</button>
+                </div>
+            `;
+        };
+
+        window.testUrlParsing = function() {
+            const params = new URLSearchParams(window.location.search);
+            const providerShare = params.get('provider_share');
+            const legacyApiKey = params.get('apikey');
+
+            let result = '';
+            if (providerShare) {
+                result = `
+                    <div class="success">
+                        <h3>✅ 檢測到 Provider 分享</h3>
+                        <p><strong>類型:</strong> 加密 Provider 配置分享</p>
+                        <p><strong>Bin ID:</strong> ${providerShare}</p>
+                    </div>
+                `;
+            } else if (legacyApiKey) {
+                result = `
+                    <div class="info">
+                        <h3>ℹ️ 檢測到舊版分享</h3>
+                        <p><strong>類型:</strong> API Key 分享</p>
+                        <p><strong>API Key:</strong> ${legacyApiKey.substring(0, 10)}...</p>
+                    </div>
+                `;
+            } else {
+                result = `
+                    <div class="info">
+                        <h3>ℹ️ 未檢測到分享參數</h3>
+                        <p>當前 URL 不包含分享參數</p>
+                        <p>可以在 URL 後添加 ?provider_share=test-id 來測試</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('urlResult').innerHTML = result;
+        };
+
+        window.simulateShareFlow = async function() {
+            try {
+                document.getElementById('simulationResult').innerHTML = `
+                    <div class="info">
+                        <h3>🔄 正在模擬分享流程...</h3>
+                    </div>
+                `;
+
+                // 1. 準備測試數據
+                const testData = document.getElementById('testData').value;
+                const password = document.getElementById('testPassword').value || 'TestPassword123!';
+
+                // 2. 加密數據
+                const encrypted = await TestEncryptionService.encrypt(testData, password);
+
+                // 3. 模擬上傳到 JSONBin（實際上只是本地存儲）
+                const mockBinId = 'mock_' + Date.now();
+                const encryptedShare = {
+                    id: mockBinId,
+                    name: '測試分享配置',
+                    description: '這是一個測試的 Provider 配置分享',
+                    encryptedData: encrypted,
+                    metadata: {
+                        version: '1.0',
+                        createdAt: new Date().toISOString(),
+                        providerTypes: ['gemini'],
+                        providerCount: 1,
+                        hasEncryption: true
+                    }
+                };
+
+                // 4. 生成分享 URL
+                const baseUrl = window.location.origin + window.location.pathname.replace('test-encryption.html', '');
+                const shareUrl = `${baseUrl}?provider_share=${encodeURIComponent(mockBinId)}`;
+
+                // 5. 模擬接收方解密
+                const decrypted = await TestEncryptionService.decrypt(encrypted, password);
+                const isValid = decrypted === testData;
+
+                document.getElementById('simulationResult').innerHTML = `
+                    <div class="success">
+                        <h3>✅ 完整分享流程模擬成功</h3>
+
+                        <h4>1️⃣ 分享方 - 創建分享</h4>
+                        <p><strong>原始數據:</strong> ${testData.length} 字符</p>
+                        <p><strong>加密密碼:</strong> ${password}</p>
+                        <p><strong>加密結果:</strong> ${encrypted.length} 字符</p>
+
+                        <h4>2️⃣ 系統 - 生成分享</h4>
+                        <p><strong>Bin ID:</strong> ${mockBinId}</p>
+                        <p><strong>分享 URL:</strong></p>
+                        <pre>${shareUrl}</pre>
+
+                        <h4>3️⃣ 接收方 - 解密驗證</h4>
+                        <p><strong>解密狀態:</strong> ${isValid ? '✅ 成功' : '❌ 失敗'}</p>
+                        <p><strong>數據完整性:</strong> ${isValid ? '✅ 一致' : '❌ 不一致'}</p>
+
+                        <h4>4️⃣ 安全性評估</h4>
+                        <ul>
+                            <li>✅ 使用 AES-GCM 256 位加密</li>
+                            <li>✅ PBKDF2 密鑰派生（100,000 次迭代）</li>
+                            <li>✅ 隨機鹽值和初始向量</li>
+                            <li>✅ 密碼強度驗證</li>
+                            <li>✅ 數據完整性檢查</li>
+                        </ul>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('simulationResult').innerHTML = `
+                    <div class="error">
+                        <h3>❌ 分享流程模擬失敗</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // 頁面載入時執行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔐 Provider 配置加密分享功能測試頁面已載入');
+
+            // 自動檢查 URL 參數
+            testUrlParsing();
+        });
+    </script>
+</body>
+</html>
