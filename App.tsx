@@ -22,8 +22,6 @@ import TeacherInteractivePrepPage from './components/TeacherInteractivePrep/Teac
 import StudentInteractivePage from './components/StudentInteractive/StudentInteractivePage';
 import ConversationPrepPage from './components/EnglishConversation/ConversationPrepPage';
 import ConversationPracticePage from './components/EnglishConversation/ConversationPracticePage';
-import ProviderTest from './components/ProviderTest';
-import ProviderDebug from './components/ProviderDebug';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
@@ -432,8 +430,6 @@ const App: React.FC = () => {
           <Route path="student-interactive" element={<ErrorBoundary><StudentInteractivePage /></ErrorBoundary>} />
           <Route path="conversation-prep" element={<ErrorBoundary><ConversationPrepPage /></ErrorBoundary>} />
           <Route path="conversation-practice/:binId" element={<ErrorBoundary><ConversationPracticePage /></ErrorBoundary>} />
-          <Route path="provider-test" element={<ErrorBoundary><ProviderTest /></ErrorBoundary>} />
-          <Route path="provider-debug" element={<ErrorBoundary><ProviderDebug /></ErrorBoundary>} />
         <Route path="/" element={
           <ErrorBoundary>
             <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -482,25 +478,6 @@ const App: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
                   </svg>
                   英文對話練習
-                </a>
-                <a
-                  href={`${import.meta.env.BASE_URL}provider-test`}
-                  className="flex items-center gap-2 px-4 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-lg"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Provider 測試
-                </a>
-                <a
-                  href={`${import.meta.env.BASE_URL}provider-debug`}
-                  className="flex items-center gap-2 px-4 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-lg"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Provider 調試
                 </a>
                 <button
                   onClick={handleShareLink}
