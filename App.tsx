@@ -22,6 +22,7 @@ import TeacherInteractivePrepPage from './components/TeacherInteractivePrep/Teac
 import StudentInteractivePage from './components/StudentInteractive/StudentInteractivePage';
 import ConversationPrepPage from './components/EnglishConversation/ConversationPrepPage';
 import ConversationPracticePage from './components/EnglishConversation/ConversationPracticePage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
 
@@ -170,14 +171,16 @@ const SharePage: React.FC = () => {
           </div>
         )}
         
-        <LearningContentDisplay 
-          content={content} 
-          topic={content.topic || ''}
-          selectedLevel={content.selectedLevel || null}
-          selectedVocabularyLevel={content.selectedVocabularyLevel || null}
-          apiKey={apiKey || undefined}
-          onContentUpdate={setContent}
-        />
+        <ErrorBoundary>
+          <LearningContentDisplay
+            content={content}
+            topic={content.topic || ''}
+            selectedLevel={content.selectedLevel || null}
+            selectedVocabularyLevel={content.selectedVocabularyLevel || null}
+            apiKey={apiKey || undefined}
+            onContentUpdate={setContent}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );
@@ -377,19 +380,21 @@ const App: React.FC = () => {
 
   return (
     <Router basename={import.meta.env.BASE_URL}>
-      <Routes>
-        <Route path="share" element={<SharePage />} />
-        <Route path="quiz" element={<QuizPage />} />
-        <Route path="writing" element={<StudentWritingPage />} />
-        <Route path="student-results" element={<StudentResultsPage />} />
-        <Route path="lesson-plans" element={<LessonPlanManager />} />
-        <Route path="interactive-learning" element={<InteractiveLearningPage />} />
-        <Route path="teacher-interactive-prep" element={<TeacherInteractivePrepPage />} />
-        <Route path="student-interactive" element={<StudentInteractivePage />} />
-        <Route path="conversation-prep" element={<ConversationPrepPage />} />
-        <Route path="conversation-practice/:binId" element={<ConversationPracticePage />} />
+      <ErrorBoundary>
+        <Routes>
+          <Route path="share" element={<ErrorBoundary><SharePage /></ErrorBoundary>} />
+          <Route path="quiz" element={<ErrorBoundary><QuizPage /></ErrorBoundary>} />
+          <Route path="writing" element={<ErrorBoundary><StudentWritingPage /></ErrorBoundary>} />
+          <Route path="student-results" element={<ErrorBoundary><StudentResultsPage /></ErrorBoundary>} />
+          <Route path="lesson-plans" element={<ErrorBoundary><LessonPlanManager /></ErrorBoundary>} />
+          <Route path="interactive-learning" element={<ErrorBoundary><InteractiveLearningPage /></ErrorBoundary>} />
+          <Route path="teacher-interactive-prep" element={<ErrorBoundary><TeacherInteractivePrepPage /></ErrorBoundary>} />
+          <Route path="student-interactive" element={<ErrorBoundary><StudentInteractivePage /></ErrorBoundary>} />
+          <Route path="conversation-prep" element={<ErrorBoundary><ConversationPrepPage /></ErrorBoundary>} />
+          <Route path="conversation-practice/:binId" element={<ErrorBoundary><ConversationPracticePage /></ErrorBoundary>} />
         <Route path="/" element={
-          <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+          <ErrorBoundary>
+            <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
             <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
             <header className="text-center mb-10">
               <h1 className="text-4xl sm:text-5xl font-extrabold text-sky-700 tracking-tight">
@@ -500,14 +505,16 @@ const App: React.FC = () => {
 
               {/* 顯示生成的完整內容 */}
               {generatedContent && !isLoading && !error && !showingLevelSelection && !showingVocabularySelection && (
-                <LearningContentDisplay 
-                  content={generatedContent} 
-                  topic={topic}
-                  selectedLevel={selectedLevel}
-                  selectedVocabularyLevel={selectedVocabularyLevel}
-                  apiKey={apiKey || undefined}
-                  onContentUpdate={setGeneratedContent}
-                />
+                <ErrorBoundary>
+                  <LearningContentDisplay
+                    content={generatedContent}
+                    topic={topic}
+                    selectedLevel={selectedLevel}
+                    selectedVocabularyLevel={selectedVocabularyLevel}
+                    apiKey={apiKey || undefined}
+                    onContentUpdate={setGeneratedContent}
+                  />
+                </ErrorBoundary>
               )}
             </main>
 
@@ -527,8 +534,10 @@ const App: React.FC = () => {
               )}
             </footer>
           </div>
+          </ErrorBoundary>
         } />
-      </Routes>
+        </Routes>
+      </ErrorBoundary>
     </Router>
   );
 };
