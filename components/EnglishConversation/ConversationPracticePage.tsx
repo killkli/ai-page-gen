@@ -133,7 +133,7 @@ const ConversationPracticePage: React.FC = () => {
     
     // 如果分割後還有很長的句子，按逗號再分割
     const segments: string[] = [];
-    for (let sentence of sentences) {
+    for (const sentence of sentences) {
       const trimmed = sentence.trim();
       if (trimmed.length > 50) { // 降低分割門檻到50字符
         const parts = trimmed.split(',').filter(s => s.trim().length > 0);

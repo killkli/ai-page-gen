@@ -213,7 +213,7 @@ export class OpenRouterProvider extends BaseProvider {
     console.log('OpenRouter 回應內容後100字:', content.substring(Math.max(0, content.length - 100)));
 
     // 先清理 JSON 格式標記，然後嘗試解析
-    let cleanedContent = content
+    const cleanedContent = content
       .replace(/```json\n/g, '')       // 移除開頭的 ```json
       .replace(/\n```/g, '')           // 移除結尾的 ```
       .replace(/```\n/g, '')           // 移除其他 ```

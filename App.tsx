@@ -1,15 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import { ExtendedLearningContent, LearningLevelSuggestions, LearningLevel, VocabularyLevel } from './types';
-import { generateLearningPlan, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel } from './services/geminiServiceAdapter';
-import { generateLearningLevelSuggestions, isEnglishRelatedTopic } from './services/geminiService';
+import { generateLearningPlan, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel, generateLearningLevelSuggestions, isEnglishRelatedTopic, initializeProviderSystem, hasConfiguredProviders } from './services/geminiServiceAdapter';
+import { providerService } from './services/providerService';
 import InputBar from './components/InputBar';
 import LoadingSpinner from './components/LoadingSpinner';
 import LearningContentDisplay from './components/LearningContentDisplay';
 import LearningLevelSelector from './components/LearningLevelSelector';
 import VocabularyLevelSelector from './components/VocabularyLevelSelector';
 import { LightbulbIcon, AcademicCapIcon, HomeIcon } from './components/icons';
-import ApiKeyModal from './components/ApiKeyModal';
-import ApiKeyStatus from './components/ApiKeyStatus';
+import ProviderApiKeyModal from './components/ProviderApiKeyModal';
+import ProviderStatusDisplay from './components/ProviderSettings/ProviderStatusDisplay';
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import { getLearningContent } from './services/jsonbinService';
 import { lessonPlanStorage, createStoredLessonPlan } from './services/lessonPlanStorage';
@@ -22,9 +22,14 @@ import TeacherInteractivePrepPage from './components/TeacherInteractivePrep/Teac
 import StudentInteractivePage from './components/StudentInteractive/StudentInteractivePage';
 import ConversationPrepPage from './components/EnglishConversation/ConversationPrepPage';
 import ConversationPracticePage from './components/EnglishConversation/ConversationPracticePage';
+import ProviderTest from './components/ProviderTest';
+import ProviderDebug from './components/ProviderDebug';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const LOCALSTORAGE_KEY = 'gemini_api_key';
+
+// Provider 系統初始化狀態
+let providerSystemInitialized = false;
 
 const SharePage: React.FC = () => {
   const [params] = useSearchParams();
@@ -136,7 +141,7 @@ const SharePage: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
-      <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
+      <ProviderApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
       <div className="max-w-4xl mx-auto">
         {/* 導航區域 */}
         <div className="mb-6">
@@ -206,25 +211,45 @@ const App: React.FC = () => {
   const [isEnglishTopic, setIsEnglishTopic] = useState<boolean>(false);
 
   React.useEffect(() => {
-    // 1. 先檢查 URL 參數
-    const params = new URLSearchParams(window.location.search);
-    const urlApiKey = params.get('apikey');
-    if (urlApiKey) {
-      localStorage.setItem(LOCALSTORAGE_KEY, urlApiKey);
-      setApiKey(urlApiKey);
-      setShowApiKeyModal(false);
-      // 清除網址參數但不刷新頁面
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-      return;
-    }
-    // 2. 再檢查 localStorage
-    const storedKey = localStorage.getItem(LOCALSTORAGE_KEY);
-    if (storedKey) {
-      setApiKey(storedKey);
-    } else {
-      setShowApiKeyModal(true);
-    }
+    const initializeApp = async () => {
+      // 1. 先檢查 URL 參數
+      const params = new URLSearchParams(window.location.search);
+      const urlApiKey = params.get('apikey');
+      if (urlApiKey) {
+        localStorage.setItem(LOCALSTORAGE_KEY, urlApiKey);
+        setApiKey(urlApiKey);
+        setShowApiKeyModal(false);
+        // 清除網址參數但不刷新頁面
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        return;
+      }
+
+      // 2. 初始化 Provider 系統
+      if (!providerSystemInitialized) {
+        try {
+          await initializeProviderSystem();
+          providerSystemInitialized = true;
+        } catch (error) {
+          console.error('Provider 系統初始化失敗:', error);
+        }
+      }
+
+      // 3. 再檢查 localStorage
+      const storedKey = localStorage.getItem(LOCALSTORAGE_KEY);
+      if (storedKey) {
+        setApiKey(storedKey);
+      } else {
+        // 檢查是否有配置的 Provider (新系統)
+        const hasProviders = await hasConfiguredProviders().catch(() => false);
+
+        if (!hasProviders) {
+          setShowApiKeyModal(true);
+        }
+      }
+    };
+
+    initializeApp();
   }, []);
 
   const handleSaveApiKey = (key: string) => {
@@ -251,8 +276,11 @@ const App: React.FC = () => {
       setError('請輸入學習主題。');
       return;
     }
-    if (!apiKey) {
-      setError('尚未設定 Gemini API 金鑰。');
+
+    // 檢查是否有配置的 Provider 或舊版 API Key
+    const hasProviders = await providerService.hasConfiguredProviders();
+    if (!hasProviders && !apiKey) {
+      setError('請先配置 AI Provider 或設定 API 金鑰。');
       setShowApiKeyModal(true);
       return;
     }
@@ -270,7 +298,9 @@ const App: React.FC = () => {
     setIsEnglishTopic(englishTopic);
 
     try {
-      const levels = await generateLearningLevelSuggestions(topic, apiKey);
+      // 使用 provider system 或 fallback 到舊版 API key
+      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : apiKey;
+      const levels = await generateLearningLevelSuggestions(topic, effectiveApiKey);
       setLearningLevels(levels);
       setShowingLevelSelection(true);
       
@@ -288,8 +318,10 @@ const App: React.FC = () => {
 
   // 第二階段：根據選定程度產生完整內容
   const handleGenerateContentWithLevel = useCallback(async (level: LearningLevel) => {
-    if (!apiKey) {
-      setError('尚未設定 Gemini API 金鑰。');
+    // 檢查是否有配置的 Provider 或舊版 API Key
+    const hasProviders = await providerService.hasConfiguredProviders();
+    if (!hasProviders && !apiKey) {
+      setError('請先配置 AI Provider 或設定 API 金鑰。');
       setShowApiKeyModal(true);
       return;
     }
@@ -307,12 +339,15 @@ const App: React.FC = () => {
 
     try {
       let content: GeneratedLearningContent;
-      
+
+      // 使用 provider system 或 fallback 到舊版 API key
+      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : apiKey;
+
       // 根據是否為英語主題選擇不同的生成方式
       if (isEnglishTopic && selectedVocabularyLevel) {
-        content = await generateLearningPlanWithVocabularyLevel(topic, level, selectedVocabularyLevel, apiKey);
+        content = await generateLearningPlanWithVocabularyLevel(topic, level, selectedVocabularyLevel, effectiveApiKey);
       } else {
-        content = await generateLearningPlanWithLevel(topic, level, apiKey);
+        content = await generateLearningPlanWithLevel(topic, level, effectiveApiKey);
       }
       
       setGeneratedContent(content);
@@ -335,8 +370,11 @@ const App: React.FC = () => {
       setError('請輸入學習主題。');
       return;
     }
-    if (!apiKey) {
-      setError('尚未設定 Gemini API 金鑰。');
+
+    // 檢查是否有配置的 Provider 或舊版 API Key
+    const hasProviders = await providerService.hasConfiguredProviders();
+    if (!hasProviders && !apiKey) {
+      setError('請先配置 AI Provider 或設定 API 金鑰。');
       setShowApiKeyModal(true);
       return;
     }
@@ -349,7 +387,9 @@ const App: React.FC = () => {
     setIsEnglishTopic(false);
 
     try {
-      const content = await generateLearningPlan(topic, apiKey);
+      // 使用 provider system 或 fallback 到舊版 API key
+      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : apiKey;
+      const content = await generateLearningPlan(topic, effectiveApiKey);
       setGeneratedContent(content);
       
       // 自動保存到本地存儲
@@ -392,10 +432,12 @@ const App: React.FC = () => {
           <Route path="student-interactive" element={<ErrorBoundary><StudentInteractivePage /></ErrorBoundary>} />
           <Route path="conversation-prep" element={<ErrorBoundary><ConversationPrepPage /></ErrorBoundary>} />
           <Route path="conversation-practice/:binId" element={<ErrorBoundary><ConversationPracticePage /></ErrorBoundary>} />
+          <Route path="provider-test" element={<ErrorBoundary><ProviderTest /></ErrorBoundary>} />
+          <Route path="provider-debug" element={<ErrorBoundary><ProviderDebug /></ErrorBoundary>} />
         <Route path="/" element={
           <ErrorBoundary>
             <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
-            <ApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
+            <ProviderApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
             <header className="text-center mb-10">
               <h1 className="text-4xl sm:text-5xl font-extrabold text-sky-700 tracking-tight">
                 AI 學習頁面 <span className="text-indigo-600">產生器</span>
@@ -415,10 +457,10 @@ const App: React.FC = () => {
               </div>
             </header>
 
-            {/* API Key Status */}
+            {/* Provider Status */}
             <div className="max-w-6xl mx-auto mb-6">
               <div className="flex justify-center">
-                <ApiKeyStatus compact={true} />
+                <ProviderStatusDisplay compact={true} />
               </div>
             </div>
 
@@ -440,6 +482,25 @@ const App: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
                   </svg>
                   英文對話練習
+                </a>
+                <a
+                  href={`${import.meta.env.BASE_URL}provider-test`}
+                  className="flex items-center gap-2 px-4 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Provider 測試
+                </a>
+                <a
+                  href={`${import.meta.env.BASE_URL}provider-debug`}
+                  className="flex items-center gap-2 px-4 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors shadow-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Provider 調試
                 </a>
                 <button
                   onClick={handleShareLink}

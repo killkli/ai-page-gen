@@ -333,6 +333,54 @@ const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, lear
   return await callProviderSystem(prompt, apiKey);
 };
 
+// 生成學習程度建議函數
+export const generateLearningLevelSuggestions = async (topic: string, apiKey: string): Promise<any> => {
+  console.log(`生成學習程度建議 (Provider 系統): ${topic}`);
+
+  const prompt = `
+    Based on the learning topic "${topic}", please provide 3 different learning level suggestions.
+
+    Output format should be JSON only:
+    {
+      "suggestions": [
+        {
+          "id": "beginner",
+          "label": "初學者",
+          "description": "適合初學者的學習內容",
+          "targetAudience": "沒有相關背景知識的學習者",
+          "estimatedHours": 2
+        },
+        {
+          "id": "intermediate",
+          "label": "中級",
+          "description": "適合有基礎知識的學習者",
+          "targetAudience": "有一定基礎的學習者",
+          "estimatedHours": 4
+        },
+        {
+          "id": "advanced",
+          "label": "進階",
+          "description": "適合進階學習者的深度內容",
+          "targetAudience": "有豐富經驗想深入學習的學習者",
+          "estimatedHours": 6
+        }
+      ]
+    }
+
+    Only output JSON, no explanation.
+  `;
+
+  return await callProviderSystem(prompt, apiKey);
+};
+
+// 檢查是否為英語相關主題
+export const isEnglishRelatedTopic = async (topic: string): Promise<boolean> => {
+  // 簡單的英語主題檢測邏輯
+  const englishKeywords = ['english', 'grammar', 'vocabulary', 'conversation', 'speaking', 'listening', 'reading', 'writing', 'toefl', 'ielts', 'business english'];
+  const lowerTopic = topic.toLowerCase();
+  return englishKeywords.some(keyword => lowerTopic.includes(keyword));
+};
+
 // 主要生成函數 - 完整版本
 export const generateLearningPlan = async (topic: string, apiKey: string): Promise<GeneratedLearningContent> => {
   console.log(`開始生成學習計劃 (Provider 系統): ${topic}`);
@@ -442,6 +490,74 @@ export const generateAIFeedback = async (practiceType: string, userWork: string,
   console.log('委託生成 AI 回饋到原始服務');
   const { generateAIFeedback: original } = await import('./geminiService');
   return await original(practiceType, userWork, prompt, apiKey);
+};
+
+// Provider 管理函數
+export const hasConfiguredProviders = async (): Promise<boolean> => {
+  return await providerService.hasConfiguredProviders();
+};
+
+export const addProvider = async (config: any) => {
+  return await providerService.addProvider(config);
+};
+
+export const updateProvider = async (config: any) => {
+  return await providerService.updateProvider(config);
+};
+
+export const removeProvider = async (providerId: string) => {
+  return await providerService.removeProvider(providerId);
+};
+
+export const testProvider = async (providerId: string) => {
+  return await providerService.testProvider(providerId);
+};
+
+export const testAllProviders = async () => {
+  return await providerService.testAllProviders();
+};
+
+export const setDefaultProvider = async (providerId: string) => {
+  return await providerService.setDefaultProvider(providerId);
+};
+
+export const getConfiguredProviders = () => {
+  return providerService.getConfiguredProviders();
+};
+
+export const getUsageStats = async () => {
+  return await providerService.getUsageStats();
+};
+
+export const getProviderManager = () => providerService;
+
+export const clearAllProviderData = async () => {
+  return await providerService.clearAllData();
+};
+
+export const initializeProviderSystem = async () => {
+  try {
+    // 檢查是否需要遷移
+    const hasProviders = await providerService.hasConfiguredProviders();
+
+    if (!hasProviders) {
+      // 嘗試遷移舊版配置
+      await providerService.migrateLegacyApiKey();
+
+      const hasProvidersAfterMigration = await providerService.hasConfiguredProviders();
+
+      if (!hasProvidersAfterMigration) {
+        console.warn('尚未配置任何 Provider，請在設定中添加 Provider');
+        return false;
+      }
+    }
+
+    console.log('Provider 系統已成功初始化');
+    return true;
+  } catch (error) {
+    console.error('初始化 Provider 系統失敗:', error);
+    return false;
+  }
 };
 
 // 重新匯出類型和常數
