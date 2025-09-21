@@ -49,7 +49,60 @@ const callProviderSystem = async (prompt: string, apiKey: string = 'provider-sys
     const response = await providerService.generateContent(request, ProviderSelectionStrategy.DEFAULT);
     console.log('Provider 系統回應:', { provider: response.metadata?.provider, model: response.metadata?.model });
 
-    return response.content;
+    // 強化的 JSON 解析處理
+    let content = response.content;
+
+    // 特殊處理：如果回應是 OpenRouter 格式，提取 content
+    if (content && typeof content === 'object' && content.choices) {
+      try {
+        content = content.choices[0].message.content;
+        console.log('✓ 檢測到 OpenRouter 格式，提取內容');
+      } catch (extractError) {
+        console.warn('⚠ OpenRouter 格式提取失敗:', extractError);
+      }
+    }
+
+    // 如果內容是字串且看起來像 JSON，嘗試解析
+    if (typeof content === 'string') {
+      try {
+        // 先嘗試清理常見的 JSON 格式問題
+        let cleanedContent = content
+          .replace(/```json\n/g, '')       // 移除開頭的 ```json
+          .replace(/\n```/g, '')           // 移除結尾的 ```
+          .replace(/```\n/g, '')           // 移除其他 ```
+          .replace(/```/g, '')             // 移除剩餘的 ```
+          .trim();                         // 去除前後空白
+
+        // 如果開頭不是 { 或 [，尋找第一個 JSON 物件
+        if (!cleanedContent.startsWith('{') && !cleanedContent.startsWith('[')) {
+          const jsonStart = Math.min(
+            cleanedContent.indexOf('{') !== -1 ? cleanedContent.indexOf('{') : Infinity,
+            cleanedContent.indexOf('[') !== -1 ? cleanedContent.indexOf('[') : Infinity
+          );
+
+          if (jsonStart !== Infinity) {
+            const isObject = cleanedContent.charAt(jsonStart) === '{';
+            const jsonEnd = isObject
+              ? cleanedContent.lastIndexOf('}')
+              : cleanedContent.lastIndexOf(']');
+
+            if (jsonEnd > jsonStart) {
+              cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
+            }
+          }
+        }
+
+        // 嘗試解析清理後的 JSON
+        content = JSON.parse(cleanedContent);
+        console.log('✓ JSON 解析成功 (Provider 系統)');
+      } catch (parseError) {
+        console.warn('⚠ JSON 解析失敗，返回原始內容:', parseError);
+        // 如果解析失敗，返回原始內容
+        content = response.content;
+      }
+    }
+
+    return content;
   } catch (error) {
     console.error('Provider 系統錯誤:', error);
 
