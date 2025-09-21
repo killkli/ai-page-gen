@@ -69,8 +69,7 @@ const ConversationPrepPage: React.FC = () => {
       localStorage.setItem('gemini_api_key', apiKey);
 
       const conversation = await conversationService.generateConversationPractice(
-        generationOptions,
-        apiKey
+        generationOptions
       );
 
       setGeneratedConversation(conversation);

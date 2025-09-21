@@ -177,7 +177,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({
       <div className="p-4">
         {/* 主要對話文字 */}
         <div className="text-lg text-gray-900 leading-relaxed mb-3">
-          {turn.keyWords.length > 0 ? (
+          {turn.keyWords?.length > 0 ? (
             <div 
               dangerouslySetInnerHTML={{
                 __html: highlightKeywords(turn.text, turn.keyWords)
@@ -246,7 +246,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({
             </div>
 
             {/* 關鍵詞彙 */}
-            {turn.keyWords.length > 0 && (
+            {turn.keyWords?.length > 0 && (
               <div>
                 <div className="text-sm font-medium text-gray-700 mb-1">
                   🔑 Key Words:

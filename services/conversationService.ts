@@ -1,6 +1,4 @@
-// 英文對話練習生成服務
-
-import { callGemini } from './geminiService';
+// ConversationService now uses the provider-based system via geminiServiceAdapter
 
 // 對話練習相關類型定義
 export interface ConversationTurn {
@@ -58,11 +56,11 @@ class ConversationService {
   
   // 生成完整對話練習內容
   async generateConversationPractice(
-    options: ConversationGenerationOptions,
-    apiKey: string
+    options: ConversationGenerationOptions
   ): Promise<ConversationPractice> {
+    const { callGemini } = await import('./geminiServiceAdapter');
     const prompt = this.buildConversationPrompt(options);
-    const response = await callGemini(prompt, apiKey);
+    const response = await callGemini(prompt);
     
     // 生成唯一 ID
     const practiceId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -169,8 +167,7 @@ Focus on practical, real-world communication that students can apply.
       expectedHints: string[];
       practicePoint: string;
       difficulty: string;
-    },
-    apiKey: string
+    }
   ): Promise<{
     overallScore: number;
     pronunciationScore: number;
@@ -181,6 +178,7 @@ Focus on practical, real-world communication that students can apply.
     suggestions: string[];
     encouragement: string;
   }> {
+    const { callGemini } = await import('./geminiServiceAdapter');
     const prompt = `
 Evaluate this English conversation practice response:
 
@@ -222,7 +220,7 @@ Evaluation criteria:
 - Consider the difficulty level when scoring (more lenient for easy level)
 `;
 
-    return await callGemini(prompt, apiKey);
+    return await callGemini(prompt);
   }
 
   // 預定義對話場景模板

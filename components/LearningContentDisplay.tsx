@@ -306,8 +306,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
 
       // 生成對話練習
       const conversationPractice = await conversationService.generateConversationPractice(
-        conversationOptions,
-        apiKey
+        conversationOptions
       );
 
       // 儲存到分享系統
