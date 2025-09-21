@@ -7,7 +7,7 @@ export interface StoredLessonPlan {
   content: {
     learningObjectives?: any;
     contentBreakdown?: any;
-    confusionPoints?: any;
+    confusingPoints?: any;
     classroomActivities?: any;
     quiz?: any;
     writingPractice?: any;
@@ -207,7 +207,7 @@ class LessonPlanStorage {
 export const lessonPlanStorage = new LessonPlanStorage();
 
 // 輔助函數：生成教案 ID
-export const generateLessonPlanId = (topic: string): string => {
+export const generateLessonPlanId = (): string => {
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substr(2, 9);
   return `lesson_${timestamp}_${randomSuffix}`;
@@ -221,7 +221,7 @@ export const createStoredLessonPlan = (
   const now = new Date().toISOString();
   
   return {
-    id: generateLessonPlanId(topic),
+    id: generateLessonPlanId(),
     topic,
     createdAt: now,
     lastAccessedAt: now,
@@ -230,7 +230,7 @@ export const createStoredLessonPlan = (
       totalSections: [
         content.learningObjectives,
         content.contentBreakdown,
-        content.confusionPoints,
+        content.confusingPoints,
         content.classroomActivities,
         content.quiz,
         content.writingPractice

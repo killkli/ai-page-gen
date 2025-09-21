@@ -6,7 +6,6 @@ interface ConversationDisplayProps {
   turn: ConversationTurn;
   isCurrentTurn: boolean;
   isStudentTurn: boolean; // 是否輪到學生說話
-  studentRole: string; // 學生扮演的角色
   onPlayComplete?: () => void;
   showTranslation?: boolean;
   showHints?: boolean;
@@ -17,7 +16,6 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({
   turn,
   isCurrentTurn,
   isStudentTurn,
-  studentRole,
   onPlayComplete,
   showTranslation = false,
   showHints = false,

@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ExtendedLearningContent, InteractiveLearningSession } from '../../types';
 import { getLearningContent } from '../../services/jsonbinService';
-import { lessonPlanStorage, StoredLessonPlan } from '../../services/lessonPlanStorage';
+import { lessonPlanStorage } from '../../services/lessonPlanStorage';
 import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent } from '../../services/geminiService';
 import LoadingSpinner from '../LoadingSpinner';
-import ProgressTracker from './ProgressTracker';
-import LearningObjectiveCard from './LearningObjectiveCard';
 import MarkdownRenderer from '../MarkdownRenderer';
 
 // 定義學習步驟類型
@@ -24,148 +22,120 @@ const InteractiveLearningPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const contentId = searchParams.get('contentId');
   const binId = searchParams.get('binId');
-  
+
   const [content, setContent] = useState<ExtendedLearningContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [learningSession, setLearningSession] = useState<InteractiveLearningSession | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [learningSteps, setLearningSteps] = useState<LearningStep[]>([]);
-  const [transformedContent, setTransformedContent] = useState<{[key: string]: any}>({});
-  const [transforming, setTransforming] = useState<{[key: string]: boolean}>({});
+  const [transformedContent, setTransformedContent] = useState<{ [key: string]: any }>({});
+  const [transforming, setTransforming] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
-    loadContent();
-  }, [contentId, binId]);
+    const initializeLearningSteps = (content: ExtendedLearningContent) => {
+      const steps: LearningStep[] = [];
 
-  const loadContent = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      let loadedContent: ExtendedLearningContent;
-
-      if (binId) {
-        // 從分享連結載入
-        loadedContent = await getLearningContent(binId);
-      } else if (contentId) {
-        // 從本地存儲載入
-        await lessonPlanStorage.init();
-        const lessonPlan = await lessonPlanStorage.getLessonPlan(contentId);
-        if (!lessonPlan) {
-          throw new Error('找不到指定的教案');
-        }
-        
-        // 轉換為 ExtendedLearningContent 格式
-        loadedContent = {
-          topic: lessonPlan.topic,
-          learningObjectives: lessonPlan.content.learningObjectives,
-          contentBreakdown: lessonPlan.content.contentBreakdown,
-          confusingPoints: lessonPlan.content.confusingPoints,
-          classroomActivities: lessonPlan.content.classroomActivities,
-          onlineInteractiveQuiz: lessonPlan.content.quiz,
-          writingPractice: lessonPlan.content.writingPractice,
-        };
-      } else {
-        throw new Error('缺少必要參數：contentId 或 binId');
+      // 為每個學習目標創建獨立步驟
+      if (content.learningObjectives && content.learningObjectives.length > 0) {
+        content.learningObjectives.forEach((objective, index) => {
+          steps.push({
+            id: `objective_${index}`,
+            title: `📚 學習目標 ${index + 1}`,
+            type: 'objective',
+            icon: '🎯',
+            description: objective.objective.length > 50
+              ? `${objective.objective.substring(0, 50)}...`
+              : objective.objective,
+            data: objective,
+            index: index
+          });
+        });
       }
 
-      setContent(loadedContent);
-      
-      // 初始化學習步驟
-      initializeLearningSteps(loadedContent);
-      
-      // 初始化或載入學習會話
-      await initializeLearningSession(loadedContent);
-
-    } catch (err: any) {
-      console.error('載入內容失敗:', err);
-      setError(err.message || '載入內容時發生錯誤');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const initializeLearningSteps = (content: ExtendedLearningContent) => {
-    const steps: LearningStep[] = [];
-    
-    // 為每個學習目標創建獨立步驟
-    if (content.learningObjectives && content.learningObjectives.length > 0) {
-      content.learningObjectives.forEach((objective, index) => {
-        steps.push({
-          id: `objective_${index}`,
-          title: `📚 學習目標 ${index + 1}`,
-          type: 'objective',
-          icon: '🎯',
-          description: objective.objective.length > 50 
-            ? `${objective.objective.substring(0, 50)}...` 
-            : objective.objective,
-          data: objective,
-          index: index
+      // 為每個內容分解創建獨立步驟
+      if (content.contentBreakdown && content.contentBreakdown.length > 0) {
+        content.contentBreakdown.forEach((item, index) => {
+          steps.push({
+            id: `breakdown_${index}`,
+            title: `🔍 深度學習 ${index + 1}`,
+            type: 'breakdown',
+            icon: '📖',
+            description: item.topic.length > 50
+              ? `${item.topic.substring(0, 50)}...`
+              : item.topic,
+            data: item,
+            index: index
+          });
         });
-      });
-    }
-    
-    // 為每個內容分解創建獨立步驟
-    if (content.contentBreakdown && content.contentBreakdown.length > 0) {
-      content.contentBreakdown.forEach((item, index) => {
-        steps.push({
-          id: `breakdown_${index}`,
-          title: `🔍 深度學習 ${index + 1}`,
-          type: 'breakdown',
-          icon: '📖',
-          description: item.topic.length > 50 
-            ? `${item.topic.substring(0, 50)}...` 
-            : item.topic,
-          data: item,
-          index: index
-        });
-      });
-    }
-    
-    // 為每個易混淆點創建獨立步驟
-    if (content.confusingPoints && content.confusingPoints.length > 0) {
-      content.confusingPoints.forEach((item, index) => {
-        steps.push({
-          id: `confusing_${index}`,
-          title: `⚡ 易混淆點 ${index + 1}`,
-          type: 'confusing',
-          icon: '💡',
-          description: item.point.length > 50 
-            ? `${item.point.substring(0, 50)}...` 
-            : item.point,
-          data: item,
-          index: index
-        });
-      });
-    }
-    
-    // 學習總結步驟
-    steps.push({
-      id: 'summary',
-      title: '🎯 學習成果',
-      type: 'summary',
-      icon: '🏆',
-      description: '完成學習並開始下一步挑戰'
-    });
-    
-    setLearningSteps(steps);
-  };
+      }
 
-  const initializeLearningSession = async (content: ExtendedLearningContent) => {
-    const sessionId = contentId || binId || 'unknown';
-    const existingSessionKey = `interactive_learning_${sessionId}`;
-    
-    try {
-      const existingSession = localStorage.getItem(existingSessionKey);
-      
-      if (existingSession) {
-        // 載入現有會話
-        const session: InteractiveLearningSession = JSON.parse(existingSession);
-        setLearningSession(session);
-      } else {
-        // 創建新會話
-        const newSession: InteractiveLearningSession = {
+      // 為每個易混淆點創建獨立步驟
+      if (content.confusingPoints && content.confusingPoints.length > 0) {
+        content.confusingPoints.forEach((item, index) => {
+          steps.push({
+            id: `confusing_${index}`,
+            title: `⚡ 易混淆點 ${index + 1}`,
+            type: 'confusing',
+            icon: '💡',
+            description: item.point.length > 50
+              ? `${item.point.substring(0, 50)}...`
+              : item.point,
+            data: item,
+            index: index
+          });
+        });
+      }
+
+      // 學習總結步驟
+      steps.push({
+        id: 'summary',
+        title: '🎯 學習成果',
+        type: 'summary',
+        icon: '🏆',
+        description: '完成學習並開始下一步挑戰'
+      });
+
+      setLearningSteps(steps);
+    };
+
+    const initializeLearningSession = async (content: ExtendedLearningContent) => {
+      const sessionId = contentId || binId || 'unknown';
+      const existingSessionKey = `interactive_learning_${sessionId}`;
+
+      try {
+        const existingSession = localStorage.getItem(existingSessionKey);
+
+        if (existingSession) {
+          // 載入現有會話
+          const session: InteractiveLearningSession = JSON.parse(existingSession);
+          setLearningSession(session);
+        } else {
+          // 創建新會話
+          const newSession: InteractiveLearningSession = {
+            contentId: sessionId,
+            topic: content.topic || '互動學習',
+            progress: {
+              currentObjectiveIndex: 0,
+              completedObjectives: [],
+              timeSpent: 0,
+              interactionCount: 0,
+              startTime: Date.now(),
+              lastUpdateTime: Date.now(),
+              completedActivities: [],
+            },
+            interactions: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+
+          setLearningSession(newSession);
+          localStorage.setItem(existingSessionKey, JSON.stringify(newSession));
+        }
+      } catch (err) {
+        console.error('初始化學習會話失敗:', err);
+        // 使用預設會話
+        const defaultSession: InteractiveLearningSession = {
           contentId: sessionId,
           topic: content.topic || '互動學習',
           progress: {
@@ -181,38 +151,64 @@ const InteractiveLearningPage: React.FC = () => {
           createdAt: Date.now(),
           updatedAt: Date.now(),
         };
-        
-        setLearningSession(newSession);
-        localStorage.setItem(existingSessionKey, JSON.stringify(newSession));
+        setLearningSession(defaultSession);
       }
-    } catch (err) {
-      console.error('初始化學習會話失敗:', err);
-      // 使用預設會話
-      const defaultSession: InteractiveLearningSession = {
-        contentId: sessionId,
-        topic: content.topic || '互動學習',
-        progress: {
-          currentObjectiveIndex: 0,
-          completedObjectives: [],
-          timeSpent: 0,
-          interactionCount: 0,
-          startTime: Date.now(),
-          lastUpdateTime: Date.now(),
-          completedActivities: [],
-        },
-        interactions: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-      setLearningSession(defaultSession);
-    }
-  };
+    };
+    const loadContent = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        let loadedContent: ExtendedLearningContent;
+
+        if (binId) {
+          // 從分享連結載入
+          loadedContent = await getLearningContent(binId);
+        } else if (contentId) {
+          // 從本地存儲載入
+          await lessonPlanStorage.init();
+          const lessonPlan = await lessonPlanStorage.getLessonPlan(contentId);
+          if (!lessonPlan) {
+            throw new Error('找不到指定的教案');
+          }
+
+          // 轉換為 ExtendedLearningContent 格式
+          loadedContent = {
+            topic: lessonPlan.topic,
+            learningObjectives: lessonPlan.content.learningObjectives,
+            contentBreakdown: lessonPlan.content.contentBreakdown,
+            confusingPoints: lessonPlan.content.confusingPoints,
+            classroomActivities: lessonPlan.content.classroomActivities,
+            onlineInteractiveQuiz: lessonPlan.content.quiz,
+            writingPractice: lessonPlan.content.writingPractice,
+          };
+        } else {
+          throw new Error('缺少必要參數：contentId 或 binId');
+        }
+
+        setContent(loadedContent);
+
+        // 初始化學習步驟
+        initializeLearningSteps(loadedContent);
+
+        // 初始化或載入學習會話
+        await initializeLearningSession(loadedContent);
+
+      } catch (err: any) {
+        console.error('載入內容失敗:', err);
+        setError(err.message || '載入內容時發生錯誤');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadContent();
+  }, [contentId, binId]);
 
   const updateLearningProgress = (updatedSession: InteractiveLearningSession) => {
     const sessionKey = `interactive_learning_${learningSession?.contentId}`;
     updatedSession.updatedAt = Date.now();
     updatedSession.progress.lastUpdateTime = Date.now();
-    
+
     setLearningSession(updatedSession);
     localStorage.setItem(sessionKey, JSON.stringify(updatedSession));
   };
@@ -250,16 +246,16 @@ const InteractiveLearningPage: React.FC = () => {
     }
 
     const transformKey = `${step.type}_${step.index || 0}`;
-    
+
     if (transformedContent[transformKey] || transforming[transformKey]) {
       return transformedContent[transformKey] || null;
     }
 
     try {
       setTransforming(prev => ({ ...prev, [transformKey]: true }));
-      
+
       let transformedData = null;
-      
+
       switch (step.type) {
         case 'objective':
           transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
@@ -273,10 +269,10 @@ const InteractiveLearningPage: React.FC = () => {
         default:
           return null;
       }
-      
+
       setTransformedContent(prev => ({ ...prev, [transformKey]: transformedData }));
       return transformedData;
-      
+
     } catch (error) {
       console.error('內容轉換失敗:', error);
       return null;
@@ -306,7 +302,7 @@ const InteractiveLearningPage: React.FC = () => {
   // 檢測文字是否包含 Markdown 格式
   const containsMarkdown = (text: string): boolean => {
     if (!text) return false;
-    
+
     // 檢測常見的 Markdown 語法
     const markdownPatterns = [
       /#+\s/,           // 標題 (# ## ###)
@@ -320,7 +316,7 @@ const InteractiveLearningPage: React.FC = () => {
       /```[\s\S]*?```/, // 程式碼區塊
       /\n\s*\n/,        // 多個換行（段落分隔）
     ];
-    
+
     return markdownPatterns.some(pattern => pattern.test(text));
   };
 
@@ -372,10 +368,10 @@ const InteractiveLearningPage: React.FC = () => {
       case 'objective':
         const objective = currentStep.data;
         const objectiveIndex = currentStep.index || 0;
-        
+
         // 使用轉換後的內容（如果存在）
         const displayObjective = transformedData || objective;
-        
+
         return (
           <div className="max-w-4xl mx-auto">
             {/* 內容轉換控制區 */}
@@ -389,14 +385,14 @@ const InteractiveLearningPage: React.FC = () => {
                         {isTransformed ? '已轉換為學生友好內容' : '轉換為學生友好內容'}
                       </h3>
                       <p className="text-sm text-slate-600">
-                        {isTransformed 
+                        {isTransformed
                           ? '內容已轉換為更適合學生學習的語言和格式'
                           : '將教師導向的教案內容轉換為學生容易理解的學習材料'
                         }
                       </p>
                     </div>
                   </div>
-                  
+
                   {!isTransformed && (
                     <button
                       onClick={() => transformStepContent(currentStep)}
@@ -420,7 +416,7 @@ const InteractiveLearningPage: React.FC = () => {
                       )}
                     </button>
                   )}
-                  
+
                   {isTransformed && (
                     <div className="flex items-center gap-2 text-green-600">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -520,12 +516,12 @@ const InteractiveLearningPage: React.FC = () => {
                       if (!updatedSession.progress.completedObjectives.includes(objectiveId)) {
                         updatedSession.progress.completedObjectives.push(objectiveId);
                         updatedSession.progress.interactionCount += 1;
-                        
+
                         // 更新當前學習目標索引
-                        const nextIncompleteIndex = content.learningObjectives?.findIndex((_, idx) => 
+                        const nextIncompleteIndex = content.learningObjectives?.findIndex((_, idx) =>
                           !updatedSession.progress.completedObjectives.includes(`objective_${idx}`) && idx > objectiveIndex
                         );
-                        
+
                         if (nextIncompleteIndex !== undefined && nextIncompleteIndex !== -1) {
                           updatedSession.progress.currentObjectiveIndex = nextIncompleteIndex;
                         }
@@ -548,7 +544,7 @@ const InteractiveLearningPage: React.FC = () => {
       case 'breakdown':
         const breakdownItem = currentStep.data;
         const displayBreakdown = transformedData || breakdownItem;
-        
+
         return (
           <div className="max-w-5xl mx-auto">
             {/* 內容轉換控制區 */}
@@ -562,14 +558,14 @@ const InteractiveLearningPage: React.FC = () => {
                         {isTransformed ? '已轉換為學生友好內容' : '轉換為學生友好內容'}
                       </h3>
                       <p className="text-sm text-slate-600">
-                        {isTransformed 
+                        {isTransformed
                           ? '內容已轉換為更適合學生學習的語言和格式'
                           : '將教師導向的教案內容轉換為學生容易理解的學習材料'
                         }
                       </p>
                     </div>
                   </div>
-                  
+
                   {!isTransformed && (
                     <button
                       onClick={() => transformStepContent(currentStep)}
@@ -593,7 +589,7 @@ const InteractiveLearningPage: React.FC = () => {
                       )}
                     </button>
                   )}
-                  
+
                   {isTransformed && (
                     <div className="flex items-center gap-2 text-green-600">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -610,8 +606,8 @@ const InteractiveLearningPage: React.FC = () => {
             <div className="bg-gradient-to-br from-sky-500 to-blue-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
               <div className="text-6xl mb-6">📖</div>
               <div className="text-4xl font-bold mb-6 leading-tight">
-                {isTransformed && transformedData?.title 
-                  ? renderText(transformedData.title, "text-4xl font-bold leading-tight") 
+                {isTransformed && transformedData?.title
+                  ? renderText(transformedData.title, "text-4xl font-bold leading-tight")
                   : renderText(breakdownItem.topic, "text-4xl font-bold leading-tight")
                 }
               </div>
@@ -740,7 +736,7 @@ const InteractiveLearningPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {breakdownItem.teachingExample && (
                     <div className="bg-white rounded-2xl shadow-xl p-8">
                       <h4 className="text-2xl font-bold text-green-700 mb-6 flex items-center">
@@ -753,7 +749,7 @@ const InteractiveLearningPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* 重點句型 */}
                 {breakdownItem.teachingSentences && breakdownItem.teachingSentences.length > 0 && (
                   <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
@@ -798,7 +794,7 @@ const InteractiveLearningPage: React.FC = () => {
       case 'confusing':
         const confusingItem = currentStep.data;
         const displayConfusing = transformedData || confusingItem;
-        
+
         return (
           <div className="max-w-5xl mx-auto">
             {/* 內容轉換控制區 */}
@@ -812,14 +808,14 @@ const InteractiveLearningPage: React.FC = () => {
                         {isTransformed ? '已轉換為學生友好內容' : '轉換為學生友好內容'}
                       </h3>
                       <p className="text-sm text-slate-600">
-                        {isTransformed 
+                        {isTransformed
                           ? '內容已轉換為更適合學生學習的語言和格式'
                           : '將教師導向的教案內容轉換為學生容易理解的學習材料'
                         }
                       </p>
                     </div>
                   </div>
-                  
+
                   {!isTransformed && (
                     <button
                       onClick={() => transformStepContent(currentStep)}
@@ -843,7 +839,7 @@ const InteractiveLearningPage: React.FC = () => {
                       )}
                     </button>
                   )}
-                  
+
                   {isTransformed && (
                     <div className="flex items-center gap-2 text-green-600">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -860,14 +856,14 @@ const InteractiveLearningPage: React.FC = () => {
             <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl shadow-2xl p-12 text-white text-center mb-8">
               <div className="text-6xl mb-6">⚡</div>
               <div className="text-4xl font-bold mb-6 leading-tight">
-                {isTransformed && transformedData?.title 
-                  ? renderText(transformedData.title, "text-4xl font-bold leading-tight") 
+                {isTransformed && transformedData?.title
+                  ? renderText(transformedData.title, "text-4xl font-bold leading-tight")
                   : renderText(confusingItem.point, "text-4xl font-bold leading-tight")
                 }
               </div>
               <p className="text-xl text-amber-100 leading-relaxed max-w-3xl mx-auto">
-                {isTransformed && transformedData?.normalizeConfusion 
-                  ? transformedData.normalizeConfusion 
+                {isTransformed && transformedData?.normalizeConfusion
+                  ? transformedData.normalizeConfusion
                   : '避免常見錯誤，掌握正確用法'
                 }
               </p>
@@ -934,12 +930,12 @@ const InteractiveLearningPage: React.FC = () => {
                         <h4 className="text-xl font-bold text-slate-800 mb-6 text-center">
                           練習情境 {exampleIndex + 1}
                         </h4>
-                        
+
                         <div className="bg-slate-50 rounded-xl p-6 mb-6">
                           <h5 className="text-lg font-bold text-slate-700 mb-3">情境：</h5>
                           <div className="text-lg text-slate-800">{renderText(example.situation, "text-lg text-slate-800")}</div>
                         </div>
-                        
+
                         <div className="grid md:grid-cols-2 gap-6 mb-6">
                           <div className="bg-red-50 border-3 border-red-300 rounded-2xl p-6">
                             <div className="flex items-center mb-4">
@@ -1023,7 +1019,7 @@ const InteractiveLearningPage: React.FC = () => {
                     <h4 className="text-xl font-bold text-slate-800 mb-6 text-center">
                       對比例子 {compIndex + 1}
                     </h4>
-                    
+
                     <div className="grid md:grid-cols-2 gap-6 mb-6">
                       {/* 正確用法 */}
                       <div className="bg-green-50 border-3 border-green-300 rounded-2xl p-6">
@@ -1153,7 +1149,7 @@ const InteractiveLearningPage: React.FC = () => {
               <p className="text-lg text-slate-600 mb-8">
                 你已經完成了「{content.topic}」的互動學習
               </p>
-              
+
               <div className="grid md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white rounded-xl p-6 shadow-md">
                   <div className="text-3xl text-indigo-600 mb-2">📚</div>
@@ -1186,7 +1182,7 @@ const InteractiveLearningPage: React.FC = () => {
               <div className="flex flex-wrap justify-center gap-4">
                 {content.onlineInteractiveQuiz && (
                   <a
-                    href={binId 
+                    href={binId
                       ? `${import.meta.env.BASE_URL}quiz?binId=${binId}`
                       : `${import.meta.env.BASE_URL}quiz?contentId=${contentId}`
                     }
@@ -1200,10 +1196,10 @@ const InteractiveLearningPage: React.FC = () => {
                     挑戰互動測驗
                   </a>
                 )}
-                
+
                 {content.writingPractice && (
                   <a
-                    href={binId 
+                    href={binId
                       ? `${import.meta.env.BASE_URL}writing?binId=${binId}`
                       : `${import.meta.env.BASE_URL}writing?contentId=${contentId}`
                     }
@@ -1242,7 +1238,7 @@ const InteractiveLearningPage: React.FC = () => {
                 互動學習 • 第 {currentStepIndex + 1} 步，共 {learningSteps.length} 步
               </p>
             </div>
-            
+
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1255,12 +1251,12 @@ const InteractiveLearningPage: React.FC = () => {
           <div className="space-y-3">
             {/* 進度條 */}
             <div className="w-full bg-slate-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-gradient-to-r from-indigo-500 to-sky-500 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${((currentStepIndex + 1) / learningSteps.length) * 100}%` }}
               />
             </div>
-            
+
             {/* 步驟類型快速導航 */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {learningSteps.map((step, index) => {
@@ -1268,32 +1264,32 @@ const InteractiveLearningPage: React.FC = () => {
                 const isBreakdown = step.type === 'breakdown';
                 const isConfusing = step.type === 'confusing';
                 const isSummary = step.type === 'summary';
-                
+
                 return (
                   <button
                     key={step.id}
                     onClick={() => goToStep(index)}
                     className={`
                       flex-shrink-0 w-8 h-8 rounded-full text-xs font-bold transition-all duration-200
-                      ${index === currentStepIndex 
-                        ? 'bg-indigo-500 text-white shadow-lg scale-110' 
-                        : index < currentStepIndex 
-                        ? 'bg-green-400 text-white hover:bg-green-500' 
-                        : 'bg-slate-300 text-slate-600 hover:bg-slate-400'
+                      ${index === currentStepIndex
+                        ? 'bg-indigo-500 text-white shadow-lg scale-110'
+                        : index < currentStepIndex
+                          ? 'bg-green-400 text-white hover:bg-green-500'
+                          : 'bg-slate-300 text-slate-600 hover:bg-slate-400'
                       }
                     `}
                     title={step.title}
                   >
-                    {isObjective ? (step.index || 0) + 1 : 
-                     isBreakdown ? '📖' : 
-                     isConfusing ? '⚡' : 
-                     isSummary ? '🏆' : 
-                     index + 1}
+                    {isObjective ? (step.index || 0) + 1 :
+                      isBreakdown ? '📖' :
+                        isConfusing ? '⚡' :
+                          isSummary ? '🏆' :
+                            index + 1}
                   </button>
                 );
               })}
             </div>
-            
+
             {/* 當前步驟資訊 */}
             <div className="text-center">
               <span className="text-xs text-slate-500">
@@ -1333,7 +1329,7 @@ const InteractiveLearningPage: React.FC = () => {
             </svg>
             上一步
           </button>
-          
+
           <div className="text-center">
             <p className="text-sm text-slate-600">
               {currentStepIndex + 1} / {learningSteps.length}

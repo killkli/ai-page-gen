@@ -12,7 +12,7 @@ import ProviderApiKeyModal from './components/ProviderApiKeyModal';
 import ProviderStatusDisplay from './components/ProviderSettings/ProviderStatusDisplay';
 import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import { getLearningContent } from './services/jsonbinService';
-import { lessonPlanStorage, createStoredLessonPlan } from './services/lessonPlanStorage';
+import { lessonPlanStorage, createStoredLessonPlan, StoredLessonPlan } from './services/lessonPlanStorage';
 import QuizPage from './components/QuizPage';
 import StudentWritingPage from './components/StudentWritingPage';
 import StudentResultsPage from './components/StudentResultsPage';
@@ -68,7 +68,7 @@ const SharePage: React.FC = () => {
   const saveSharedContentToLocal = async (content: ExtendedLearningContent, shareBinId: string) => {
     try {
       await lessonPlanStorage.init();
-      
+
       // 檢查是否已經儲存過這個分享教案（避免重複儲存）
       const existingPlan = await lessonPlanStorage.getLessonPlan(`shared_${shareBinId}`);
       if (existingPlan) {
@@ -106,7 +106,7 @@ const SharePage: React.FC = () => {
           sharedBinId: shareBinId // 保存原始的分享 ID
         }
       };
-      
+
       await lessonPlanStorage.saveLessonPlan(storedPlan);
       console.log(`分享教案已儲存到本地: ${content.topic || '分享的教案'} (${shareBinId})`);
     } catch (error) {
@@ -136,7 +136,7 @@ const SharePage: React.FC = () => {
       <div className="flex justify-center my-10"><LoadingSpinner /></div>
     </div>
   );
-  
+
   if (error) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -144,7 +144,7 @@ const SharePage: React.FC = () => {
       </div>
     </div>
   );
-  
+
   // 如果是 Provider 分享，顯示 ProviderShareReceiver
   if (providerShareId) {
     return (
@@ -160,14 +160,14 @@ const SharePage: React.FC = () => {
   }
 
   if (!content) return null;
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
       <ProviderApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
       <div className="max-w-4xl mx-auto">
         {/* 導航區域 */}
         <div className="mb-6">
-          <a 
+          <a
             href={`${import.meta.env.BASE_URL}`}
             className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors shadow-sm"
           >
@@ -197,7 +197,7 @@ const SharePage: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         <ErrorBoundary>
           <LearningContentDisplay
             content={content}
@@ -225,12 +225,12 @@ const App: React.FC = () => {
   // 新的分享功能狀態
   const [showProviderShareModal, setShowProviderShareModal] = useState<boolean>(false);
   const [availableProviders, setAvailableProviders] = useState<any[]>([]);
-  
+
   // 新增：程度建議相關狀態
   const [learningLevels, setLearningLevels] = useState<LearningLevelSuggestions | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<LearningLevel | null>(null);
   const [showingLevelSelection, setShowingLevelSelection] = useState<boolean>(false);
-  
+
   // 新增：單字程度相關狀態 (僅適用於英語主題)
   const [selectedVocabularyLevel, setSelectedVocabularyLevel] = useState<VocabularyLevel | null>(null);
   const [showingVocabularySelection, setShowingVocabularySelection] = useState<boolean>(false);
@@ -338,7 +338,7 @@ const App: React.FC = () => {
       const levels = await generateLearningLevelSuggestions(topic, effectiveApiKey);
       setLearningLevels(levels);
       setShowingLevelSelection(true);
-      
+
       // 如果是英語主題，也要顯示單字程度選擇器
       if (englishTopic) {
         setShowingVocabularySelection(true);
@@ -384,11 +384,11 @@ const App: React.FC = () => {
       } else {
         content = await generateLearningPlanWithLevel(topic, level, effectiveApiKey);
       }
-      
+
       setGeneratedContent(content);
       setShowingLevelSelection(false);
       setShowingVocabularySelection(false);
-      
+
       // 自動保存到本地存儲
       await saveToLocalStorage(content, topic);
     } catch (err: any) {
@@ -426,7 +426,7 @@ const App: React.FC = () => {
       const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : apiKey;
       const content = await generateLearningPlan(topic, effectiveApiKey);
       setGeneratedContent(content);
-      
+
       // 自動保存到本地存儲
       await saveToLocalStorage(content, topic);
     } catch (err: any) {
@@ -480,167 +480,167 @@ const App: React.FC = () => {
           <Route path="student-interactive" element={<ErrorBoundary><StudentInteractivePage /></ErrorBoundary>} />
           <Route path="conversation-prep" element={<ErrorBoundary><ConversationPrepPage /></ErrorBoundary>} />
           <Route path="conversation-practice/:binId" element={<ErrorBoundary><ConversationPracticePage /></ErrorBoundary>} />
-        <Route path="/" element={
-          <ErrorBoundary>
-            <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
-            <ProviderApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
-            <header className="text-center mb-10">
-              <h1 className="text-4xl sm:text-5xl font-extrabold text-sky-700 tracking-tight">
-                AI 學習頁面 <span className="text-indigo-600">產生器</span>
-              </h1>
-              <p className="mt-3 text-lg text-slate-600 max-w-2xl mx-auto">
-                輸入一個主題，讓 AI 為您打造包含互動測驗的結構化學習計劃！
-              </p>
-              <div className="mt-6 max-w-2xl mx-auto bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 text-left shadow-sm">
-                <div className="flex items-start mb-2">
-                  <svg className="w-6 h-6 text-yellow-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
-                  <span className="font-semibold text-yellow-800 text-base">使用注意事項</span>
-                </div>
-                <ul className="list-disc pl-8 text-yellow-900 text-sm space-y-1">
-                  <li>內容審查：請在分享AI生成內容給學生前仔細檢查，確保內容適合且無誤</li>
-                  <li>隱私保護：請勿輸入學生個人識別資訊</li>
-                </ul>
-              </div>
-            </header>
-
-            {/* Provider Status */}
-            <div className="max-w-6xl mx-auto mb-6">
-              <div className="flex justify-center">
-                <ProviderStatusDisplay compact={true} />
-              </div>
-            </div>
-
-            {/* Navigation Bar */}
-            <div className="max-w-6xl mx-auto mb-8">
-              <div className="flex justify-center gap-3 flex-wrap">
-                <a 
-                  href={`${import.meta.env.BASE_URL}lesson-plans`}
-                  className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
-                >
-                  <AcademicCapIcon className="w-5 h-5" />
-                  我的教案庫
-                </a>
-                <a 
-                  href={`${import.meta.env.BASE_URL}conversation-prep`}
-                  className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
-                  </svg>
-                  英文對話練習
-                </a>
-                <button
-                  onClick={handleProviderShare}
-                  className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
-                  </svg>
-                  分享 Provider 配置
-                </button>
-                <button
-                  onClick={handleShareLink}
-                  className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-                  </svg>
-                  分享應用程式連結
-                </button>
-              </div>
-              {copySuccess && (
-                <div className="mt-3 text-center">
-                  <p className={`text-sm ${copySuccess.includes('請先') ? 'text-red-600' : 'text-green-600'}`}>
-                    {copySuccess}
+          <Route path="/" element={
+            <ErrorBoundary>
+              <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
+                <ProviderApiKeyModal isOpen={showApiKeyModal} onSave={handleSaveApiKey} />
+                <header className="text-center mb-10">
+                  <h1 className="text-4xl sm:text-5xl font-extrabold text-sky-700 tracking-tight">
+                    AI 學習頁面 <span className="text-indigo-600">產生器</span>
+                  </h1>
+                  <p className="mt-3 text-lg text-slate-600 max-w-2xl mx-auto">
+                    輸入一個主題，讓 AI 為您打造包含互動測驗的結構化學習計劃！
                   </p>
+                  <div className="mt-6 max-w-2xl mx-auto bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 text-left shadow-sm">
+                    <div className="flex items-start mb-2">
+                      <svg className="w-6 h-6 text-yellow-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+                      <span className="font-semibold text-yellow-800 text-base">使用注意事項</span>
+                    </div>
+                    <ul className="list-disc pl-8 text-yellow-900 text-sm space-y-1">
+                      <li>內容審查：請在分享AI生成內容給學生前仔細檢查，確保內容適合且無誤</li>
+                      <li>隱私保護：請勿輸入學生個人識別資訊</li>
+                    </ul>
+                  </div>
+                </header>
+
+                {/* Provider Status */}
+                <div className="max-w-6xl mx-auto mb-6">
+                  <div className="flex justify-center">
+                    <ProviderStatusDisplay compact={true} />
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* Provider 分享 Modal */}
-            <ProviderShareModal
-              isOpen={showProviderShareModal}
-              onClose={() => setShowProviderShareModal(false)}
-              providers={availableProviders}
-              onShareCreated={handleProviderShareCreated}
-            />
-
-            <main className="max-w-4xl mx-auto">
-              <InputBar
-                topic={topic}
-                setTopic={setTopic}
-                onGenerate={handleGenerateContent}
-                onGenerateWithLevels={handleGenerateLevelSuggestions}
-                isLoading={isLoading}
-              />
-
-              {error && !isLoading && (
-                <div className="my-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-md">
-                  <h3 className="font-bold text-lg mb-2 flex items-center"><LightbulbIcon className="w-6 h-6 mr-2 text-red-600" />產生內容時發生錯誤</h3>
-                  <p>{error}</p>
-                  <p className="mt-2 text-sm">請嘗試修改您的主題或重試。如果問題持續存在，AI 模型可能暫時不可用，或者 API 金鑰可能存在問題。</p>
+                {/* Navigation Bar */}
+                <div className="max-w-6xl mx-auto mb-8">
+                  <div className="flex justify-center gap-3 flex-wrap">
+                    <a
+                      href={`${import.meta.env.BASE_URL}lesson-plans`}
+                      className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+                    >
+                      <AcademicCapIcon className="w-5 h-5" />
+                      我的教案庫
+                    </a>
+                    <a
+                      href={`${import.meta.env.BASE_URL}conversation-prep`}
+                      className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+                      </svg>
+                      英文對話練習
+                    </a>
+                    <button
+                      onClick={handleProviderShare}
+                      className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
+                      </svg>
+                      分享 Provider 配置
+                    </button>
+                    <button
+                      onClick={handleShareLink}
+                      className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                      </svg>
+                      分享應用程式連結
+                    </button>
+                  </div>
+                  {copySuccess && (
+                    <div className="mt-3 text-center">
+                      <p className={`text-sm ${copySuccess.includes('請先') ? 'text-red-600' : 'text-green-600'}`}>
+                        {copySuccess}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {isLoading && (
-                <div className="flex justify-center my-10">
-                  <LoadingSpinner />
-                </div>
-              )}
-
-              {/* 顯示學習程度選擇 */}
-              {showingLevelSelection && learningLevels && !isLoading && !error && (
-                <LearningLevelSelector
-                  learningLevels={learningLevels}
-                  onLevelSelect={setSelectedLevel}
-                  onGenerateWithLevel={handleGenerateContentWithLevel}
-                  selectedLevelId={selectedLevel?.id}
-                  isLoading={isLoading}
+                {/* Provider 分享 Modal */}
+                <ProviderShareModal
+                  isOpen={showProviderShareModal}
+                  onClose={() => setShowProviderShareModal(false)}
+                  providers={availableProviders}
+                  onShareCreated={handleProviderShareCreated}
                 />
-              )}
 
-              {/* 顯示英語單字程度選擇 (僅限英語主題) */}
-              {showingVocabularySelection && isEnglishTopic && !isLoading && !error && (
-                <VocabularyLevelSelector
-                  onVocabularyLevelSelect={setSelectedVocabularyLevel}
-                  selectedLevel={selectedVocabularyLevel}
-                  isVisible={true}
-                />
-              )}
-
-              {/* 顯示生成的完整內容 */}
-              {generatedContent && !isLoading && !error && !showingLevelSelection && !showingVocabularySelection && (
-                <ErrorBoundary>
-                  <LearningContentDisplay
-                    content={generatedContent}
+                <main className="max-w-4xl mx-auto">
+                  <InputBar
                     topic={topic}
-                    selectedLevel={selectedLevel}
-                    selectedVocabularyLevel={selectedVocabularyLevel}
-                    apiKey={apiKey || undefined}
-                    onContentUpdate={setGeneratedContent}
+                    setTopic={setTopic}
+                    onGenerate={handleGenerateContent}
+                    onGenerateWithLevels={handleGenerateLevelSuggestions}
+                    isLoading={isLoading}
                   />
-                </ErrorBoundary>
-              )}
-            </main>
 
-            <footer className="text-center mt-12 py-6 border-t border-slate-300">
-              <p className="text-sm text-slate-500">
-                由 Gemini API 驅動。AI 設計，為學習而生。
-              </p>
-              <button
-                className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded shadow transition"
-                onClick={handleShareLink}
-                disabled={!apiKey}
-              >
-                產生分享連結並複製
-              </button>
-              {copySuccess && (
-                <div className="mt-2 text-green-600 text-sm">{copySuccess}</div>
-              )}
-            </footer>
-          </div>
-          </ErrorBoundary>
-        } />
+                  {error && !isLoading && (
+                    <div className="my-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-md">
+                      <h3 className="font-bold text-lg mb-2 flex items-center"><LightbulbIcon className="w-6 h-6 mr-2 text-red-600" />產生內容時發生錯誤</h3>
+                      <p>{error}</p>
+                      <p className="mt-2 text-sm">請嘗試修改您的主題或重試。如果問題持續存在，AI 模型可能暫時不可用，或者 API 金鑰可能存在問題。</p>
+                    </div>
+                  )}
+
+                  {isLoading && (
+                    <div className="flex justify-center my-10">
+                      <LoadingSpinner />
+                    </div>
+                  )}
+
+                  {/* 顯示學習程度選擇 */}
+                  {showingLevelSelection && learningLevels && !isLoading && !error && (
+                    <LearningLevelSelector
+                      learningLevels={learningLevels}
+                      onLevelSelect={setSelectedLevel}
+                      onGenerateWithLevel={handleGenerateContentWithLevel}
+                      selectedLevelId={selectedLevel?.id}
+                      isLoading={isLoading}
+                    />
+                  )}
+
+                  {/* 顯示英語單字程度選擇 (僅限英語主題) */}
+                  {showingVocabularySelection && isEnglishTopic && !isLoading && !error && (
+                    <VocabularyLevelSelector
+                      onVocabularyLevelSelect={setSelectedVocabularyLevel}
+                      selectedLevel={selectedVocabularyLevel}
+                      isVisible={true}
+                    />
+                  )}
+
+                  {/* 顯示生成的完整內容 */}
+                  {generatedContent && !isLoading && !error && !showingLevelSelection && !showingVocabularySelection && (
+                    <ErrorBoundary>
+                      <LearningContentDisplay
+                        content={generatedContent}
+                        topic={topic}
+                        selectedLevel={selectedLevel}
+                        selectedVocabularyLevel={selectedVocabularyLevel}
+                        apiKey={apiKey || undefined}
+                        onContentUpdate={setGeneratedContent}
+                      />
+                    </ErrorBoundary>
+                  )}
+                </main>
+
+                <footer className="text-center mt-12 py-6 border-t border-slate-300">
+                  <p className="text-sm text-slate-500">
+                    由 Gemini API 驅動。AI 設計，為學習而生。
+                  </p>
+                  <button
+                    className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded shadow transition"
+                    onClick={handleShareLink}
+                    disabled={!apiKey}
+                  >
+                    產生分享連結並複製
+                  </button>
+                  {copySuccess && (
+                    <div className="mt-2 text-green-600 text-sm">{copySuccess}</div>
+                  )}
+                </footer>
+              </div>
+            </ErrorBoundary>
+          } />
         </Routes>
       </ErrorBoundary>
     </Router>

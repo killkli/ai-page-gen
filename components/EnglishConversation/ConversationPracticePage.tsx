@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ConversationPractice } from '../../services/conversationService';
-import { conversationService } from '../../services/conversationService';
 import { speechService } from '../../services/speechService';
 import { getSharedContent } from '../../services/jsonbinService';
 import ConversationDisplay from './ConversationDisplay';
 import VoiceRecorder from './VoiceRecorder';
-import FeedbackPanel from './FeedbackPanel';
 import LoadingSpinner from '../LoadingSpinner';
 
 interface StudentResponse {
@@ -30,20 +28,20 @@ interface PracticeSession {
 const ConversationPracticePage: React.FC = () => {
   const { binId } = useParams<{ binId: string }>();
   const navigate = useNavigate();
-  
+
   // 核心狀態
   const [conversation, setConversation] = useState<ConversationPractice | null>(null);
   const [practiceSession, setPracticeSession] = useState<PracticeSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // UI 狀態
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [currentFeedback, setCurrentFeedback] = useState<any>(null);
+  const [_showFeedback, setShowFeedback] = useState(false);
+  const [_currentFeedback, setCurrentFeedback] = useState<any>(null);
   const [isProcessingResponse, setIsProcessingResponse] = useState(false);
   const [selectedStudentRole, setSelectedStudentRole] = useState<string>('');
-  
+
   // 新增的狀態
   const [selectedResponse, setSelectedResponse] = useState<string>('');
   const [lastRecordingResult, setLastRecordingResult] = useState<{
@@ -51,7 +49,7 @@ const ConversationPracticePage: React.FC = () => {
     audioBlob?: Blob;
     similarity?: number;
   } | null>(null);
-  
+
   // 句子分段相關狀態
   const [currentSegments, setCurrentSegments] = useState<string[]>([]);
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState<number>(0);
@@ -59,18 +57,18 @@ const ConversationPracticePage: React.FC = () => {
 
   // 計算文字相似度 (更寬鬆的版本)
   const calculateSimilarity = (target: string, spoken: string): number => {
-    const normalizeText = (text: string) => 
+    const normalizeText = (text: string) =>
       text.toLowerCase().replace(/[^\w\s]/g, '').trim();
-    
+
     const targetWords = normalizeText(target).split(/\s+/);
     const spokenWords = normalizeText(spoken).split(/\s+/);
-    
+
     if (targetWords.length === 0 || spokenWords.length === 0) return 0;
-    
+
     // 計算相同詞彙的數量
     let matches = 0;
     const targetWordSet = new Set(targetWords);
-    
+
     spokenWords.forEach(spokenWord => {
       if (targetWordSet.has(spokenWord)) {
         matches++;
@@ -85,12 +83,12 @@ const ConversationPracticePage: React.FC = () => {
         });
       }
     });
-    
+
     // 以較長的句子為基準計算相似度
     const maxLength = Math.max(targetWords.length, spokenWords.length);
     const similarity = Math.min(matches / maxLength, 1.0);
-    
-    
+
+
     return similarity;
   };
 
@@ -127,10 +125,10 @@ const ConversationPracticePage: React.FC = () => {
 
   // 將長句子分段
   const segmentSentence = (text: string): string[] => {
-    
+
     // 先按標點符號分割
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    
+
     // 如果分割後還有很長的句子，按逗號再分割
     const segments: string[] = [];
     for (const sentence of sentences) {
@@ -146,44 +144,13 @@ const ConversationPracticePage: React.FC = () => {
         segments.push(trimmed);
       }
     }
-    
+
     // 如果沒有成功分段，直接返回原句子
     const finalSegments = segments.length > 0 ? segments : [text.trim()];
-    
+
     return finalSegments;
   };
 
-  // 設置當前輪次的分段
-  const setupCurrentTurnSegments = (turnIndex: number) => {
-    
-    if (!conversation || !practiceSession) {
-      return;
-    }
-    
-    const turn = conversation.dialogue[turnIndex];
-    if (!turn || turn.speaker !== practiceSession.studentRole) {
-      return;
-    }
-    
-    const segments = segmentSentence(turn.text);
-    
-    // 只有在真正開始新回合時才重置 segment index
-    // 檢查是否是新回合：segments 不同 或者 currentSegments 為空
-    const isNewTurn = currentSegments.length === 0 || 
-                     JSON.stringify(segments) !== JSON.stringify(currentSegments);
-    
-    
-    setCurrentSegments(segments);
-    
-    if (isNewTurn) {
-      setCurrentSegmentIndex(0);
-      
-      // 自動選擇第一個分段
-      if (segments.length > 0) {
-        setSelectedResponse(segments[0]);
-      }
-    }
-  };
 
   // 載入對話練習內容
   const loadConversationPractice = useCallback(async () => {
@@ -195,7 +162,7 @@ const ConversationPracticePage: React.FC = () => {
 
     try {
       const sharedContent = await getSharedContent(binId);
-      
+
       if (sharedContent.type !== 'conversation-practice') {
         setError('This is not a conversation practice link');
         setLoading(false);
@@ -203,12 +170,12 @@ const ConversationPracticePage: React.FC = () => {
       }
 
       setConversation(sharedContent.practice);
-      
+
       // 自動選擇第一個學生角色
       if (sharedContent.practice.participants.length > 0) {
         setSelectedStudentRole(sharedContent.practice.participants[0]);
       }
-      
+
       setLoading(false);
     } catch (err) {
       console.error('Failed to load conversation practice:', err);
@@ -223,9 +190,37 @@ const ConversationPracticePage: React.FC = () => {
 
   // 當練習會話開始且為學生回合時，設置分段
   useEffect(() => {
+    // 設置當前輪次的分段
+    const setupCurrentTurnSegments = (turnIndex: number) => {
+      if (!conversation || !practiceSession) {
+        return;
+      }
+      const turn = conversation.dialogue[turnIndex];
+      if (!turn || turn.speaker !== practiceSession.studentRole) {
+        return;
+      }
+      const segments = segmentSentence(turn.text);
+
+      // 只有在真正開始新回合時才重置 segment index
+      // 檢查是否是新回合：segments 不同 或者 currentSegments 為空
+      const isNewTurn = currentSegments.length === 0 ||
+        JSON.stringify(segments) !== JSON.stringify(currentSegments);
+
+
+      setCurrentSegments(segments);
+
+      if (isNewTurn) {
+        setCurrentSegmentIndex(0);
+
+        // 自動選擇第一個分段
+        if (segments.length > 0) {
+          setSelectedResponse(segments[0]);
+        }
+      }
+    };
     if (practiceSession && conversation && conversation.dialogue.length > 0) {
       const currentTurn = conversation.dialogue[currentTurnIndex];
-      
+
       if (currentTurn && currentTurn.speaker === practiceSession.studentRole) {
         setupCurrentTurnSegments(currentTurnIndex);
       } else {
@@ -235,11 +230,7 @@ const ConversationPracticePage: React.FC = () => {
         setSelectedResponse('');
       }
     }
-  }, [practiceSession, conversation, currentTurnIndex]);
-
-  // 監控selectedResponse變化
-  useEffect(() => {
-  }, [selectedResponse, currentSegmentIndex, currentSegments]);
+  }, [currentSegments, practiceSession, conversation, currentTurnIndex]);
 
   // 開始練習會話
   const startPracticeSession = () => {
@@ -257,7 +248,7 @@ const ConversationPracticePage: React.FC = () => {
     setPracticeSession(session);
     setCurrentTurnIndex(0);
     setShowFeedback(false);
-    
+
   };
 
   // 檢查是否為學生回合
@@ -269,11 +260,11 @@ const ConversationPracticePage: React.FC = () => {
 
   // 處理學生語音回應
   const handleStudentResponse = async (result: { text: string; confidence: number; audioBlob?: Blob }) => {
-    
+
     // 獲取當前應該使用的目標句子
     const currentTargetText = currentSegments.length > 0 ? currentSegments[currentSegmentIndex] : selectedResponse;
-    
-    
+
+
     if (!conversation || !practiceSession || !currentTargetText) {
       return;
     }
@@ -283,19 +274,19 @@ const ConversationPracticePage: React.FC = () => {
     try {
       // 計算相似度 - 使用當前正確的目標文本
       const similarity = calculateSimilarity(currentTargetText, result.text);
-      
-      
+
+
       // 儲存錄音結果供回放使用
       const recordingResult = {
         text: result.text,
         audioBlob: result.audioBlob,
         similarity: similarity
       };
-      
+
       setLastRecordingResult(recordingResult);
 
       const currentTurn = conversation.dialogue[currentTurnIndex];
-      
+
       // 記錄學生回應
       const response: StudentResponse = {
         turnId: currentTurn.id,
@@ -331,27 +322,27 @@ const ConversationPracticePage: React.FC = () => {
     if (currentSegmentIndex < currentSegments.length - 1) {
       const nextSegmentIndex = currentSegmentIndex + 1;
       const nextSegment = currentSegments[nextSegmentIndex];
-      
+
       // 切換到下一段時清除之前的錄音結果
       setLastRecordingResult(null);
       setCurrentSegmentIndex(nextSegmentIndex);
       setSelectedResponse(nextSegment);
-      
+
       return;
     }
 
     // 沒有更多分段，移動到下一個回合
     if (currentTurnIndex < conversation.dialogue.length - 1) {
       const nextTurnIndex = currentTurnIndex + 1;
-      
+
       // 清除當前練習的狀態
       setLastRecordingResult(null);
       setCurrentSegments([]);
       setCurrentSegmentIndex(0);
       setSelectedResponse('');
-      
+
       setCurrentTurnIndex(nextTurnIndex);
-      
+
       // useEffect會自動處理下一個回合的設置
     } else {
       // 練習完成
@@ -369,15 +360,10 @@ const ConversationPracticePage: React.FC = () => {
     };
 
     setPracticeSession(completedSession);
-    
+
     // 可以在這裡保存會話結果或顯示總結
   };
 
-  // 重試當前回合
-  const retryCurrentTurn = () => {
-    setShowFeedback(false);
-    setCurrentFeedback(null);
-  };
 
   if (loading) {
     return (
@@ -451,11 +437,10 @@ const ConversationPracticePage: React.FC = () => {
                 <button
                   key={participant}
                   onClick={() => setSelectedStudentRole(participant)}
-                  className={`p-4 border rounded-lg text-left transition-all ${
-                    selectedStudentRole === participant
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`p-4 border rounded-lg text-left transition-all ${selectedStudentRole === participant
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
                 >
                   <div className="font-medium text-gray-900">{participant}</div>
                   <div className="text-sm text-gray-600 mt-1">
@@ -484,11 +469,10 @@ const ConversationPracticePage: React.FC = () => {
             <button
               onClick={startPracticeSession}
               disabled={!selectedStudentRole}
-              className={`px-8 py-3 rounded-lg font-medium transition-colors ${
-                selectedStudentRole
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
+              className={`px-8 py-3 rounded-lg font-medium transition-colors ${selectedStudentRole
+                ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
             >
               開始練習
             </button>
@@ -511,7 +495,7 @@ const ConversationPracticePage: React.FC = () => {
             <p className="text-gray-600 mb-6">
               您已經完成了英文對話練習，表現很棒！
             </p>
-            
+
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
@@ -567,7 +551,7 @@ const ConversationPracticePage: React.FC = () => {
   // 主要練習介面
   const currentTurn = conversation.dialogue[currentTurnIndex];
   const isCurrentStudentTurn = isStudentTurn(currentTurnIndex);
-  
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-4">
@@ -581,7 +565,7 @@ const ConversationPracticePage: React.FC = () => {
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
+            <div
               className="bg-blue-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((currentTurnIndex + 1) / conversation.dialogue.length) * 100}%` }}
             ></div>
@@ -593,7 +577,6 @@ const ConversationPracticePage: React.FC = () => {
           turn={currentTurn}
           isCurrentTurn={true}
           isStudentTurn={isCurrentStudentTurn}
-          studentRole={practiceSession.studentRole}
           showTranslation={false}
           showHints={isCurrentStudentTurn}
         />
@@ -618,7 +601,7 @@ const ConversationPracticePage: React.FC = () => {
             {/* 要念的句子 - 使用分段後的句子 */}
             <div className="mb-6">
               <h4 className="text-md font-medium text-gray-800 mb-3">📝 請練習這個句子：</h4>
-              
+
               {/* 顯示完整句子供參考 */}
               {currentSegments.length > 1 && (
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -626,10 +609,10 @@ const ConversationPracticePage: React.FC = () => {
                   <div className="text-blue-900">{currentTurn.text}</div>
                 </div>
               )}
-              
+
               {/* 當前要練習的分段 */}
               {selectedResponse ? (
-                <div 
+                <div
                   className="p-4 border-2 border-green-500 bg-green-50 rounded-lg cursor-pointer transition-colors"
                   onClick={() => setSelectedResponse(selectedResponse)}
                 >
@@ -646,7 +629,7 @@ const ConversationPracticePage: React.FC = () => {
                         title="播放示範發音"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
+                          <path d="M8 5v14l11-7z" />
                         </svg>
                       </button>
                     </div>
@@ -659,7 +642,7 @@ const ConversationPracticePage: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               {/* 顯示中文翻譯 */}
               {currentTurn.translation && (
                 <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -677,8 +660,8 @@ const ConversationPracticePage: React.FC = () => {
                   <VoiceRecorder
                     targetText={currentSegments.length > 0 ? currentSegments[currentSegmentIndex] : selectedResponse}
                     onRecordingComplete={handleStudentResponse}
-                    onRecordingStart={() => {}}
-                    onRecordingStop={() => {}}
+                    onRecordingStart={() => { }}
+                    onRecordingStop={() => { }}
                     disabled={isProcessingResponse}
                     language="en-US"
                     placeholder="點擊錄音按鈕開始練習"
@@ -696,7 +679,7 @@ const ConversationPracticePage: React.FC = () => {
                           className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 flex items-center gap-1"
                         >
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z"/>
+                            <path d="M8 5v14l11-7z" />
                           </svg>
                           播放錄音
                         </button>
@@ -732,7 +715,7 @@ const ConversationPracticePage: React.FC = () => {
                         {(() => {
                           const isLastSegment = currentSegmentIndex >= currentSegments.length - 1;
                           const isLastTurn = currentTurnIndex >= (conversation?.dialogue.length || 0) - 1;
-                          
+
                           if (!isLastSegment) {
                             return `練習下一段 (${currentSegmentIndex + 2}/${currentSegments.length})`;
                           } else if (!isLastTurn) {
@@ -772,7 +755,7 @@ const ConversationPracticePage: React.FC = () => {
             <p className="text-gray-600 mb-4">
               請仔細聽對方的發音和語調，為下次練習做準備
             </p>
-            
+
             <button
               onClick={moveToNextSegmentOrTurn}
               className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium flex items-center gap-2 mx-auto"
@@ -784,15 +767,15 @@ const ConversationPracticePage: React.FC = () => {
           </div>
         )}
 
-            {/* 處理中狀態 */}
-            {isProcessingResponse && (
-              <div className="text-center mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <LoadingSpinner />
-                <div className="text-sm text-blue-600 mt-2">
-                  🔄 正在分析您的發音...
-                </div>
-              </div>
-            )}
+        {/* 處理中狀態 */}
+        {isProcessingResponse && (
+          <div className="text-center mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <LoadingSpinner />
+            <div className="text-sm text-blue-600 mt-2">
+              🔄 正在分析您的發音...
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

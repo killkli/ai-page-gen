@@ -12,10 +12,6 @@ export * from './src/core/types';
 // 保持向後兼容性的舊版接口定義
 // 這些接口現在映射到新的類型系統，但保持原有的接口不變
 
-import { 
-  DifficultyLevel
-} from './src/core/types';
-
 // 舊版測驗題目接口 - 向後兼容
 export interface TrueFalseQuestion {
   statement: string;

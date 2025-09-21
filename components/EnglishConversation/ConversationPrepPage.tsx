@@ -316,7 +316,7 @@ const ConversationPrepPage: React.FC = () => {
                 >
                   {loading ? (
                     <>
-                      <LoadingSpinner size="sm" />
+                      <LoadingSpinner/>
                       <span>Generating...</span>
                     </>
                   ) : (
@@ -426,7 +426,6 @@ const ConversationPrepPage: React.FC = () => {
                     turn={generatedConversation.dialogue[previewTurnIndex]}
                     isCurrentTurn={true}
                     isStudentTurn={false}
-                    studentRole=""
                     showTranslation={true}
                     showHints={true}
                   />
@@ -465,7 +464,7 @@ const ConversationPrepPage: React.FC = () => {
                     >
                       {sharing ? (
                         <>
-                          <LoadingSpinner size="sm" />
+                          <LoadingSpinner/>
                           <span>Creating Share Link...</span>
                         </>
                       ) : (
