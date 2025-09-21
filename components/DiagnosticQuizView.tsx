@@ -268,7 +268,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
         <p>此難度級別沒有找到測驗題目。</p>
       ) : (
         (Object.keys(quizTypeLabels) as QuizContentKey[]).map((quizType) => {
-          if (!currentQuizSet.hasOwnProperty(quizType)) {
+          if (!(quizType in currentQuizSet)) {
             return null;
           }
           const questions = currentQuizSet[quizType];
