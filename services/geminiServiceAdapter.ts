@@ -342,7 +342,7 @@ export const generateLearningLevelSuggestions = async (topic: string, apiKey: st
 
     Output format should be JSON only:
     {
-      "suggestions": [
+      "suggestedLevels": [
         {
           "id": "beginner",
           "label": "初學者",
