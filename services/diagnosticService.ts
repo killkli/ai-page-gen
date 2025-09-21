@@ -1,62 +1,66 @@
-import { 
-  QuestionResponse, 
-  QuestionTypePerformance, 
-  LearningWeakness, 
-  LearningStrength, 
-  PersonalizedRecommendation, 
-  StudentLearningFeedback, 
-  TeacherDiagnosticReport, 
-  DiagnosticSession, 
+import {
+  QuestionResponse,
+  QuestionTypePerformance,
+  LearningWeakness,
+  LearningStrength,
+  PersonalizedRecommendation,
+  StudentLearningFeedback,
+  TeacherDiagnosticReport,
+  DiagnosticSession,
   LearningDiagnosticResult,
   QuizContentKey,
-  DiagnosticReportConfig 
+  DiagnosticReportConfig
 } from '../types';
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
-// 內部函數：調用 Gemini AI
-const callGeminiForDiagnosticForDiagnostic = async (prompt: string, apiKey: string): Promise<any> => {
-  const ai = new GoogleGenAI({ apiKey });
-  const model = 'gemini-2.5-flash';
+// 內部函數：調用 Provider 系統
+const callProviderForDiagnostic = async (prompt: string): Promise<any> => {
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: model,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      },
-    });
-    if (!response.text) throw new Error("AI 回傳內容為空，請重試或檢查 API 金鑰。");
-    let jsonStr = response.text.trim();
-    // 先移除 code block fence
-    const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
-    const match = jsonStr.match(fenceRegex);
-    if (match && match[2]) jsonStr = match[2].trim();
-    // 嘗試抓出第一個合法 JSON 區塊（{} 或 []）
-    if (!jsonStr.startsWith("{") && !jsonStr.startsWith("[") && (jsonStr.includes("{") || jsonStr.includes("["))) {
-      const objStart = jsonStr.indexOf("{");
-      const arrStart = jsonStr.indexOf("[");
-      let jsonStart = -1;
-      let jsonEnd = -1;
-      if (objStart !== -1 && (arrStart === -1 || objStart < arrStart)) {
-        // 以 { 開頭
-        jsonStart = objStart;
-        jsonEnd = jsonStr.lastIndexOf("}");
-      } else if (arrStart !== -1) {
-        // 以 [ 開頭
-        jsonStart = arrStart;
-        jsonEnd = jsonStr.lastIndexOf("]");
+    // 動態導入以避免循環依賴
+    const { callGemini } = await import('./geminiServiceAdapter');
+    const response = await callGemini(prompt);
+
+    // 保持原有的 JSON 解析邏輯，確保與原功能完全一致
+    let content = response;
+
+    // 如果 response 是字符串，嘗試解析 JSON
+    if (typeof content === 'string') {
+      let jsonStr = content.trim();
+
+      // 先移除 code block fence
+      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+      const match = jsonStr.match(fenceRegex);
+      if (match && match[2]) jsonStr = match[2].trim();
+
+      // 嘗試抓出第一個合法 JSON 區塊（{} 或 []）
+      if (!jsonStr.startsWith("{") && !jsonStr.startsWith("[") && (jsonStr.includes("{") || jsonStr.includes("["))) {
+        const objStart = jsonStr.indexOf("{");
+        const arrStart = jsonStr.indexOf("[");
+        let jsonStart = -1;
+        let jsonEnd = -1;
+        if (objStart !== -1 && (arrStart === -1 || objStart < arrStart)) {
+          // 以 { 開頭
+          jsonStart = objStart;
+          jsonEnd = jsonStr.lastIndexOf("}");
+        } else if (arrStart !== -1) {
+          // 以 [ 開頭
+          jsonStart = arrStart;
+          jsonEnd = jsonStr.lastIndexOf("]");
+        }
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          jsonStr = jsonStr.substring(jsonStart, jsonEnd + 1);
+        }
       }
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        jsonStr = jsonStr.substring(jsonStart, jsonEnd + 1);
+
+      try {
+        content = JSON.parse(jsonStr);
+      } catch (err) {
+        // log 原始內容方便 debug
+        console.error("AI 回傳原始內容 (JSON parse 失敗):", response);
+        throw new Error("AI 模型傳回的資料格式無法解析 (可能不是有效的 JSON)。請嘗試修改您的主題或重試。");
       }
     }
-    try {
-      return JSON.parse(jsonStr);
-    } catch (err) {
-      // log 原始內容方便 debug
-      console.error("AI 回傳原始內容 (JSON parse 失敗):", response.text);
-      throw new Error("AI 模型傳回的資料格式無法解析 (可能不是有效的 JSON)。請嘗試修改您的主題或重試。");
-    }
+
+    return content;
   } catch (error) {
     let errorMessage = "無法產生診斷內容。";
     if (error instanceof Error) errorMessage += ` 詳細資料： ${error.message}`;
@@ -142,8 +146,7 @@ export const determineLearningLevel = (overallScore: number): 'beginner' | 'inte
 export const generateLearningAnalysisWithAI = async (
   topic: string,
   responses: QuestionResponse[],
-  performances: QuestionTypePerformance[],
-  apiKey: string
+  performances: QuestionTypePerformance[]
 ): Promise<{ strengths: LearningStrength[], weaknesses: LearningWeakness[], learningStyle?: string, cognitivePattern?: string }> => {
   
   // 整理錯誤的具體題目和答案
@@ -206,7 +209,7 @@ export const generateLearningAnalysisWithAI = async (
   `;
 
   try {
-    return await callGeminiForDiagnosticForDiagnostic(prompt, apiKey);
+    return await callProviderForDiagnostic(prompt);
   } catch (error) {
     console.error('AI 學習分析生成失敗:', error);
     // 提供預設分析作為備案
@@ -225,8 +228,7 @@ export const generatePersonalizedRecommendations = async (
   overallScore: number,
   learningLevel: string,
   strengths: LearningStrength[],
-  weaknesses: LearningWeakness[],
-  apiKey: string
+  weaknesses: LearningWeakness[]
 ): Promise<PersonalizedRecommendation[]> => {
   const prompt = `
     Generate personalized learning recommendations for a student based on their performance analysis.
@@ -259,7 +261,7 @@ export const generatePersonalizedRecommendations = async (
   `;
 
   try {
-    const result = await callGeminiForDiagnosticForDiagnostic(prompt, apiKey);
+    const result = await callProviderForDiagnostic(prompt);
     return result.recommendations || [];
   } catch (error) {
     console.error('AI 個人化建議生成失敗:', error);
@@ -275,7 +277,6 @@ export const generateStudentFeedback = async (
   performances: QuestionTypePerformance[],
   strengths: LearningStrength[],
   weaknesses: LearningWeakness[],
-  apiKey: string,
   studentId?: string,
   responses?: QuestionResponse[]
 ): Promise<StudentLearningFeedback> => {
@@ -311,7 +312,7 @@ export const generateStudentFeedback = async (
   `;
 
   try {
-    const result = await callGeminiForDiagnosticForDiagnostic(prompt, apiKey);
+    const result = await callProviderForDiagnostic(prompt);
     return {
       studentId,
       overallScore,
@@ -347,7 +348,6 @@ export const generateTeachingRecommendations = async (
   performances: QuestionTypePerformance[],
   strengths: LearningStrength[],
   weaknesses: LearningWeakness[],
-  apiKey: string,
   responses?: QuestionResponse[]
 ): Promise<{
   immediateInterventions: string[];
@@ -388,7 +388,7 @@ export const generateTeachingRecommendations = async (
   `;
 
   try {
-    const result = await callGeminiForDiagnosticForDiagnostic(prompt, apiKey);
+    const result = await callProviderForDiagnostic(prompt);
     return {
       immediateInterventions: result.immediateInterventions || [],
       instructionalStrategies: result.instructionalStrategies || [],
@@ -409,7 +409,6 @@ export const generateTeachingRecommendations = async (
 // 主要診斷函數 - 生成完整的學習診斷結果
 export const generateLearningDiagnostic = async (
   session: DiagnosticSession,
-  apiKey: string,
   config: DiagnosticReportConfig = {
     includeDetailedAnalysis: true,
     includeComparativeData: false,
@@ -428,8 +427,7 @@ export const generateLearningDiagnostic = async (
     const learningAnalysis = await generateLearningAnalysisWithAI(
       session.topic,
       session.responses,
-      performanceStats,
-      apiKey
+      performanceStats
     );
 
     // 3. 生成個人化建議
@@ -438,8 +436,7 @@ export const generateLearningDiagnostic = async (
       overallScore,
       learningLevel,
       learningAnalysis.strengths,
-      learningAnalysis.weaknesses,
-      apiKey
+      learningAnalysis.weaknesses
     );
 
     // 4. 生成學生版回饋
@@ -450,7 +447,6 @@ export const generateLearningDiagnostic = async (
       performanceStats,
       learningAnalysis.strengths,
       learningAnalysis.weaknesses,
-      apiKey,
       session.studentId,
       session.responses
     );
@@ -462,7 +458,6 @@ export const generateLearningDiagnostic = async (
       performanceStats,
       learningAnalysis.strengths,
       learningAnalysis.weaknesses,
-      apiKey,
       session.responses
     );
 
