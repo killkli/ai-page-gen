@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ExtendedLearningContent, LearningLevelSuggestions, LearningLevel, VocabularyLevel } from './types';
-import { generateLearningPlan, generateLearningLevelSuggestions, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel, isEnglishRelatedTopic } from './services/geminiService';
+import { generateLearningPlan, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel } from './services/geminiServiceAdapter';
+import { generateLearningLevelSuggestions, isEnglishRelatedTopic } from './services/geminiService';
 import InputBar from './components/InputBar';
 import LoadingSpinner from './components/LoadingSpinner';
 import LearningContentDisplay from './components/LearningContentDisplay';
