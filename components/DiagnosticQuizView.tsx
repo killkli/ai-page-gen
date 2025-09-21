@@ -272,8 +272,8 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
             return null;
           }
           const questions = currentQuizSet[quizType];
-          if (!questions || questions.length === 0) {
-            return null; 
+          if (!questions || !Array.isArray(questions) || questions.length === 0) {
+            return null;
           }
 
           return (
@@ -288,7 +288,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
               </h4>
               
               {/* 題目渲染邏輯保持不變，但添加回調函數 */}
-              {quizType === 'trueFalse' && questions.map((q, i) => {
+              {quizType === 'trueFalse' && Array.isArray(questions) && questions.map((q, i) => {
                 const questionId = `${selectedDifficulty}-tf-${i}`;
                 return (
                   <div key={questionId} className={answeredQuestions.has(questionId) ? 'opacity-75' : ''}>
@@ -310,7 +310,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
                 );
               })}
               
-              {quizType === 'multipleChoice' && questions.map((q, i) => {
+              {quizType === 'multipleChoice' && Array.isArray(questions) && questions.map((q, i) => {
                 const questionId = `${selectedDifficulty}-mc-${i}`;
                 return (
                   <div key={questionId} className={answeredQuestions.has(questionId) ? 'opacity-75' : ''}>
@@ -332,7 +332,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
                 );
               })}
               
-              {quizType === 'fillInTheBlanks' && questions.map((q, i) => {
+              {quizType === 'fillInTheBlanks' && Array.isArray(questions) && questions.map((q, i) => {
                 const questionId = `${selectedDifficulty}-fb-${i}`;
                 return (
                   <div key={questionId} className={answeredQuestions.has(questionId) ? 'opacity-75' : ''}>
@@ -354,7 +354,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
                 );
               })}
               
-              {quizType === 'sentenceScramble' && questions.map((q, i) => {
+              {quizType === 'sentenceScramble' && Array.isArray(questions) && questions.map((q, i) => {
                 const questionId = `${selectedDifficulty}-ss-${i}`;
                 return (
                   <div key={questionId} className={answeredQuestions.has(questionId) ? 'opacity-75' : ''}>
@@ -376,7 +376,7 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
                 );
               })}
               
-              {quizType === 'memoryCardGame' && questions.map((q, i) => {
+              {quizType === 'memoryCardGame' && Array.isArray(questions) && questions.map((q, i) => {
                 const questionId = `${selectedDifficulty}-mcg-${i}`;
                 return (
                   <div key={questionId} className={answeredQuestions.has(questionId) ? 'opacity-75' : ''}>

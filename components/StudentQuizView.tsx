@@ -213,7 +213,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
   };
 
   const getQuizComponent = (type: QuizContentKey, questions: any[]) => {
-    if (!questions || questions.length === 0) return null;
+    if (!questions || !Array.isArray(questions) || questions.length === 0) return null;
 
     const createAnswerCallback = (questionIndex: number) => supportsDiagnostic 
       ? (userAnswer: any, isCorrect: boolean, responseTime?: number) => {

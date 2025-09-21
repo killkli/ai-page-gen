@@ -66,9 +66,9 @@ const QuizView: React.FC<QuizViewProps> = ({ quizzes }) => {
             return null;
           }
           const questions = currentQuizSet[quizType];
-          if (!questions || questions.length === 0) {
+          if (!questions || !Array.isArray(questions) || questions.length === 0) {
             // If there are no questions for this type and difficulty, don't render the heading
-            return null; 
+            return null;
           }
 
           return (
@@ -76,19 +76,19 @@ const QuizView: React.FC<QuizViewProps> = ({ quizzes }) => {
               <h4 className="text-xl font-semibold text-slate-700 mb-3 border-b-2 border-sky-200 pb-1">
                 {quizTypeLabels[quizType]}
               </h4>
-              {quizType === 'trueFalse' && questions.map((q, i) => (
+              {quizType === 'trueFalse' && Array.isArray(questions) && questions.map((q, i) => (
                 <TrueFalseQuizItem key={`${selectedDifficulty}-tf-${i}`} question={q as any} itemNumber={i + 1} />
               ))}
-              {quizType === 'multipleChoice' && questions.map((q, i) => (
+              {quizType === 'multipleChoice' && Array.isArray(questions) && questions.map((q, i) => (
                 <MultipleChoiceQuizItem key={`${selectedDifficulty}-mc-${i}`} question={q as any} itemNumber={i + 1} />
               ))}
-              {quizType === 'fillInTheBlanks' && questions.map((q, i) => (
+              {quizType === 'fillInTheBlanks' && Array.isArray(questions) && questions.map((q, i) => (
                 <FillBlankQuizItem key={`${selectedDifficulty}-fb-${i}`} question={q as any} itemNumber={i + 1} />
               ))}
-              {quizType === 'sentenceScramble' && questions.map((q, i) => (
+              {quizType === 'sentenceScramble' && Array.isArray(questions) && questions.map((q, i) => (
                 <SentenceScrambleQuizItem key={`${selectedDifficulty}-ss-${i}`} question={q as any} itemNumber={i + 1} />
               ))}
-              {quizType === 'memoryCardGame' && questions.map((q, i) => (
+              {quizType === 'memoryCardGame' && Array.isArray(questions) && questions.map((q, i) => (
                 <MemoryCardGameQuizItem key={`${selectedDifficulty}-mcg-${i}`} question={q as any} itemNumber={i + 1} />
               ))}
               {/* Rendering for spelling removed */}
