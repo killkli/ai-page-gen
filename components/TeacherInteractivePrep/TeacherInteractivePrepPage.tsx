@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ExtendedLearningContent } from '../../types';
 import { getLearningContent, saveLearningContent } from '../../services/jsonbinService';
 import { lessonPlanStorage } from '../../services/lessonPlanStorage';
-import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent, generateStepQuiz } from '../../services/geminiService';
+import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent, generateStepQuiz } from '../../services/geminiServiceAdapter';
 import { interactiveContentStorage, TransformedVersion } from '../../services/interactiveContentStorage';
 import LoadingSpinner from '../LoadingSpinner';
 import MarkdownRenderer from '../MarkdownRenderer';
@@ -231,13 +231,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
       
       switch (step.type) {
         case 'objective':
-          transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
+          transformedData = await transformLearningObjectiveForStudent(step.data);
           break;
         case 'breakdown':
-          transformedData = await transformContentBreakdownForStudent(step.data, apiKey);
+          transformedData = await transformContentBreakdownForStudent(step.data);
           break;
         case 'confusing':
-          transformedData = await transformConfusingPointForStudent(step.data, apiKey);
+          transformedData = await transformConfusingPointForStudent(step.data);
           break;
       }
       
@@ -310,7 +310,6 @@ const TeacherInteractivePrepPage: React.FC = () => {
       const quizData = await generateStepQuiz(
         transformation.transformed,
         step.type,
-        apiKey,
         configToUse
       );
       
@@ -399,13 +398,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
           
           switch (step.type) {
             case 'objective':
-              transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
+              transformedData = await transformLearningObjectiveForStudent(step.data);
               break;
             case 'breakdown':
-              transformedData = await transformContentBreakdownForStudent(step.data, apiKey);
+              transformedData = await transformContentBreakdownForStudent(step.data);
               break;
             case 'confusing':
-              transformedData = await transformConfusingPointForStudent(step.data, apiKey);
+              transformedData = await transformConfusingPointForStudent(step.data);
               break;
           }
           
@@ -515,13 +514,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
           
           switch (step.type) {
             case 'objective':
-              transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
+              transformedData = await transformLearningObjectiveForStudent(step.data);
               break;
             case 'breakdown':
-              transformedData = await transformContentBreakdownForStudent(step.data, apiKey);
+              transformedData = await transformContentBreakdownForStudent(step.data);
               break;
             case 'confusing':
-              transformedData = await transformConfusingPointForStudent(step.data, apiKey);
+              transformedData = await transformConfusingPointForStudent(step.data);
               break;
           }
           

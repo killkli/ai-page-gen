@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { WritingPracticeContent, SentencePracticePrompt, WritingPracticePrompt, AIFeedback, VocabularyLevel } from '../types';
-import { getAIFeedback } from '../services/geminiService';
+import { getAIFeedback } from '../services/geminiServiceAdapter';
 
 interface WritingPracticeViewProps {
   content: WritingPracticeContent;
@@ -42,7 +42,7 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
     setLoadingFeedback(prev => ({ ...prev, [prompt.id]: true }));
     
     try {
-      const aiFeedback = await getAIFeedback(work, promptType, prompt, apiKey, vocabularyLevel);
+      const aiFeedback = await getAIFeedback(work, promptType, prompt, vocabularyLevel);
       setFeedback(prev => ({ ...prev, [prompt.id]: aiFeedback }));
     } catch (error) {
       console.error('AI 批改失敗:', error);

@@ -10,7 +10,7 @@ import { generateEncryptedApiKeyParam } from '../utils/cryptoUtils'; // Import c
 import Tabs from './Tabs';
 import { saveLearningContent, saveQuizContent, saveWritingPracticeContent, saveConversationPracticeContent } from '../services/jsonbinService';
 import { conversationService } from '../services/conversationService';
-import { regenerateQuizWithConfig } from '../services/geminiService';
+import { regenerateQuizWithConfig } from '../services/geminiServiceAdapter';
 import QuizConfigPanel from './QuizConfigPanel';
 import QRCodeDisplay from './QRCodeDisplay';
 
@@ -243,7 +243,6 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({ content
     try {
       const newQuiz = await regenerateQuizWithConfig(
         topic,
-        storedApiKey,
         content.learningObjectives,
         quizConfig,
         selectedLevel,

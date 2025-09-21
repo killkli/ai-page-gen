@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ExtendedLearningContent, InteractiveLearningSession } from '../../types';
 import { getLearningContent } from '../../services/jsonbinService';
 import { lessonPlanStorage } from '../../services/lessonPlanStorage';
-import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent } from '../../services/geminiService';
+import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent } from '../../services/geminiServiceAdapter';
 import LoadingSpinner from '../LoadingSpinner';
 import MarkdownRenderer from '../MarkdownRenderer';
 
@@ -258,13 +258,13 @@ const InteractiveLearningPage: React.FC = () => {
 
       switch (step.type) {
         case 'objective':
-          transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
+          transformedData = await transformLearningObjectiveForStudent(step.data);
           break;
         case 'breakdown':
-          transformedData = await transformContentBreakdownForStudent(step.data, apiKey);
+          transformedData = await transformContentBreakdownForStudent(step.data);
           break;
         case 'confusing':
-          transformedData = await transformConfusingPointForStudent(step.data, apiKey);
+          transformedData = await transformConfusingPointForStudent(step.data);
           break;
         default:
           return null;

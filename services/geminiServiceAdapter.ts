@@ -327,6 +327,428 @@ const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, lear
   return await callProviderSystem(prompt, apiKey);
 };
 
+// =============================================================================
+// Missing Functions Migration - Provider System Implementation
+// =============================================================================
+
+// 生成自訂測驗 (替代 generateCustomQuiz)
+export const generateCustomQuiz = async (
+  topic: string, 
+  apiKey: string, 
+  learningObjectives: any[],
+  quizConfig: any,
+  selectedLevel?: any,
+  vocabularyLevel?: any
+): Promise<any> => {
+  // 驗證並修正配置 - 簡化版本
+  const validateQuizConfig = (config: any) => {
+    const validated = { ...config };
+    for (const difficulty of ['easy', 'normal', 'hard']) {
+      if (!validated[difficulty]) validated[difficulty] = {};
+      const diffConfig = validated[difficulty];
+      
+      // 設定預設值和限制
+      diffConfig.trueFalse = Math.min(Math.max(diffConfig.trueFalse || 0, 0), 10);
+      diffConfig.multipleChoice = Math.min(Math.max(diffConfig.multipleChoice || 0, 0), 10);
+      diffConfig.fillInTheBlanks = Math.min(Math.max(diffConfig.fillInTheBlanks || 0, 0), 10);
+      diffConfig.sentenceScramble = Math.min(Math.max(diffConfig.sentenceScramble || 0, 0), 10);
+      diffConfig.memoryCardGame = Math.min(Math.max(diffConfig.memoryCardGame || 0, 0), 2);
+    }
+    return validated;
+  };
+
+  const validatedConfig = validateQuizConfig(quizConfig);
+  
+  const generateQuizForDifficulty = async (difficulty: string) => {
+    const config = validatedConfig[difficulty];
+    
+    // 構建基於自訂題數的 prompt
+    let difficultyPrompt = '';
+    if (selectedLevel) {
+      difficultyPrompt = `適合「${selectedLevel.name}」程度學習者 (${selectedLevel.description}) 的`;
+    }
+    
+    let vocabularyConstraints = '';
+    if (vocabularyLevel) {
+      vocabularyConstraints = `
+      CRITICAL VOCABULARY CONSTRAINTS for English content:
+      - All English text must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+      - Examples should be appropriate for ${vocabularyLevel.description}
+      `;
+    }
+
+    const prompt = `
+      Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+      Please generate ${difficultyPrompt}quiz content for "${topic}" with the following specific quantities:
+      
+      - True/False questions: ${config.trueFalse} questions
+      - Multiple choice questions: ${config.multipleChoice} questions  
+      - Fill in the blanks questions: ${config.fillInTheBlanks} questions
+      - Sentence scramble questions: ${config.sentenceScramble} questions
+      - Memory card game questions: ${config.memoryCardGame} questions
+      
+      ${vocabularyConstraints}
+      
+      Output MUST be a valid JSON object with this exact structure:
+      {
+        "trueFalse": [${config.trueFalse > 0 ? `
+          { "statement": "是非題題目", "isTrue": true, "explanation": "可選說明" }
+          // 總共 ${config.trueFalse} 題` : '// 空陣列，因為設定為 0 題'}],
+        "multipleChoice": [${config.multipleChoice > 0 ? `
+          { "question": "選擇題題目", "options": ["選項A", "選項B", "選項C", "選項D"], "correctAnswerIndex": 0 }
+          // 總共 ${config.multipleChoice} 題` : '// 空陣列，因為設定為 0 題'}],
+        "fillInTheBlanks": [${config.fillInTheBlanks > 0 ? `
+          { "sentenceWithBlank": "填空題題目，空格用 ____ 表示", "correctAnswer": "正確答案" }
+          // 總共 ${config.fillInTheBlanks} 題` : '// 空陣列，因為設定為 0 題'}],
+        "sentenceScramble": [${config.sentenceScramble > 0 ? `
+          { "originalSentence": "正確的完整句子", "scrambledWords": ["打散", "的", "單字", "陣列"] }
+          // 總共 ${config.sentenceScramble} 題` : '// 空陣列，因為設定為 0 題'}],
+        "memoryCardGame": [${config.memoryCardGame > 0 ? `
+          { "pairs": [{"question": "卡片正面", "answer": "卡片背面"}, ...], "instructions": "遊戲說明" }
+          // 總共 ${config.memoryCardGame} 題，每題至少包含 5 對卡片` : '// 空陣列，因為設定為 0 題'}]
+      }
+      
+      IMPORTANT: 
+      - Generate EXACTLY the number of questions specified for each type (supports up to 10 questions for most types, 2 for memory card games)
+      - If a question type is set to 0, provide an empty array []
+      - For memoryCardGame, each question should contain at least 5 pairs in the "pairs" array
+      - Maximum limits: trueFalse/multipleChoice/fillInTheBlanks/sentenceScramble up to 10 questions, memoryCardGame up to 2 questions
+      - All text must be in the primary language of the topic
+      - Do NOT include any explanation or extra text, only output the JSON object
+    `;
+    
+    return await callGemini(prompt);
+  };
+
+  // 並行生成三個難度的測驗
+  const [easy, normal, hard] = await Promise.all([
+    generateQuizForDifficulty('easy'),
+    generateQuizForDifficulty('normal'),
+    generateQuizForDifficulty('hard')
+  ]);
+
+  return { easy, normal, hard };
+};
+
+// 重新生成測驗配置 (替代 regenerateQuizWithConfig)
+export const regenerateQuizWithConfig = async (
+  topic: string,
+  learningObjectives: any[],
+  quizConfig: any,
+  selectedLevel?: any,
+  vocabularyLevel?: any
+): Promise<any> => {
+  return await generateCustomQuiz(topic, '', learningObjectives, quizConfig, selectedLevel, vocabularyLevel);
+};
+
+// AI 回饋生成 (替代 getAIFeedback)
+export const getAIFeedback = async (
+  studentWork: string,
+  promptType: 'sentence' | 'writing',
+  prompt: any,
+  vocabularyLevel?: any
+): Promise<any> => {
+  const isEnglish = /[a-zA-Z]/.test(studentWork);
+  const language = isEnglish ? 'English' : 'Chinese';
+  
+  const feedbackPrompt = `
+    Please provide detailed feedback for this ${promptType} practice work:
+    
+    Original Prompt: ${JSON.stringify(prompt)}
+    Student Work: "${studentWork}"
+    
+    ${vocabularyLevel && isEnglish ? `
+    VOCABULARY LEVEL CONTEXT:
+    - Target level: ${vocabularyLevel.name} (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description})
+    - Evaluate if vocabulary usage matches this level
+    ` : ''}
+    
+    Provide comprehensive feedback in JSON format:
+    {
+      "score": 85,
+      "strengths": ["具體優點1", "具體優點2"],
+      "improvements": ["改進建議1", "改進建議2"],
+      "grammarCorrections": [
+        {
+          "original": "原文片段",
+          "corrected": "修正後版本", 
+          "explanation": "修正原因說明"
+        }
+      ],
+      "vocabularyTips": ["詞彙使用建議1", "詞彙使用建議2"],
+      "structureFeedback": "結構和組織回饋",
+      "overallComment": "整體評語和鼓勵"
+    }
+    
+    Evaluation Criteria:
+    - Content relevance and completion of requirements
+    - Grammar and language accuracy
+    - Vocabulary usage and variety
+    - Structure and organization (for writing)
+    - Creativity and expression
+    
+    ${promptType === 'sentence' ? `
+    For sentence practice:
+    - Check if required keywords are used correctly
+    - Evaluate sentence structure and grammar
+    - Assess creativity in sentence construction
+    ` : `
+    For writing practice:
+    - Evaluate if word count requirements are met
+    - Assess paragraph structure and flow
+    - Check adherence to suggested outline
+    - Evaluate argument development and coherence
+    `}
+    
+    Provide feedback in ${language === 'English' ? 'Traditional Chinese' : 'Traditional Chinese'} for better understanding.
+    Be encouraging and constructive. Score range: 0-100.
+    
+    Do NOT include explanation, only output the JSON object.
+  `;
+
+  return await callGemini(feedbackPrompt);
+};
+// 學生內容轉換函數群組
+export const transformLearningObjectiveForStudent = async (
+  objective: any
+): Promise<any> => {
+  const prompt = `
+    Transform the following teacher-oriented learning objective into student-friendly, engaging content suitable for interactive learning:
+    
+    Original Learning Objective:
+    ${JSON.stringify(objective)}
+    
+    Transform it into student-centered language that:
+    1. Uses "你" (you) instead of "學生" (students)
+    2. Makes it personally relevant and motivating
+    3. Explains WHY this learning is important to the student
+    4. Uses encouraging, accessible language
+    5. Includes concrete examples that students can relate to
+    6. Makes the learning goal feel achievable and exciting
+    
+    Output MUST be a valid JSON object with this structure:
+    {
+      "objective": "學習目標改寫為學生導向的語言",
+      "description": "詳細說明為什麼你需要學會這個，以及學會後對你的好處",
+      "teachingExample": "具體的、與學生生活相關的例子或應用情境",
+      "personalRelevance": "這個學習與你的日常生活、未來發展的關係",
+      "encouragement": "鼓勵學生的話語，讓學習感覺有趣且可達成"
+    }
+    
+    Make the content engaging, personal, and motivational. Use Traditional Chinese.
+    Do NOT include any explanation or extra text. Only output the JSON object.
+  `;
+  
+  return await callGemini(prompt);
+};
+
+export const transformContentBreakdownForStudent = async (
+  contentItem: any
+): Promise<any> => {
+  const prompt = `
+    Transform the following teacher-oriented content breakdown into student-friendly, engaging content suitable for interactive learning:
+    
+    Original Content Breakdown:
+    ${JSON.stringify(contentItem)}
+    
+    Transform it into student-centered language that:
+    1. Uses "你" (you) instead of "學生" (students)
+    2. Breaks down complex concepts into digestible steps
+    3. Provides clear, relatable examples
+    4. Uses encouraging and accessible language
+    5. Shows practical applications in daily life
+    6. Makes learning feel manageable and interesting
+    
+    Output MUST be a valid JSON object with this structure:
+    {
+      "title": "學生友善的標題",
+      "details": "轉換為以學生為中心的詳細內容，使用 '你' 的語調",
+      "examples": ["與學生生活相關的具體例子1", "具體例子2"],
+      "practicalApplications": ["這個概念如何在你的生活中應用1", "應用2"],
+      "learningTips": ["幫助你更好理解和記憶的小技巧1", "技巧2"],
+      "encouragement": "鼓勵學生的話語，讓他們對學習這個內容感到興奮"
+    }
+    
+    Make the content engaging, personal, and motivational. Use Traditional Chinese.
+    Do NOT include any explanation or extra text. Only output the JSON object.
+  `;
+  
+  return await callGemini(prompt);
+};
+
+export const transformConfusingPointForStudent = async (
+  confusingPoint: any
+): Promise<any> => {
+  const prompt = `
+    Transform the following teacher-oriented confusing point into student-friendly, supportive content that helps students overcome learning challenges:
+    
+    Original Confusing Point:
+    ${JSON.stringify(confusingPoint)}
+    
+    Transform it into student-centered language that:
+    1. Uses "你" (you) instead of "學生" (students)
+    2. Acknowledges that confusion is normal and okay
+    3. Provides clear, step-by-step clarification
+    4. Uses relatable analogies and examples
+    5. Offers practical strategies to overcome the confusion
+    6. Is encouraging and supportive in tone
+    
+    Output MUST be a valid JSON object with this structure:
+    {
+      "confusingConcept": "用學生友善的語言描述容易混淆的概念",
+      "whyConfusing": "為什麼這個概念容易讓你感到困惑（正常化困惑感受）",
+      "clarification": "清楚的解釋和澄清，使用你能理解的語言",
+      "helpfulAnalogies": ["幫助你理解的比喻或類比1", "類比2"],
+      "practicalStrategies": ["克服這個困惑的實用方法1", "方法2"],
+      "commonMistakes": ["避免這些常見錯誤1", "錯誤2"],
+      "encouragement": "鼓勵的話語，讓你知道克服這個困難是可能的"
+    }
+    
+    Make the content supportive, clear, and motivational. Use Traditional Chinese.
+    Do NOT include any explanation or extra text. Only output the JSON object.
+  `;
+  
+  return await callGemini(prompt);
+};
+
+// 記憶卡遊戲驗證函數
+const validateMemoryCardGame = (memoryCardGames: any[]): { isValid: boolean; issues: string[] } => {
+  const issues: string[] = [];
+  
+  memoryCardGames.forEach((game, gameIndex) => {
+    if (!game.pairs || !Array.isArray(game.pairs)) {
+      issues.push(`遊戲 ${gameIndex + 1}: 缺少 pairs 陣列`);
+      return;
+    }
+    
+    const leftContents = new Set();
+    const rightContents = new Set();
+    
+    game.pairs.forEach((pair: any, pairIndex: number) => {
+      if (!pair.left || !pair.right) {
+        issues.push(`遊戲 ${gameIndex + 1}, 配對 ${pairIndex + 1}: 缺少 left 或 right 內容`);
+        return;
+      }
+      
+      if (leftContents.has(pair.left)) {
+        issues.push(`遊戲 ${gameIndex + 1}: 重複的左側內容 "${pair.left}"`);
+      }
+      if (rightContents.has(pair.right)) {
+        issues.push(`遊戲 ${gameIndex + 1}: 重複的右側內容 "${pair.right}"`);
+      }
+      
+      leftContents.add(pair.left);
+      rightContents.add(pair.right);
+    });
+    
+    if (game.pairs.length < 5) {
+      issues.push(`遊戲 ${gameIndex + 1}: 配對數量不足，至少需要 5 對，目前只有 ${game.pairs.length} 對`);
+    }
+  });
+  
+  return {
+    isValid: issues.length === 0,
+    issues
+  };
+};
+
+// 生成步驟測驗
+export const generateStepQuiz = async (
+  stepContent: any,
+  stepType: 'objective' | 'breakdown' | 'confusing',
+  quizConfig: {
+    trueFalse: number;
+    multipleChoice: number;
+    memoryCardGame: number;
+  }
+): Promise<any> => {
+  const prompt = `
+    Based on the following transformed student-friendly content, generate quiz questions that help students practice and reinforce their understanding:
+    
+    Step Type: ${stepType}
+    Content: ${JSON.stringify(stepContent)}
+    
+    Generate EXACTLY the requested number of questions for each type:
+    - True/False: ${quizConfig.trueFalse} questions
+    - Multiple Choice: ${quizConfig.multipleChoice} questions  
+    - Memory Card Game: ${quizConfig.memoryCardGame} pair set(s)
+    
+    Quiz Design Principles:
+    1. Questions should directly test understanding of the content provided
+    2. Use student-friendly language that matches the transformed content tone
+    3. Make questions engaging and practical
+    4. Include clear explanations for correct answers
+    5. For memory card games, create concept-definition or question-answer pairs
+    6. Avoid trick questions; focus on genuine comprehension
+    
+    CRITICAL for Memory Card Games:
+    - Each "left" and "right" content must be COMPLETELY UNIQUE across all pairs
+    - NO duplicate content on either left or right side
+    - Each pair should test a different concept or knowledge point
+    - Students should never be confused about which card matches which
+    - All content in left column must be distinct from each other
+    - All content in right column must be distinct from each other
+    - Create clear, unambiguous one-to-one relationships
+    
+    Output MUST be a valid JSON object with this exact structure:
+    {
+      "trueFalse": [
+        { 
+          "statement": "清楚的是非判斷陳述句...", 
+          "isTrue": true, 
+          "explanation": "解釋為什麼這個陳述是正確/錯誤的..."
+        }
+        // exactly ${quizConfig.trueFalse} items
+      ],
+      "multipleChoice": [
+        { 
+          "question": "測試理解的選擇題問題...", 
+          "options": ["選項A", "選項B", "選項C", "選項D"], 
+          "correctAnswerIndex": 0,
+          "explanation": "解釋為什麼這個答案是正確的..."
+        }
+        // exactly ${quizConfig.multipleChoice} items
+      ],
+      "memoryCardGame": [
+        {
+          "title": "配對遊戲標題",
+          "pairs": [
+            { "left": "第一個概念", "right": "第一個概念的定義或對應" },
+            { "left": "第二個概念", "right": "第二個概念的定義或對應" },
+            { "left": "第三個概念", "right": "第三個概念的定義或對應" },
+            { "left": "第四個概念", "right": "第四個概念的定義或對應" },
+            { "left": "第五個概念", "right": "第五個概念的定義或對應" }
+            // at least 5 pairs per game
+          ]
+        }
+        // exactly ${quizConfig.memoryCardGame} games
+      ]
+    }
+    
+    All content should be in Traditional Chinese and directly related to the provided learning content.
+    Make questions that genuinely help students practice and remember the key concepts.
+    Do NOT include any explanation or extra text outside the JSON structure.
+  `;
+  
+  // 生成測驗內容
+  const quizData = await callGemini(prompt);
+  
+  // 驗證記憶卡遊戲內容
+  if (quizData.memoryCardGame && Array.isArray(quizData.memoryCardGame)) {
+    const validation = validateMemoryCardGame(quizData.memoryCardGame);
+    
+    if (!validation.isValid) {
+      console.warn('記憶卡遊戲驗證失敗:', validation.issues);
+      
+      // 可選：如果驗證失敗，重新生成或給出警告
+      // 這裡我們選擇記錄警告但仍返回結果，讓老師能在預覽中看到問題
+      quizData._validationWarnings = validation.issues;
+    }
+  }
+  
+  return quizData;
+};
+
 // 生成學習程度建議函數
 export const generateLearningLevelSuggestions = async (topic: string, apiKey: string): Promise<any> => {
   console.log(`生成學習程度建議 (Provider 系統): ${topic}`);
