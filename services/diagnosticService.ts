@@ -9,7 +9,7 @@ import {
   DiagnosticSession,
   LearningDiagnosticResult,
   QuizContentKey,
-  DiagnosticReportConfig
+  // DiagnosticReportConfig
 } from '../types';
 
 // 內部函數：調用 Provider 系統
@@ -53,7 +53,7 @@ const callProviderForDiagnostic = async (prompt: string): Promise<any> => {
 
       try {
         content = JSON.parse(jsonStr);
-      } catch (err) {
+      } catch (_err) {
         // log 原始內容方便 debug
         console.error("AI 回傳原始內容 (JSON parse 失敗):", response);
         throw new Error("AI 模型傳回的資料格式無法解析 (可能不是有效的 JSON)。請嘗試修改您的主題或重試。");
@@ -146,7 +146,7 @@ export const determineLearningLevel = (overallScore: number): 'beginner' | 'inte
 export const generateLearningAnalysisWithAI = async (
   topic: string,
   responses: QuestionResponse[],
-  performances: QuestionTypePerformance[]
+  // performances: QuestionTypePerformance[]
 ): Promise<{ strengths: LearningStrength[], weaknesses: LearningWeakness[], learningStyle?: string, cognitivePattern?: string }> => {
   
   // 整理錯誤的具體題目和答案
@@ -274,7 +274,6 @@ export const generateStudentFeedback = async (
   topic: string,
   overallScore: number,
   overallLevel: string,
-  performances: QuestionTypePerformance[],
   strengths: LearningStrength[],
   weaknesses: LearningWeakness[],
   studentId?: string,
@@ -409,13 +408,13 @@ export const generateTeachingRecommendations = async (
 // 主要診斷函數 - 生成完整的學習診斷結果
 export const generateLearningDiagnostic = async (
   session: DiagnosticSession,
-  config: DiagnosticReportConfig = {
-    includeDetailedAnalysis: true,
-    includeComparativeData: false,
-    includeVisualCharts: false,
-    language: 'zh-TW',
-    reportFormat: 'standard'
-  }
+  // config: DiagnosticReportConfig = {
+  //   includeDetailedAnalysis: true,
+  //   includeComparativeData: false,
+  //   includeVisualCharts: false,
+  //   language: 'zh-TW',
+  //   reportFormat: 'standard'
+  // }
 ): Promise<LearningDiagnosticResult> => {
   try {
     // 1. 分析測驗結果
@@ -427,7 +426,7 @@ export const generateLearningDiagnostic = async (
     const learningAnalysis = await generateLearningAnalysisWithAI(
       session.topic,
       session.responses,
-      performanceStats
+      // performanceStats
     );
 
     // 3. 生成個人化建議
@@ -444,7 +443,6 @@ export const generateLearningDiagnostic = async (
       session.topic,
       overallScore,
       learningLevel,
-      performanceStats,
       learningAnalysis.strengths,
       learningAnalysis.weaknesses,
       session.studentId,

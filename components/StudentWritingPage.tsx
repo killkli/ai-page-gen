@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ExtendedLearningContent, WritingPracticeContent } from '../types';
+import {  WritingPracticeContent } from '../types';
 import { HomeIcon } from './icons';
 import { getWritingPracticeContent } from '../services/jsonbinService';
 import { extractApiKeyFromParams } from '../utils/cryptoUtils';
@@ -63,7 +63,7 @@ const StudentWritingPage: React.FC = () => {
         setApiKeySource('localStorage');
       }
     }
-  }, []); // 只在組件掛載時執行一次
+  }, [apiKey]); // 只在組件掛載時執行一次
 
   const handleApiKeySubmit = (e: React.FormEvent) => {
     e.preventDefault();

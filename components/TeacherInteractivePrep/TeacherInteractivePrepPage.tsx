@@ -35,7 +35,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const contentId = searchParams.get('contentId');
   const binId = searchParams.get('binId');
-  
+
   const [content, setContent] = useState<ExtendedLearningContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,14 +44,14 @@ const TeacherInteractivePrepPage: React.FC = () => {
   const [transformations, setTransformations] = useState<TransformationState>({});
   const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'published' | 'error'>('idle');
   const [publishedUrl, setPublishedUrl] = useState<string>('');
-  
+
   // 批次轉換相關狀態
   const [batchTransformStatus, setBatchTransformStatus] = useState<'idle' | 'running' | 'completed' | 'error'>('idle');
-  const [batchProgress, setBatchProgress] = useState<{current: number, total: number, currentStep?: string}>({current: 0, total: 0});
-  
+  const [batchProgress, setBatchProgress] = useState<{ current: number, total: number, currentStep?: string }>({ current: 0, total: 0 });
+
   // 選擇性轉換狀態
   const [selectedSteps, setSelectedSteps] = useState<Set<string>>(new Set());
-  
+
   // 版本管理狀態
   const [availableVersions, setAvailableVersions] = useState<TransformedVersion[]>([]);
   const [currentVersionId, setCurrentVersionId] = useState<string | null>(null);
@@ -66,66 +66,71 @@ const TeacherInteractivePrepPage: React.FC = () => {
     multipleChoice: 3,
     memoryCardGame: 1
   });
-  
+
   // 測驗預覽狀態
   const [showQuizPreview, setShowQuizPreview] = useState(false);
   const [previewQuizData, setPreviewQuizData] = useState<any>(null);
   const [previewStepId, setPreviewStepId] = useState<string>('');
 
+  // 獲取有效的 content ID 
+  const getEffectiveContentId = (): string | null => {
+    return contentId || binId;
+  };
+
   useEffect(() => {
+    const loadContent = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        let loadedContent: ExtendedLearningContent;
+
+        if (binId) {
+          loadedContent = await getLearningContent(binId);
+        } else if (contentId) {
+          await lessonPlanStorage.init();
+          const lessonPlan = await lessonPlanStorage.getLessonPlan(contentId);
+          if (!lessonPlan) {
+            throw new Error('找不到指定的教案');
+          }
+
+          loadedContent = {
+            topic: lessonPlan.topic,
+            learningObjectives: lessonPlan.content.learningObjectives,
+            contentBreakdown: lessonPlan.content.contentBreakdown,
+            confusingPoints: lessonPlan.content.confusingPoints,
+            classroomActivities: lessonPlan.content.classroomActivities,
+            onlineInteractiveQuiz: lessonPlan.content.quiz,
+            writingPractice: lessonPlan.content.writingPractice,
+          };
+        } else {
+          throw new Error('缺少必要參數：contentId 或 binId');
+        }
+
+        setContent(loadedContent);
+        initializePrepSteps(loadedContent);
+
+        // 加載現有版本（如果有的話）
+        const effectiveContentId = contentId || binId;
+        if (effectiveContentId) {
+          await loadExistingVersions(effectiveContentId);
+        }
+
+      } catch (err: any) {
+        console.error('載入內容失敗:', err);
+        setError(err.message || '載入內容時發生錯誤');
+      } finally {
+        setLoading(false);
+      }
+    };
     loadContent();
   }, [contentId, binId]);
 
-  const loadContent = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      let loadedContent: ExtendedLearningContent;
-
-      if (binId) {
-        loadedContent = await getLearningContent(binId);
-      } else if (contentId) {
-        await lessonPlanStorage.init();
-        const lessonPlan = await lessonPlanStorage.getLessonPlan(contentId);
-        if (!lessonPlan) {
-          throw new Error('找不到指定的教案');
-        }
-        
-        loadedContent = {
-          topic: lessonPlan.topic,
-          learningObjectives: lessonPlan.content.learningObjectives,
-          contentBreakdown: lessonPlan.content.contentBreakdown,
-          confusingPoints: lessonPlan.content.confusingPoints,
-          classroomActivities: lessonPlan.content.classroomActivities,
-          onlineInteractiveQuiz: lessonPlan.content.quiz,
-          writingPractice: lessonPlan.content.writingPractice,
-        };
-      } else {
-        throw new Error('缺少必要參數：contentId 或 binId');
-      }
-
-      setContent(loadedContent);
-      initializePrepSteps(loadedContent);
-      
-      // 加載現有版本（如果有的話）
-      const effectiveContentId = getEffectiveContentId();
-      if (effectiveContentId) {
-        await loadExistingVersions(effectiveContentId);
-      }
-      
-    } catch (err: any) {
-      console.error('載入內容失敗:', err);
-      setError(err.message || '載入內容時發生錯誤');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const initializePrepSteps = (content: ExtendedLearningContent) => {
     const steps: PrepStep[] = [];
     const initialTransformations: TransformationState = {};
-    
+
     // 學習目標
     if (content.learningObjectives && content.learningObjectives.length > 0) {
       content.learningObjectives.forEach((objective, index) => {
@@ -138,7 +143,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
           data: objective,
           index
         });
-        
+
         initialTransformations[stepId] = {
           original: objective,
           transformed: null,
@@ -150,7 +155,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         };
       });
     }
-    
+
     // 內容分解
     if (content.contentBreakdown && content.contentBreakdown.length > 0) {
       content.contentBreakdown.forEach((item, index) => {
@@ -163,7 +168,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
           data: item,
           index
         });
-        
+
         initialTransformations[stepId] = {
           original: item,
           transformed: null,
@@ -175,7 +180,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         };
       });
     }
-    
+
     // 易混淆點
     if (content.confusingPoints && content.confusingPoints.length > 0) {
       content.confusingPoints.forEach((item, index) => {
@@ -188,7 +193,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
           data: item,
           index
         });
-        
+
         initialTransformations[stepId] = {
           original: item,
           transformed: null,
@@ -200,7 +205,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         };
       });
     }
-    
+
     setPrepSteps(steps);
     setTransformations(initialTransformations);
   };
@@ -228,7 +233,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
     try {
       let transformedData = null;
-      
+
       switch (step.type) {
         case 'objective':
           transformedData = await transformLearningObjectiveForStudent(step.data);
@@ -240,7 +245,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
           transformedData = await transformConfusingPointForStudent(step.data);
           break;
       }
-      
+
       setTransformations(prev => ({
         ...prev,
         [stepId]: {
@@ -250,7 +255,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
           isTransforming: false
         }
       }));
-      
+
     } catch (error) {
       console.error('轉換失敗:', error);
       setTransformations(prev => ({
@@ -293,7 +298,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
     const stepIndex = parseInt(stepId.replace('step_', ''));
     const step = prepSteps[stepIndex];
     const transformation = transformations[stepId];
-    
+
     if (!step || !transformation?.isTransformed || !transformation.transformed) {
       alert('請先轉換內容後再生成測驗');
       return;
@@ -306,13 +311,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
     try {
       const configToUse = customConfig || quizConfig;
-      
+
       const quizData = await generateStepQuiz(
         transformation.transformed,
         step.type,
         configToUse
       );
-      
+
       setTransformations(prev => ({
         ...prev,
         [stepId]: {
@@ -322,10 +327,10 @@ const TeacherInteractivePrepPage: React.FC = () => {
           isGeneratingQuiz: false
         }
       }));
-      
+
       // 關閉設定對話框
       setShowQuizSettings(false);
-      
+
     } catch (error) {
       console.error('測驗生成失敗:', error);
       setTransformations(prev => ({
@@ -361,7 +366,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
   // 批次轉換所有內容
   const batchTransformAll = async () => {
     if (!content) return;
-    
+
     const apiKey = localStorage.getItem('gemini_api_key');
     if (!apiKey) {
       alert('請先設定 Gemini API Key');
@@ -370,15 +375,15 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
     setBatchTransformStatus('running');
     const totalSteps = prepSteps.length;
-    setBatchProgress({current: 0, total: totalSteps});
+    setBatchProgress({ current: 0, total: totalSteps });
 
     try {
       for (let i = 0; i < prepSteps.length; i++) {
         const step = prepSteps[i];
         const stepId = `step_${i}`;
-        
-        setBatchProgress({current: i + 1, total: totalSteps, currentStep: step.title});
-        
+
+        setBatchProgress({ current: i + 1, total: totalSteps, currentStep: step.title });
+
         // 如果已經轉換過，跳過
         if (transformations[stepId]?.isTransformed) {
           continue;
@@ -395,7 +400,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
         try {
           let transformedData;
-          
+
           switch (step.type) {
             case 'objective':
               transformedData = await transformLearningObjectiveForStudent(step.data);
@@ -407,7 +412,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
               transformedData = await transformConfusingPointForStudent(step.data);
               break;
           }
-          
+
           setTransformations(prev => ({
             ...prev,
             [stepId]: {
@@ -417,7 +422,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
               isTransforming: false
             }
           }));
-          
+
         } catch (stepError) {
           console.error(`轉換步驟 ${step.title} 失敗:`, stepError);
           setTransformations(prev => ({
@@ -433,7 +438,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         // 添加小延遲，避免API請求過於頻繁
         await new Promise(resolve => setTimeout(resolve, 500));
       }
-      
+
       setBatchTransformStatus('completed');
     } catch (error) {
       console.error('批次轉換失敗:', error);
@@ -469,7 +474,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
       alert('請先選擇要轉換的步驟');
       return;
     }
-    
+
     const apiKey = localStorage.getItem('gemini_api_key');
     if (!apiKey) {
       alert('請先設定 Gemini API Key');
@@ -478,23 +483,23 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
     setBatchTransformStatus('running');
     const totalSteps = selectedSteps.size;
-    setBatchProgress({current: 0, total: totalSteps});
+    setBatchProgress({ current: 0, total: totalSteps });
 
     try {
       let currentStepNumber = 0;
-      
+
       for (let i = 0; i < prepSteps.length; i++) {
         const step = prepSteps[i];
         const stepId = `step_${i}`;
-        
+
         // 跳過未選中的步驟
         if (!selectedSteps.has(stepId)) {
           continue;
         }
 
         currentStepNumber++;
-        setBatchProgress({current: currentStepNumber, total: totalSteps, currentStep: step.title});
-        
+        setBatchProgress({ current: currentStepNumber, total: totalSteps, currentStep: step.title });
+
         // 如果已經轉換過，跳過
         if (transformations[stepId]?.isTransformed) {
           continue;
@@ -511,7 +516,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
         try {
           let transformedData;
-          
+
           switch (step.type) {
             case 'objective':
               transformedData = await transformLearningObjectiveForStudent(step.data);
@@ -523,7 +528,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
               transformedData = await transformConfusingPointForStudent(step.data);
               break;
           }
-          
+
           setTransformations(prev => ({
             ...prev,
             [stepId]: {
@@ -533,7 +538,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
               isTransforming: false
             }
           }));
-          
+
         } catch (stepError) {
           console.error(`轉換步驟 ${step.title} 失敗:`, stepError);
           setTransformations(prev => ({
@@ -548,7 +553,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         // 添加小延遲，避免API請求過於頻繁
         await new Promise(resolve => setTimeout(resolve, 500));
       }
-      
+
       setBatchTransformStatus('completed');
     } catch (error) {
       console.error('批次轉換失敗:', error);
@@ -556,10 +561,6 @@ const TeacherInteractivePrepPage: React.FC = () => {
     }
   };
 
-  // 獲取有效的 content ID 
-  const getEffectiveContentId = (): string | null => {
-    return contentId || binId;
-  };
 
   // 版本管理函數
   const loadExistingVersions = async (lessonPlanId: string) => {
@@ -577,13 +578,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
     console.log('content:', !!content);
     console.log('contentId:', contentId);
     console.log('transformations:', transformations);
-    
+
     if (!content) {
       console.log('❌ 缺少 content');
       alert('缺少教案內容，無法保存版本');
       return;
     }
-    
+
     // 獲取有效的 content ID
     const actualContentId = getEffectiveContentId();
     if (!actualContentId) {
@@ -592,11 +593,11 @@ const TeacherInteractivePrepPage: React.FC = () => {
       return;
     }
     console.log('使用的 contentId:', actualContentId);
-    
+
     // 收集目前已轉換的數據和測驗資料
     const transformedData: { [stepId: string]: any } = {};
     const quizData: { [stepId: string]: any } = {};
-    
+
     Object.entries(transformations).forEach(([stepId, transformation]) => {
       console.log(`檢查步驟 ${stepId}:`, {
         isTransformed: transformation.isTransformed,
@@ -604,7 +605,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         hasQuiz: transformation.hasQuiz,
         hasQuizData: !!transformation.quiz
       });
-      
+
       if (transformation.isTransformed && transformation.transformed) {
         transformedData[stepId] = transformation.transformed;
       }
@@ -629,13 +630,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
       console.log('初始化 interactiveContentStorage...');
       await interactiveContentStorage.init();
       console.log('✅ 初始化成功');
-      
+
       const versionName = saveVersionName || `版本 ${new Date().toLocaleString('zh-TW')}`;
       const versionData = {
         transformedData,
         quizData
       };
-      
+
       console.log('準備保存版本:', {
         actualContentId,
         topic: content.topic || '無標題教案',
@@ -643,7 +644,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
         versionData,
         selectedSteps: Array.from(selectedSteps)
       });
-      
+
       const versionId = await interactiveContentStorage.saveVersion(
         actualContentId,
         content.topic || '無標題教案',
@@ -652,37 +653,37 @@ const TeacherInteractivePrepPage: React.FC = () => {
         versionName,
         `包含 ${Object.keys(transformedData).length} 個已轉換步驟，${Object.keys(quizData).length} 個測驗`
       );
-      
+
       console.log('✅ 版本保存成功，ID:', versionId);
-      
+
       setSaveVersionName('');
       await loadExistingVersions(actualContentId);
       alert('版本保存成功！');
-      
+
     } catch (error) {
       console.error('❌ 保存版本失敗:', error);
       console.error('錯誤堆棧:', error.stack);
       alert(`保存版本失敗：${error.message || error}`);
     }
-    
+
     console.log('=== 保存版本結束 ===');
   };
 
   const loadVersion = async (versionId: string) => {
     const effectiveContentId = getEffectiveContentId();
     if (!effectiveContentId) return;
-    
+
     try {
       await interactiveContentStorage.init();
       const version = await interactiveContentStorage.getVersion(effectiveContentId, versionId);
-      
+
       if (version) {
         // 重置當前狀態
         setTransformations({});
-        
+
         // 重新初始化所有步驟的轉換狀態
         const newTransformations: TransformationState = {};
-        
+
         // 先為所有步驟設置默認狀態
         prepSteps.forEach((step, index) => {
           const stepId = `step_${index}`;
@@ -696,11 +697,11 @@ const TeacherInteractivePrepPage: React.FC = () => {
             isGeneratingQuiz: false
           };
         });
-        
+
         // 處理版本資料格式 (支援新舊格式)
         const versionTransformedData = version.transformedData?.transformedData || version.transformedData;
         const versionQuizData = version.transformedData?.quizData || {};
-        
+
         // 然後加載版本中的轉換數據
         Object.entries(versionTransformedData || {}).forEach(([stepId, transformedData]) => {
           if (newTransformations[stepId]) {
@@ -711,7 +712,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
             };
           }
         });
-        
+
         // 加載版本中的測驗資料
         Object.entries(versionQuizData || {}).forEach(([stepId, quizData]) => {
           if (newTransformations[stepId]) {
@@ -722,12 +723,12 @@ const TeacherInteractivePrepPage: React.FC = () => {
             };
           }
         });
-        
+
         setTransformations(newTransformations);
         setSelectedSteps(new Set(version.selectedSteps));
         setCurrentVersionId(versionId);
         setShowVersionSelector(false);
-        
+
         await interactiveContentStorage.updateLastAccessed(effectiveContentId);
       }
     } catch (error) {
@@ -739,7 +740,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
   const deleteVersion = async (versionId: string) => {
     const effectiveContentId = getEffectiveContentId();
     if (!effectiveContentId) return;
-    
+
     const version = availableVersions.find(v => v.id === versionId);
     if (!version) return;
 
@@ -751,7 +752,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
       await interactiveContentStorage.init();
       await interactiveContentStorage.deleteVersion(effectiveContentId, versionId);
       await loadExistingVersions(effectiveContentId);
-      
+
       if (currentVersionId === versionId) {
         setCurrentVersionId(null);
       }
@@ -764,13 +765,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
   // 檢測文字是否包含 Markdown
   const containsMarkdown = (text: string): boolean => {
     if (!text) return false;
-    
+
     const markdownPatterns = [
       /#+\s/, /\*\*.*\*\*/, /\*.*\*/, /`.*`/,
       /^\s*[-*+]\s/m, /^\s*\d+\.\s/m,
       /\[.*\]\(.*\)/, /^\s*>/m, /```[\s\S]*?```/, /\n\s*\n/,
     ];
-    
+
     return markdownPatterns.some(pattern => pattern.test(text));
   };
 
@@ -785,9 +786,9 @@ const TeacherInteractivePrepPage: React.FC = () => {
   // 發布到 JSONBIN
   const publishInteractiveContent = async () => {
     if (!content) return;
-    
+
     setPublishStatus('publishing');
-    
+
     try {
       // 只收集已轉換的內容和測驗
       const transformedStepsData: { [stepId: string]: any } = {};
@@ -797,16 +798,16 @@ const TeacherInteractivePrepPage: React.FC = () => {
       Object.entries(transformations).forEach(([stepId, transformation]) => {
         if (transformation.isTransformed && transformation.transformed) {
           transformedStepsData[stepId] = transformation.transformed;
-          
+
           // 收集測驗資料
           if (transformation.hasQuiz && transformation.quiz) {
             stepQuizData[stepId] = transformation.quiz;
           }
-          
+
           // 根據步驟類型，也保留對應的原始內容
           const stepIndex = parseInt(stepId.replace('step_', ''));
           const step = prepSteps[stepIndex];
-          
+
           if (step) {
             switch (step.type) {
               case 'objective':
@@ -853,10 +854,10 @@ const TeacherInteractivePrepPage: React.FC = () => {
       // 保存到 JSONBIN
       const binId = await saveLearningContent(transformedContent);
       const studentUrl = `${window.location.origin}${import.meta.env.BASE_URL}student-interactive?binId=${binId}`;
-      
+
       setPublishedUrl(studentUrl);
       setPublishStatus('published');
-      
+
     } catch (error) {
       console.error('發布失敗:', error);
       setPublishStatus('error');
@@ -915,7 +916,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
     isTransformed: false,
     isTransforming: false
   };
-  
+
   // 計算完成進度
   const transformedCount = Object.values(transformations).filter(t => t.isTransformed).length;
   const totalSteps = prepSteps.length;
@@ -933,7 +934,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                 第 {currentStepIndex + 1} 步，共 {totalSteps} 步 • 已轉換：{transformedCount}/{totalSteps}
               </p>
             </div>
-            
+
             {/* 批次轉換和發布狀態 */}
             <div className="flex items-center gap-4">
               {/* 批次轉換進度顯示 */}
@@ -949,14 +950,14 @@ const TeacherInteractivePrepPage: React.FC = () => {
                     {batchProgress.currentStep && `正在轉換：${batchProgress.currentStep}`}
                   </div>
                   <div className="mt-1 bg-blue-200 rounded-full h-1">
-                    <div 
+                    <div
                       className="bg-blue-600 h-1 rounded-full transition-all duration-300"
-                      style={{width: `${(batchProgress.current / batchProgress.total) * 100}%`}}
+                      style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
                     />
                   </div>
                 </div>
               )}
-              
+
               {batchTransformStatus === 'completed' && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <div className="flex items-center gap-2">
@@ -967,7 +968,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               {/* 批次轉換按鈕 */}
               <div className="flex items-center gap-2">
                 <button
@@ -999,7 +1000,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   {transformedCount === totalSteps ? '全部已轉換' : '全部轉換'}
                 </button>
               </div>
-              
+
               {publishStatus === 'published' && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
@@ -1015,7 +1016,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               <button
                 onClick={publishInteractiveContent}
                 disabled={publishStatus === 'publishing' || transformedCount === 0}
@@ -1043,12 +1044,12 @@ const TeacherInteractivePrepPage: React.FC = () => {
           {/* 進度條 */}
           <div className="space-y-3">
             <div className="w-full bg-slate-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-gradient-to-r from-indigo-500 to-sky-500 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${((currentStepIndex + 1) / totalSteps) * 100}%` }}
               />
             </div>
-            
+
             {/* 選擇控制 */}
             <div className="flex items-center gap-4 mb-3">
               <div className="flex items-center gap-2">
@@ -1069,7 +1070,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
               <div className="text-xs text-slate-500">
                 已選擇 {selectedSteps.size} / {prepSteps.length} 個步驟
               </div>
-              
+
               {/* 版本管理控制 */}
               <div className="flex items-center gap-2 text-xs">
                 {availableVersions.length > 0 && (
@@ -1079,8 +1080,8 @@ const TeacherInteractivePrepPage: React.FC = () => {
                       onClick={() => setShowVersionSelector(!showVersionSelector)}
                       className="text-indigo-600 hover:text-indigo-800 font-medium"
                     >
-                      {currentVersionId ? 
-                        availableVersions.find(v => v.id === currentVersionId)?.name || '選擇版本' 
+                      {currentVersionId ?
+                        availableVersions.find(v => v.id === currentVersionId)?.name || '選擇版本'
                         : `${availableVersions.length} 個可用`}
                     </button>
                   </div>
@@ -1103,7 +1104,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             {/* 步驟導航 */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {prepSteps.map((step, index) => {
@@ -1113,11 +1114,11 @@ const TeacherInteractivePrepPage: React.FC = () => {
                     key={step.id}
                     className={`
                       flex-shrink-0 p-2 rounded-lg border transition-all duration-200 bg-white
-                      ${index === currentStepIndex 
-                        ? 'border-indigo-500 bg-indigo-50' 
+                      ${index === currentStepIndex
+                        ? 'border-indigo-500 bg-indigo-50'
                         : transformations[stepId]?.isTransformed
-                        ? 'border-green-200 bg-green-50'
-                        : 'border-slate-200'
+                          ? 'border-green-200 bg-green-50'
+                          : 'border-slate-200'
                       }
                     `}
                   >
@@ -1140,7 +1141,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                           </svg>
                         )}
                       </button>
-                      
+
                       {/* 個別步驟控制按鈕 */}
                       {transformations[stepId]?.isTransformed ? (
                         <div className="flex items-center gap-1 ml-2">
@@ -1159,7 +1160,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                           >
                             🗑️
                           </button>
-                          
+
                           {/* 測驗控制 */}
                           {transformations[stepId]?.hasQuiz ? (
                             <div className="flex items-center gap-1">
@@ -1222,7 +1223,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                 );
               })}
             </div>
-            
+
             {/* 版本選擇器 */}
             {showVersionSelector && availableVersions.length > 0 && (
               <div className="mt-4 p-4 bg-slate-50 rounded-lg border">
@@ -1278,7 +1279,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
           <h2 className="text-3xl font-bold text-slate-800 mb-2">{currentStep.title}</h2>
           <p className="text-lg text-slate-600">
             {currentStep.type === 'objective' && '將學習目標轉換為學生友好的語言'}
-            {currentStep.type === 'breakdown' && '將內容分解轉換為易懂的學習材料'}  
+            {currentStep.type === 'breakdown' && '將內容分解轉換為易懂的學習材料'}
             {currentStep.type === 'confusing' && '將易混淆點轉換為支持性指導'}
           </p>
         </div>
@@ -1295,14 +1296,14 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   {currentTransformation.isTransformed ? '已完成轉換' : '準備轉換內容'}
                 </h3>
                 <p className="text-sm text-slate-600">
-                  {currentTransformation.isTransformed 
+                  {currentTransformation.isTransformed
                     ? '內容已轉換為學生友好格式，可以進行預覽或重新轉換'
                     : '點擊轉換按鈕將教師導向內容轉換為學生友好格式'
                   }
                 </p>
               </div>
             </div>
-            
+
             <div className="text-sm text-slate-500">
               使用上方導航欄中的控制按鈕進行轉換操作
             </div>
@@ -1329,7 +1330,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   )}
                 </div>
               )}
-              
+
               {currentStep.type === 'breakdown' && (
                 <div className="space-y-3">
                   <div><strong>主題：</strong> {renderText(currentStep.data.topic)}</div>
@@ -1341,7 +1342,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   )}
                 </div>
               )}
-              
+
               {currentStep.type === 'confusing' && (
                 <div className="space-y-3">
                   <div><strong>易混淆點：</strong> {renderText(currentStep.data.point)}</div>
@@ -1391,7 +1392,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                       )}
                     </>
                   )}
-                  
+
                   {currentStep.type === 'breakdown' && (
                     <>
                       {currentTransformation.transformed.title && (
@@ -1418,7 +1419,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                       )}
                     </>
                   )}
-                  
+
                   {currentStep.type === 'confusing' && (
                     <>
                       {currentTransformation.transformed.title && (
@@ -1464,7 +1465,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
             </svg>
             上一步
           </button>
-          
+
           <div className="text-center">
             <p className="text-sm text-slate-600">
               {currentStepIndex + 1} / {totalSteps}
@@ -1501,7 +1502,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -1519,7 +1520,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   選擇題數量
@@ -1536,7 +1537,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   記憶卡遊戲組數
@@ -1554,7 +1555,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <div className="p-6 border-t bg-slate-50 rounded-b-2xl">
               <div className="flex gap-3">
                 <button
@@ -1667,7 +1668,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                         <div className="ml-4 space-y-1">
                           {question.options.map((option, optIndex) => (
                             <div key={optIndex} className={`text-sm ${optIndex === question.correctAnswerIndex ? 'text-green-700 font-medium' : 'text-slate-600'}`}>
-                              {String.fromCharCode(65 + optIndex)}. {option} 
+                              {String.fromCharCode(65 + optIndex)}. {option}
                               {optIndex === question.correctAnswerIndex && ' ✓'}
                             </div>
                           ))}

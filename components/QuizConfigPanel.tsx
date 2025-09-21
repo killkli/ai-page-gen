@@ -1,5 +1,5 @@
 import React from 'react';
-import { QuizCustomConfig, QuizDifficulty, QuizTypeConfig, DEFAULT_QUIZ_CONFIG, QuizContentKey, QUIZ_TYPE_LIMITS } from '../types';
+import { QuizCustomConfig, DEFAULT_QUIZ_CONFIG, QuizContentKey, QUIZ_TYPE_LIMITS } from '../types';
 
 interface QuizConfigPanelProps {
   config: QuizCustomConfig;
@@ -28,7 +28,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
   ) => {
     const maxLimit = QUIZ_TYPE_LIMITS[questionType];
     const validCount = Math.max(0, Math.min(maxLimit, count));
-    
+
     const newConfig = {
       easy: { ...config.easy, [questionType]: validCount },
       normal: { ...config.normal, [questionType]: validCount },
@@ -101,7 +101,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
           const maxLimit = QUIZ_TYPE_LIMITS[questionType];
           const currentValue = config.easy[questionType]; // 假設三個難度都相同
           const totalAcrossDifficulties = getQuestionTypeTotal(questionType);
-          
+
           return (
             <div key={questionType} className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-lg p-5 border border-slate-200">
               <div className="flex items-center justify-between mb-4">
@@ -123,7 +123,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-center gap-4">
                 <button
                   onClick={() => handleQuestionCountChange(questionType, currentValue - 1)}
@@ -132,14 +132,14 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                 >
                   -
                 </button>
-                
+
                 <div className="flex flex-col items-center">
                   <div className="text-3xl font-bold text-gray-800 mb-1">
                     {currentValue}
                   </div>
                   <div className="text-xs text-gray-500">每個難度</div>
                 </div>
-                
+
                 <button
                   onClick={() => handleQuestionCountChange(questionType, currentValue + 1)}
                   className="w-10 h-10 rounded-full bg-green-100 hover:bg-green-200 flex items-center justify-center text-green-600 font-bold text-lg transition-colors shadow-sm"
@@ -148,7 +148,7 @@ const QuizConfigPanel: React.FC<QuizConfigPanelProps> = ({
                   +
                 </button>
               </div>
-              
+
               {/* 三個難度的預覽 */}
               <div className="mt-4 flex justify-center gap-4">
                 <div className="text-center">

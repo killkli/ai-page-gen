@@ -23,7 +23,6 @@ const ProviderShareModal: React.FC<ProviderShareModalProps> = ({
   const [isCreating, setIsCreating] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [error, setError] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // 初始化時選擇所有可用的 providers
   React.useEffect(() => {

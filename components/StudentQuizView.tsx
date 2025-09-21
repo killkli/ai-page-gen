@@ -92,6 +92,11 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
 
   // 分享作答結果給老師
   const handleShareResults = useCallback(async () => {
+    // 取得當前難度的回答記錄
+    const getCurrentDifficultyResponses = () => {
+      const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
+      return responses.filter(response => response.difficulty === currentDifficultyString);
+    };
     const currentResponses = getCurrentDifficultyResponses();
     if (currentResponses.length === 0) {
       alert('請先完成一些題目再分享結果！');
@@ -106,12 +111,12 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
     setSharing(true);
     try {
       const overallScore = calculateOverallScore(currentResponses);
-      const difficultyLabel = selectedDifficulty === QuizDifficulty.Easy ? '簡單' : 
-                            selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難';
-      
+      const difficultyLabel = selectedDifficulty === QuizDifficulty.Easy ? '簡單' :
+        selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難';
+
       // 獲取當前難度的完整測驗內容，供老師查看題目
       const currentQuizContent = quiz?.[selectedDifficulty] || {};
-      
+
       const resultBinId = await saveStudentResults({
         studentName: studentName.trim(),
         topic,
@@ -131,7 +136,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
       const baseUrl = import.meta.env.BASE_URL || '/';
       const teacherUrl = `${window.location.origin}${baseUrl}student-results?binId=${resultBinId}`;
       setShareUrl(teacherUrl);
-      
+
       // 自動複製到剪貼簿
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(teacherUrl);
@@ -145,7 +150,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
     } finally {
       setSharing(false);
     }
-  }, [getCurrentDifficultyResponses, studentName, topic, selectedDifficulty, quizBinId]);
+  }, [responses, studentName, topic, selectedDifficulty, quizBinId, quiz]);
 
   if (showDiagnostic && supportsDiagnostic && apiKey && getCurrentDifficultyResponses().length > 0) {
     return (
@@ -156,8 +161,8 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
               <ChartBarIcon className="w-8 h-8 text-indigo-600" />
               <h1 className="text-2xl font-bold text-gray-900">學習診斷報告</h1>
               <span className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-medium rounded-full">
-                {selectedDifficulty === QuizDifficulty.Easy ? '簡單' : 
-                 selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'} 難度
+                {selectedDifficulty === QuizDifficulty.Easy ? '簡單' :
+                  selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'} 難度
               </span>
             </div>
             <div className="flex items-center gap-2 text-gray-600">
@@ -168,8 +173,8 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         </div>
         <div className="max-w-4xl mx-auto px-4 py-8">
           <LearningDiagnosticReport
-            topic={`${topic} (${selectedDifficulty === QuizDifficulty.Easy ? '簡單' : 
-                     selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'}難度)`}
+            topic={`${topic} (${selectedDifficulty === QuizDifficulty.Easy ? '簡單' :
+              selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'}難度)`}
             apiKey={apiKey}
             mode="student"
             initialResponses={getCurrentDifficultyResponses()}
@@ -215,11 +220,11 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
   const getQuizComponent = (type: QuizContentKey, questions: any[]) => {
     if (!questions || !Array.isArray(questions) || questions.length === 0) return null;
 
-    const createAnswerCallback = (questionIndex: number) => supportsDiagnostic 
+    const createAnswerCallback = (questionIndex: number) => supportsDiagnostic
       ? (userAnswer: any, isCorrect: boolean, responseTime?: number) => {
-          const correctAnswer = getCorrectAnswer(type, questions[questionIndex]);
-          handleQuestionResponse(type, questionIndex, userAnswer, correctAnswer, isCorrect, responseTime);
-        }
+        const correctAnswer = getCorrectAnswer(type, questions[questionIndex]);
+        handleQuestionResponse(type, questionIndex, userAnswer, correctAnswer, isCorrect, responseTime);
+      }
       : undefined;
 
     switch (type) {
@@ -227,9 +232,9 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <TrueFalseQuizItem 
-                key={`${selectedDifficulty}-tf-${i}`} 
-                question={q} 
+              <TrueFalseQuizItem
+                key={`${selectedDifficulty}-tf-${i}`}
+                question={q}
                 itemNumber={i + 1}
                 onAnswer={createAnswerCallback(i)}
               />
@@ -240,9 +245,9 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <MultipleChoiceQuizItem 
-                key={`${selectedDifficulty}-mc-${i}`} 
-                question={q} 
+              <MultipleChoiceQuizItem
+                key={`${selectedDifficulty}-mc-${i}`}
+                question={q}
                 itemNumber={i + 1}
                 onAnswer={createAnswerCallback(i)}
               />
@@ -253,9 +258,9 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <FillBlankQuizItem 
-                key={`${selectedDifficulty}-fb-${i}`} 
-                question={q} 
+              <FillBlankQuizItem
+                key={`${selectedDifficulty}-fb-${i}`}
+                question={q}
                 itemNumber={i + 1}
                 onAnswer={createAnswerCallback(i)}
               />
@@ -266,9 +271,9 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <SentenceScrambleQuizItem 
-                key={`${selectedDifficulty}-ss-${i}`} 
-                question={q} 
+              <SentenceScrambleQuizItem
+                key={`${selectedDifficulty}-ss-${i}`}
+                question={q}
                 itemNumber={i + 1}
                 onAnswer={createAnswerCallback(i)}
               />
@@ -279,9 +284,9 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         return (
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <MemoryCardGameQuizItem 
-                key={`${selectedDifficulty}-mcg-${i}`} 
-                question={q} 
+              <MemoryCardGameQuizItem
+                key={`${selectedDifficulty}-mcg-${i}`}
+                question={q}
                 itemNumber={i + 1}
                 onAnswer={createAnswerCallback(i)}
               />
@@ -303,7 +308,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
               <PuzzlePieceIcon className="w-8 h-8 text-indigo-600" />
               <h1 className="text-2xl font-bold text-gray-900">互動測驗</h1>
             </div>
-            <a 
+            <a
               href={`${import.meta.env.BASE_URL}`}
               className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
             >
@@ -331,7 +336,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                   查看學習診斷 ({getCurrentDifficultyResponses().length})
                 </button>
               )}
-              
+
               {getCurrentDifficultyResponses().length > 0 && (
                 <button
                   onClick={handleShareResults}
@@ -378,8 +383,8 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                 key={key}
                 onClick={() => setSelectedDifficulty(key)}
                 className={`px-6 py-3 rounded-lg text-white font-medium transition-all transform hover:scale-105 shadow-md
-                  ${selectedDifficulty === key 
-                    ? `${color} ring-4 ring-opacity-50` 
+                  ${selectedDifficulty === key
+                    ? `${color} ring-4 ring-opacity-50`
                     : 'bg-gray-400 hover:bg-gray-500'
                   }
                 `}
@@ -396,7 +401,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
             {(Object.keys(quizTypeLabels) as QuizContentKey[]).map((type) => {
               const questions = currentQuizSet[type];
               const component = getQuizComponent(type, questions);
-              
+
               if (!component) return null;
 
               return (
@@ -427,7 +432,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
 
       {/* 姓名輸入 Modal */}
       {showNameInput && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -478,7 +483,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
 
       {/* 分享成功 Modal */}
       {shareUrl && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -537,7 +542,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                 </div>
               </div>
             </div>
-            
+
             {/* QR Code 顯示區域 */}
             {showQRCode && (
               <div className="mb-4 flex justify-center">
@@ -549,10 +554,10 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                 />
               </div>
             )}
-            
+
             <div className="bg-blue-50 p-3 rounded-lg mb-4">
               <p className="text-sm text-blue-700">
-                💡 <strong>給老師的說明：</strong><br/>
+                💡 <strong>給老師的說明：</strong><br />
                 老師打開連結後可以看到 {studentName} 在「{topic}」({selectedDifficulty === QuizDifficulty.Easy ? '簡單' : selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'}難度) 的作答結果，並可使用 AI 進行詳細的學習分析。
               </p>
             </div>

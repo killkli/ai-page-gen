@@ -159,7 +159,7 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
 
   const renderWritingPractice = () => (
     <div className="space-y-6">
-      {content.writingPractice.map((prompt, index) => (
+      {content.writingPractice.map((prompt) => (
         <div key={prompt.id} className="bg-white rounded-lg shadow-md p-6 border border-purple-200">
           <div className="mb-4">
             <h4 className="text-lg font-semibold text-gray-800 mb-2">

@@ -22,7 +22,7 @@ type StudentLearningStep = {
 const StudentInteractivePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const binId = searchParams.get('binId');
-  
+
   const [content, setContent] = useState<ExtendedLearningContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +33,28 @@ const StudentInteractivePage: React.FC = () => {
   const [currentStepQuiz, setCurrentStepQuiz] = useState<any | null>(null);
 
   useEffect(() => {
+    const loadInteractiveContent = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const loadedContent = await getLearningContent(binId!);
+
+        // 檢查是否為互動內容
+        if (!loadedContent.isInteractive) {
+          throw new Error('此內容尚未準備為互動教材');
+        }
+
+        setContent(loadedContent);
+        initializeLearningSteps(loadedContent);
+
+      } catch (err: any) {
+        console.error('載入互動內容失敗:', err);
+        setError(err.message || '載入互動內容時發生錯誤');
+      } finally {
+        setLoading(false);
+      }
+    };
     if (binId) {
       loadInteractiveContent();
     } else {
@@ -43,67 +65,83 @@ const StudentInteractivePage: React.FC = () => {
 
   // 當學習步驟設置完成後初始化學習會話
   useEffect(() => {
+    const initializeLearningSession = (content: ExtendedLearningContent) => {
+      const sessionKey = `student_interactive_${binId}`;
+
+      try {
+        const existingSession = localStorage.getItem(sessionKey);
+
+        if (existingSession) {
+          const session: InteractiveLearningSession = JSON.parse(existingSession);
+          setLearningSession(session);
+          // 恢復學習進度，確保索引有效
+          const savedIndex = session.progress.currentObjectiveIndex || 0;
+          const validIndex = Math.min(Math.max(0, savedIndex), learningSteps.length - 1);
+          setCurrentStepIndex(validIndex);
+        } else {
+          const newSession: InteractiveLearningSession = {
+            contentId: binId || 'unknown',
+            topic: content.topic || '互動學習',
+            progress: {
+              currentObjectiveIndex: 0,
+              completedObjectives: [],
+              timeSpent: 0,
+              interactionCount: 0,
+              startTime: Date.now(),
+              lastUpdateTime: Date.now(),
+              completedActivities: [],
+            },
+            interactions: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+
+          setLearningSession(newSession);
+          localStorage.setItem(sessionKey, JSON.stringify(newSession));
+        }
+      } catch (err) {
+        console.error('初始化學習會話失敗:', err);
+      }
+    };
     if (content && learningSteps.length > 0) {
       initializeLearningSession(content);
     }
   }, [content, learningSteps, binId]);
 
-  const loadInteractiveContent = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const loadedContent = await getLearningContent(binId!);
-      
-      // 檢查是否為互動內容
-      if (!loadedContent.isInteractive) {
-        throw new Error('此內容尚未準備為互動教材');
-      }
-
-      setContent(loadedContent);
-      initializeLearningSteps(loadedContent);
-
-    } catch (err: any) {
-      console.error('載入互動內容失敗:', err);
-      setError(err.message || '載入互動內容時發生錯誤');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const initializeLearningSteps = (content: ExtendedLearningContent) => {
     const steps: StudentLearningStep[] = [];
     const transformedData = content.transformedData || {};
-    
+
     console.log('Initial content:', content);
     console.log('Transformed data keys:', Object.keys(transformedData));
     console.log('Transformed data:', transformedData);
-    
+
     // 檢查是否有 originalContent 來幫助映射
     if (content.originalContent) {
       console.log('Original content from JSON:', content.originalContent);
     }
-    
+
     // 直接根據轉換數據的鍵來創建步驟
     const sortedStepIds = Object.keys(transformedData).sort((a, b) => {
       const aNum = parseInt(a.replace('step_', ''));
       const bNum = parseInt(b.replace('step_', ''));
       return aNum - bNum;
     });
-    
+
     console.log('Sorted step IDs:', sortedStepIds);
-    
+
     // 直接使用 includedSteps 來建立正確的映射關係
     const includedSteps = content.includedSteps || Object.keys(transformedData);
     console.log('Included steps:', includedSteps);
-    
+
     // 建立原始內容的查找表
-    const originalLookup: {[key: string]: {content: any, type: string, index: number}} = {};
-    
+    const originalLookup: { [key: string]: { content: any, type: string, index: number } } = {};
+
     // 如果有 originalContent，使用它來建立映射
     if (content.originalContent) {
       console.log('Using originalContent from JSON for mapping');
-      
+
       // originalContent 應該是一個物件，每個 stepId 對應一個原始內容
       Object.keys(content.originalContent).forEach((stepId) => {
         const originalItem = content.originalContent[stepId];
@@ -118,32 +156,32 @@ const StudentInteractivePage: React.FC = () => {
     } else {
       // 備用方案：重新建立所有原始內容的完整列表
       console.log('Using fallback method to build original content mapping');
-      
-      const allOriginalContent: {content: any, type: string, typeIndex: number}[] = [];
-      
+
+      const allOriginalContent: { content: any, type: string, typeIndex: number }[] = [];
+
       // 學習目標
       if (content.learningObjectives) {
         content.learningObjectives.forEach((obj, index) => {
           allOriginalContent.push({ content: obj, type: 'objective', typeIndex: index });
         });
       }
-      
+
       // 深度學習
       if (content.contentBreakdown) {
         content.contentBreakdown.forEach((item, index) => {
           allOriginalContent.push({ content: item, type: 'breakdown', typeIndex: index });
         });
       }
-      
+
       // 易混淆點
       if (content.confusingPoints) {
         content.confusingPoints.forEach((item, index) => {
           allOriginalContent.push({ content: item, type: 'confusing', typeIndex: index });
         });
       }
-      
+
       console.log('All original content (fallback):', allOriginalContent);
-      
+
       // 根據 includedSteps 的順序建立查找表
       // 由於只收到了部分原始內容，我們按照 includedSteps 的順序來映射
       includedSteps.forEach((stepId, arrayIndex) => {
@@ -158,45 +196,45 @@ const StudentInteractivePage: React.FC = () => {
         }
       });
     }
-    
+
     console.log('Original lookup:', originalLookup);
-    
+
     // 根據轉換數據創建步驟
     sortedStepIds.forEach((stepId) => {
       const transformedContent = transformedData[stepId];
       const original = originalLookup[stepId];
-      
+
       if (transformedContent && original) {
         let title = '';
         let icon = '';
         let description = '';
-        
+
         switch (original.type) {
           case 'objective':
             title = `📚 學習目標 ${original.index + 1}`;
             icon = '🎯';
-            description = transformedContent.objective?.length > 50 
-              ? `${transformedContent.objective.substring(0, 50)}...` 
+            description = transformedContent.objective?.length > 50
+              ? `${transformedContent.objective.substring(0, 50)}...`
               : transformedContent.objective || original.content.objective;
             break;
           case 'breakdown':
             title = `🔍 深度學習 ${original.index + 1}`;
             icon = '📖';
-            description = transformedContent.title?.length > 50 
-              ? `${transformedContent.title.substring(0, 50)}...` 
+            description = transformedContent.title?.length > 50
+              ? `${transformedContent.title.substring(0, 50)}...`
               : transformedContent.title || original.content.topic;
             break;
           case 'confusing':
             title = `⚡ 重要提醒 ${original.index + 1}`;
             icon = '💡';
-            description = transformedContent.title?.length > 50 
-              ? `${transformedContent.title.substring(0, 50)}...` 
+            description = transformedContent.title?.length > 50
+              ? `${transformedContent.title.substring(0, 50)}...`
               : transformedContent.title || original.content.point;
             break;
         }
-        
+
         console.log(`Creating step: ${stepId}, type: ${original.type}, title: ${title}`);
-        
+
         steps.push({
           id: stepId,
           title: title,
@@ -208,7 +246,7 @@ const StudentInteractivePage: React.FC = () => {
         });
       }
     });
-    
+
     // 學習總結步驟
     if (steps.length > 0) {
       steps.push({
@@ -220,55 +258,17 @@ const StudentInteractivePage: React.FC = () => {
         content: null
       });
     }
-    
+
     console.log('Final steps:', steps);
     setLearningSteps(steps);
   };
 
-  const initializeLearningSession = (content: ExtendedLearningContent) => {
-    const sessionKey = `student_interactive_${binId}`;
-    
-    try {
-      const existingSession = localStorage.getItem(sessionKey);
-      
-      if (existingSession) {
-        const session: InteractiveLearningSession = JSON.parse(existingSession);
-        setLearningSession(session);
-        // 恢復學習進度，確保索引有效
-        const savedIndex = session.progress.currentObjectiveIndex || 0;
-        const validIndex = Math.min(Math.max(0, savedIndex), learningSteps.length - 1);
-        setCurrentStepIndex(validIndex);
-      } else {
-        const newSession: InteractiveLearningSession = {
-          contentId: binId || 'unknown',
-          topic: content.topic || '互動學習',
-          progress: {
-            currentObjectiveIndex: 0,
-            completedObjectives: [],
-            timeSpent: 0,
-            interactionCount: 0,
-            startTime: Date.now(),
-            lastUpdateTime: Date.now(),
-            completedActivities: [],
-          },
-          interactions: [],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        };
-        
-        setLearningSession(newSession);
-        localStorage.setItem(sessionKey, JSON.stringify(newSession));
-      }
-    } catch (err) {
-      console.error('初始化學習會話失敗:', err);
-    }
-  };
 
   const updateLearningProgress = (updatedSession: InteractiveLearningSession) => {
     const sessionKey = `student_interactive_${binId}`;
     updatedSession.updatedAt = Date.now();
     updatedSession.progress.lastUpdateTime = Date.now();
-    
+
     setLearningSession(updatedSession);
     localStorage.setItem(sessionKey, JSON.stringify(updatedSession));
   };
@@ -289,10 +289,10 @@ const StudentInteractivePage: React.FC = () => {
   const goToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < learningSteps.length && learningSteps[stepIndex]) {
       setCurrentStepIndex(stepIndex);
-      
+
       // 自動捲動到頂端
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      
+
       if (learningSession) {
         const updatedSession = { ...learningSession };
         updatedSession.progress.currentObjectiveIndex = stepIndex;
@@ -317,7 +317,7 @@ const StudentInteractivePage: React.FC = () => {
   const showStepQuiz = () => {
     const currentStep = learningSteps[currentStepIndex];
     if (!currentStep || !content?.stepQuizData) return;
-    
+
     const stepQuiz = content.stepQuizData[currentStep.id];
     if (stepQuiz) {
       setCurrentStepQuiz(stepQuiz);
@@ -340,13 +340,13 @@ const StudentInteractivePage: React.FC = () => {
   // 檢測和渲染 Markdown
   const containsMarkdown = (text: string): boolean => {
     if (!text) return false;
-    
+
     const markdownPatterns = [
       /#+\s/, /\*\*.*\*\*/, /\*.*\*/, /`.*`/,
       /^\s*[-*+]\s/m, /^\s*\d+\.\s/m,
       /\[.*\]\(.*\)/, /^\s*>/m, /```[\s\S]*?```/, /\n\s*\n/,
     ];
-    
+
     return markdownPatterns.some(pattern => pattern.test(text));
   };
 
@@ -385,7 +385,7 @@ const StudentInteractivePage: React.FC = () => {
   }
 
   const currentStep = learningSteps[currentStepIndex];
-  
+
   // 如果沒有當前步驟，顯示錯誤
   if (!currentStep) {
     return (
@@ -400,7 +400,7 @@ const StudentInteractivePage: React.FC = () => {
       </div>
     );
   }
-  
+
   // 計算學習進度
   const completedSteps = learningSession.progress.completedObjectives.length;
   const totalLearningSteps = learningSteps.length - 1; // 排除總結步驟
@@ -490,7 +490,7 @@ const StudentInteractivePage: React.FC = () => {
                   </button>
                 </div>
               )}
-              
+
               {/* 測驗按鈕 */}
               {hasCurrentStepQuiz() && (
                 <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6">
@@ -637,7 +637,7 @@ const StudentInteractivePage: React.FC = () => {
                   </button>
                 </div>
               )}
-              
+
               {/* 測驗按鈕 */}
               {hasCurrentStepQuiz() && (
                 <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6">
@@ -837,7 +837,7 @@ const StudentInteractivePage: React.FC = () => {
                   </button>
                 </div>
               )}
-              
+
               {/* 測驗按鈕 */}
               {hasCurrentStepQuiz() && (
                 <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-6">
@@ -868,7 +868,7 @@ const StudentInteractivePage: React.FC = () => {
               <p className="text-lg text-slate-600 mb-8">
                 你已經完成了「{content.topic}」的學習旅程
               </p>
-              
+
               <div className="grid md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white rounded-xl p-6 shadow-md">
                   <div className="text-3xl text-indigo-600 mb-2">📚</div>
@@ -912,7 +912,7 @@ const StudentInteractivePage: React.FC = () => {
                     挑戰互動測驗
                   </a>
                 )}
-                
+
                 {content.writingPractice && (
                   <a
                     href={`${import.meta.env.BASE_URL}writing?binId=${binId}`}
@@ -948,7 +948,7 @@ const StudentInteractivePage: React.FC = () => {
                 第 {currentStepIndex + 1} 步，共 {learningSteps.length} 步
               </p>
             </div>
-            
+
             <div className="flex items-center gap-1 text-xs text-slate-500">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -959,12 +959,12 @@ const StudentInteractivePage: React.FC = () => {
 
           {/* 進度條 */}
           <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
-            <div 
+            <div
               className="bg-gradient-to-r from-indigo-500 to-sky-500 h-1.5 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${((currentStepIndex + 1) / learningSteps.length) * 100}%` }}
             />
           </div>
-          
+
           {/* 學習進度指示 */}
           <div className="text-center">
             <span className="text-xs text-slate-400">
@@ -1000,7 +1000,7 @@ const StudentInteractivePage: React.FC = () => {
             </svg>
             上一步
           </button>
-          
+
           <div className="text-center">
             <p className="text-sm text-slate-600">
               {currentStepIndex + 1} / {learningSteps.length}
