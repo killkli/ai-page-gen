@@ -404,7 +404,7 @@ export abstract class BaseGeminiService {
    * 生成請求 ID
    */
   protected generateRequestId(): string {
-    return `${this.branchType}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `${this.branchType}_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   /**

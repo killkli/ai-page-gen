@@ -39,31 +39,12 @@ export type {
   LearningLevel,
   LearningLevelSuggestions,
   
-  // 英文學習類型
-  CEFRLevel,
-  VocabularyLevel,
-  VocabularyItem,
-  DialogueLine,
-  EnglishLearningContent,
-  
-  // 數學學習類型
-  MathDomain,
-  MathGradeLevel,
-  MathConcept,
-  MathFormula,
-  MathLearningContent,
-  
   // 寫作練習類型
   SentencePracticePrompt,
   WritingPracticePrompt,
   WritingPracticeContent,
   AIFeedback,
   
-  // 工具函數
-  isEnglishContent,
-  isMathContent,
-  isBaseContent,
-  getBranchFromContent,
   
 } from './src/core/types';
 

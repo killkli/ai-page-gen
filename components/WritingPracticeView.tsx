@@ -40,9 +40,9 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
     }
 
     setLoadingFeedback(prev => ({ ...prev, [prompt.id]: true }));
-    
+
     try {
-      const aiFeedback = await getAIFeedback(work, promptType, prompt, vocabularyLevel);
+      const aiFeedback = await getAIFeedback(work, promptType, prompt, apiKey, vocabularyLevel);
       setFeedback(prev => ({ ...prev, [prompt.id]: aiFeedback }));
     } catch (error) {
       console.error('AI 批改失敗:', error);
@@ -60,17 +60,16 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
             <div>
               <h4 className="text-lg font-semibold text-gray-800 mb-2">
                 造句練習 {index + 1}
-                <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                  prompt.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                  prompt.difficulty === 'normal' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-red-100 text-red-700'
-                }`}>
-                  {prompt.difficulty === 'easy' ? '簡單' : 
-                   prompt.difficulty === 'normal' ? '普通' : '困難'}
+                <span className={`ml-2 px-2 py-1 text-xs rounded-full ${prompt.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                    prompt.difficulty === 'normal' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                  }`}>
+                  {prompt.difficulty === 'easy' ? '簡單' :
+                    prompt.difficulty === 'normal' ? '普通' : '困難'}
                 </span>
               </h4>
               <p className="text-gray-700 mb-3">{prompt.instruction}</p>
-              
+
               {prompt.keywords.length > 0 && (
                 <div className="mb-3">
                   <p className="text-sm font-medium text-gray-600 mb-1">必須使用的關鍵詞：</p>
@@ -83,14 +82,14 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
                   </div>
                 </div>
               )}
-              
+
               {prompt.exampleSentence && (
                 <div className="mb-3 p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm font-medium text-gray-600 mb-1">範例句子：</p>
                   <p className="text-gray-700 italic">{prompt.exampleSentence}</p>
                 </div>
               )}
-              
+
               {prompt.hints && prompt.hints.length > 0 && (
                 <div className="mb-3">
                   <p className="text-sm font-medium text-gray-600 mb-1">提示：</p>
@@ -119,7 +118,7 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
               rows={3}
               placeholder="請在此輸入您的造句..."
             />
-            
+
             <div className="mt-3 flex justify-between items-center">
               <span className="text-sm text-gray-500">
                 字數: {(studentWork[prompt.id] || '').length}
@@ -164,17 +163,16 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
           <div className="mb-4">
             <h4 className="text-lg font-semibold text-gray-800 mb-2">
               {prompt.title}
-              <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                prompt.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                prompt.difficulty === 'normal' ? 'bg-yellow-100 text-yellow-700' :
-                'bg-red-100 text-red-700'
-              }`}>
-                {prompt.difficulty === 'easy' ? '簡單' : 
-                 prompt.difficulty === 'normal' ? '普通' : '困難'}
+              <span className={`ml-2 px-2 py-1 text-xs rounded-full ${prompt.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                  prompt.difficulty === 'normal' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                }`}>
+                {prompt.difficulty === 'easy' ? '簡單' :
+                  prompt.difficulty === 'normal' ? '普通' : '困難'}
               </span>
             </h4>
             <p className="text-gray-700 mb-3">{prompt.instruction}</p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-2">建議結構：</p>
@@ -187,7 +185,7 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
                   ))}
                 </ul>
               </div>
-              
+
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-2">
                   字數要求: {prompt.minLength} - {prompt.maxLength} 字
@@ -206,7 +204,7 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
                 )}
               </div>
             </div>
-            
+
             {prompt.exampleOutline && (
               <div className="p-3 bg-gray-50 rounded-lg mb-4">
                 <p className="text-sm font-medium text-gray-600 mb-1">範例大綱：</p>
@@ -227,16 +225,16 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
               rows={8}
               placeholder="請在此輸入您的文章..."
             />
-            
+
             <div className="mt-3 flex justify-between items-center">
               <div className="text-sm text-gray-500">
                 <span>字數: {(studentWork[prompt.id] || '').length}</span>
                 <span className="ml-4">
-                  {(studentWork[prompt.id] || '').length < prompt.minLength 
-                    ? `還需 ${prompt.minLength - (studentWork[prompt.id] || '').length} 字` 
+                  {(studentWork[prompt.id] || '').length < prompt.minLength
+                    ? `還需 ${prompt.minLength - (studentWork[prompt.id] || '').length} 字`
                     : (studentWork[prompt.id] || '').length > prompt.maxLength
-                    ? `超出 ${(studentWork[prompt.id] || '').length - prompt.maxLength} 字`
-                    : '符合字數要求'}
+                      ? `超出 ${(studentWork[prompt.id] || '').length - prompt.maxLength} 字`
+                      : '符合字數要求'}
                 </span>
               </div>
               {apiKey && (
@@ -284,7 +282,7 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
             <p className="text-gray-600 text-sm">{content.instructions}</p>
           </div>
         </div>
-        
+
         {!isStudentMode && (
           <div className="text-sm text-gray-500 bg-white px-3 py-2 rounded-lg border">
             <div>造句練習: {content.sentencePractice.length} 題</div>
@@ -297,21 +295,19 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
       <div className="flex border-b border-gray-200 mb-6">
         <button
           onClick={() => setSelectedTab('sentence')}
-          className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
-            selectedTab === 'sentence'
+          className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${selectedTab === 'sentence'
               ? 'border-blue-500 text-blue-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           提示造句 ({content.sentencePractice.length})
         </button>
         <button
           onClick={() => setSelectedTab('writing')}
-          className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
-            selectedTab === 'writing'
+          className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${selectedTab === 'writing'
               ? 'border-purple-500 text-purple-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           提示寫作 ({content.writingPractice.length})
         </button>
@@ -336,15 +332,14 @@ const AIFeedbackDisplay: React.FC<AIFeedbackDisplayProps> = ({ feedback }) => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.847a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.847.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
         </svg>
         AI 批改回饋
-        <div className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${
-          feedback.score >= 85 ? 'bg-green-100 text-green-800' :
-          feedback.score >= 70 ? 'bg-yellow-100 text-yellow-800' :
-          'bg-red-100 text-red-800'
-        }`}>
+        <div className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${feedback.score >= 85 ? 'bg-green-100 text-green-800' :
+            feedback.score >= 70 ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+          }`}>
           {feedback.score} 分
         </div>
       </h5>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {feedback.strengths.length > 0 && (
           <div>
@@ -359,7 +354,7 @@ const AIFeedbackDisplay: React.FC<AIFeedbackDisplayProps> = ({ feedback }) => {
             </ul>
           </div>
         )}
-        
+
         {feedback.improvements.length > 0 && (
           <div>
             <h6 className="font-medium text-orange-700 mb-2">💡 改進建議</h6>
@@ -374,7 +369,7 @@ const AIFeedbackDisplay: React.FC<AIFeedbackDisplayProps> = ({ feedback }) => {
           </div>
         )}
       </div>
-      
+
       {feedback.grammarCorrections && feedback.grammarCorrections.length > 0 && (
         <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
           <h6 className="font-medium text-yellow-800 mb-2">📝 語法修正</h6>
@@ -390,7 +385,7 @@ const AIFeedbackDisplay: React.FC<AIFeedbackDisplayProps> = ({ feedback }) => {
           ))}
         </div>
       )}
-      
+
       {feedback.vocabularyTips && feedback.vocabularyTips.length > 0 && (
         <div className="mb-4">
           <h6 className="font-medium text-blue-700 mb-2">📚 詞彙建議</h6>
@@ -404,14 +399,14 @@ const AIFeedbackDisplay: React.FC<AIFeedbackDisplayProps> = ({ feedback }) => {
           </ul>
         </div>
       )}
-      
+
       {feedback.structureFeedback && (
         <div className="mb-4">
           <h6 className="font-medium text-purple-700 mb-2">🏗️ 結構回饋</h6>
           <p className="text-sm text-gray-700">{feedback.structureFeedback}</p>
         </div>
       )}
-      
+
       <div className="border-t pt-3">
         <h6 className="font-medium text-gray-800 mb-2">📋 整體評語</h6>
         <p className="text-sm text-gray-700 bg-white p-3 rounded-lg border">{feedback.overallComment}</p>

@@ -46,7 +46,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       } else if (provider.type === ProviderType.OPENROUTER) {
         providerInstance = new OpenRouterProvider(provider as any);
       } else {
-        throw new Error(`不支援的 Provider 類型: ${provider.type}`);
+        throw new Error(`不支援的 Provider 類型`);
       }
 
       const availableModels = await providerInstance.getAvailableModels();

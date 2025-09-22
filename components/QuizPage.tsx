@@ -89,7 +89,7 @@ const QuizPage: React.FC = () => {
     );
   }
 
-  return <StudentQuizView quiz={quiz} topic={topic} apiKey={apiKey} supportsDiagnostic={supportsDiagnostic} quizBinId={binId} />;
+  return <StudentQuizView quiz={quiz} topic={topic} apiKey={apiKey} supportsDiagnostic={supportsDiagnostic} quizBinId={binId ?? undefined} />;
 };
 
 export default QuizPage;

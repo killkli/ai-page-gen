@@ -23,7 +23,7 @@ interface StudentResults {
 const StudentResultsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const binId = searchParams.get('binId');
-  
+
   const [results, setResults] = useState<StudentResults | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +112,7 @@ const StudentResultsPage: React.FC = () => {
           </svg>
           <h2 className="text-xl font-bold text-gray-800 mb-2">載入失敗</h2>
           <p className="text-gray-600 mb-6">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -130,12 +130,8 @@ const StudentResultsPage: React.FC = () => {
         apiKey={apiKey}
         mode="teacher"
         initialResponses={results.responses}
-        quizData={results.quizContent ? { 
-          topic: results.topic, 
-          [results.metadata?.selectedDifficulty?.toLowerCase() || 'normal']: results.quizContent 
-        } : undefined}
         existingReport={results.diagnosticReport}
-        resultsBinId={binId}
+        resultsBinId={binId ?? undefined}
         onClose={() => setShowDiagnostic(false)}
         onReportSaved={(report) => {
           setResults(prev => prev ? { ...prev, diagnosticReport: report } : null);
@@ -173,7 +169,7 @@ const StudentResultsPage: React.FC = () => {
               <AcademicCapIcon className="w-8 h-8 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-900">學生作答結果檢視</h1>
             </div>
-            <a 
+            <a
               href={`${import.meta.env.BASE_URL}`}
               className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
             >
@@ -278,7 +274,7 @@ const StudentResultsPage: React.FC = () => {
                   生成 AI 學習診斷報告
                 </button>
               )}
-              
+
               {apiKey ? (
                 <div className="text-sm text-green-600 flex items-center gap-1">
                   ✅ API Key 已設定，可使用 AI 診斷功能
@@ -289,7 +285,7 @@ const StudentResultsPage: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="text-xs text-gray-500">
               {hasSavedReport ? (
                 <span>📊 已儲存診斷報告，可隨時查看或重新生成新的分析</span>
@@ -303,8 +299,8 @@ const StudentResultsPage: React.FC = () => {
         {/* 詳細作答記錄 */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">📋 詳細作答記錄 (含原始題目)</h3>
-          <EnhancedStudentResultsDisplay 
-            responses={results.responses} 
+          <EnhancedStudentResultsDisplay
+            responses={results.responses}
             quizContent={results.quizContent}
           />
         </div>
@@ -312,7 +308,7 @@ const StudentResultsPage: React.FC = () => {
 
       {/* API Key 設定 Modal */}
       {showApiKeyModal && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -335,10 +331,10 @@ const StudentResultsPage: React.FC = () => {
             </div>
             <p className="text-gray-600 mb-4">
               要使用 AI 學習診斷功能，請輸入您的 Google Gemini API Key。
-              <a 
-                href="https://aistudio.google.com/app/apikey" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="underline text-blue-600 ml-1"
               >
                 點此取得 API Key

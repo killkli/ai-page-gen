@@ -11,6 +11,8 @@ export interface StoredLessonPlan {
     classroomActivities?: any;
     quiz?: any;
     writingPractice?: any;
+    selectedLevel?: any;
+    selectedVocabularyLevel?: any;
   };
   metadata?: {
     totalSections?: number;
@@ -43,11 +45,11 @@ class LessonPlanStorage {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         // 如果 store 不存在則創建
         if (!db.objectStoreNames.contains(this.storeName)) {
           const store = db.createObjectStore(this.storeName, { keyPath: 'id' });
-          
+
           // 創建索引
           store.createIndex('topic', 'topic', { unique: false });
           store.createIndex('createdAt', 'createdAt', { unique: false });
@@ -71,13 +73,13 @@ class LessonPlanStorage {
   // 保存教案
   async saveLessonPlan(lessonPlan: StoredLessonPlan): Promise<void> {
     const db = await this.ensureDB();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
-      
+
       const request = store.put(lessonPlan);
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => reject(new Error('Failed to save lesson plan'));
     });
@@ -86,15 +88,15 @@ class LessonPlanStorage {
   // 獲取所有教案（按最後訪問時間排序）
   async getAllLessonPlans(): Promise<StoredLessonPlan[]> {
     const db = await this.ensureDB();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const index = store.index('lastAccessedAt');
-      
+
       const request = index.openCursor(null, 'prev'); // 最新的在前面
       const results: StoredLessonPlan[] = [];
-      
+
       request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
         if (cursor) {
@@ -104,7 +106,7 @@ class LessonPlanStorage {
           resolve(results);
         }
       };
-      
+
       request.onerror = () => reject(new Error('Failed to get lesson plans'));
     });
   }
@@ -112,17 +114,17 @@ class LessonPlanStorage {
   // 根據 ID 獲取教案
   async getLessonPlan(id: string): Promise<StoredLessonPlan | null> {
     const db = await this.ensureDB();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], 'readonly');
       const store = transaction.objectStore(this.storeName);
       const request = store.get(id);
-      
+
       request.onsuccess = () => {
         const result = request.result;
         resolve(result || null);
       };
-      
+
       request.onerror = () => reject(new Error('Failed to get lesson plan'));
     });
   }
@@ -139,12 +141,12 @@ class LessonPlanStorage {
   // 刪除教案
   async deleteLessonPlan(id: string): Promise<void> {
     const db = await this.ensureDB();
-    
+
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       const request = store.delete(id);
-      
+
       request.onsuccess = () => resolve();
       request.onerror = () => reject(new Error('Failed to delete lesson plan'));
     });
@@ -154,8 +156,8 @@ class LessonPlanStorage {
   async searchLessonPlans(query: string): Promise<StoredLessonPlan[]> {
     const allPlans = await this.getAllLessonPlans();
     const lowerQuery = query.toLowerCase();
-    
-    return allPlans.filter(plan => 
+
+    return allPlans.filter(plan =>
       plan.topic.toLowerCase().includes(lowerQuery)
     );
   }
@@ -175,10 +177,10 @@ class LessonPlanStorage {
   // 清理舊教案（保留最近的 N 個）
   async cleanupOldLessonPlans(keepCount = 50): Promise<void> {
     const allPlans = await this.getAllLessonPlans();
-    
+
     if (allPlans.length > keepCount) {
       const toDelete = allPlans.slice(keepCount);
-      
+
       for (const plan of toDelete) {
         await this.deleteLessonPlan(plan.id);
       }
@@ -193,7 +195,7 @@ class LessonPlanStorage {
     newestPlan?: string;
   }> {
     const allPlans = await this.getAllLessonPlans();
-    
+
     return {
       totalCount: allPlans.length,
       totalSizeEstimate: JSON.stringify(allPlans).length,
@@ -219,7 +221,7 @@ export const createStoredLessonPlan = (
   content: any
 ): StoredLessonPlan => {
   const now = new Date().toISOString();
-  
+
   return {
     id: generateLessonPlanId(),
     topic,

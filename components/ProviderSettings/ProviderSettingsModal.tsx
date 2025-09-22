@@ -466,7 +466,7 @@ const ProviderEditor: React.FC<ProviderEditorProps> = ({
   isSaving = false
 }) => {
   const updateProvider = (updates: Partial<ProviderConfig>) => {
-    onChange({ ...provider, ...updates });
+    onChange({ ...provider, ...updates } as ProviderConfig);
   };
 
   const updateSettings = (settings: any) => {

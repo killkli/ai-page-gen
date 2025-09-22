@@ -169,7 +169,6 @@ const DiagnosticQuizView: React.FC<DiagnosticQuizViewProps> = ({
     return (
       <LearningDiagnosticReport
         topic={`${topic} (${difficultyLabel}難度)`}
-        quizData={quizzes}
         studentId={studentId}
         apiKey={apiKey}
         mode="both"

@@ -4,6 +4,7 @@ import { saveLearningContent } from '../services/jsonbinService';
 import { AcademicCapIcon, ClockIcon, ShareIcon, TrashIcon, EyeIcon, HomeIcon } from './icons';
 import LoadingSpinner from './LoadingSpinner';
 import LearningContentDisplay from './LearningContentDisplay';
+import { ExtendedLearningContent } from '@/types';
 
 const LessonPlanManager: React.FC = () => {
   const [lessonPlans, setLessonPlans] = useState<StoredLessonPlan[]>([]);
@@ -19,7 +20,7 @@ const LessonPlanManager: React.FC = () => {
     // 獲取 API Key
     const storedKey = localStorage.getItem('gemini_api_key');
     setApiKey(storedKey);
-    
+
     loadLessonPlans();
   }, []);
 
@@ -43,7 +44,7 @@ const LessonPlanManager: React.FC = () => {
       await loadLessonPlans();
       return;
     }
-    
+
     try {
       setLoading(true);
       const results = await lessonPlanStorage.searchLessonPlans(searchQuery);
@@ -59,7 +60,7 @@ const LessonPlanManager: React.FC = () => {
   const handleViewPlan = async (plan: StoredLessonPlan) => {
     setSelectedPlan(plan);
     setViewMode('view');
-    
+
     // 更新最後訪問時間
     try {
       await lessonPlanStorage.updateLastAccessed(plan.id);
@@ -75,7 +76,7 @@ const LessonPlanManager: React.FC = () => {
     }
 
     setShareLoading(plan.id);
-    
+
     try {
       // 準備分享數據
       const shareData = {
@@ -85,9 +86,9 @@ const LessonPlanManager: React.FC = () => {
         selectedVocabularyLevel: plan.content.selectedVocabularyLevel || null
       };
 
-      const binId = await saveLearningContent(shareData, apiKey, true);
+      const binId = await saveLearningContent(shareData);
       const shareUrl = `${window.location.origin}${import.meta.env.BASE_URL}share?binId=${binId}`;
-      
+
       // 複製到剪貼簿
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(shareUrl);
@@ -102,7 +103,7 @@ const LessonPlanManager: React.FC = () => {
         document.body.removeChild(textarea);
         alert(`分享連結已複製！\\n${shareUrl}`);
       }
-      
+
       // 更新最後訪問時間
       await lessonPlanStorage.updateLastAccessed(plan.id);
     } catch (err) {
@@ -117,7 +118,7 @@ const LessonPlanManager: React.FC = () => {
     if (!confirm(`確定要刪除教案「${plan.topic}」嗎？此操作無法復原。`)) {
       return;
     }
-    
+
     try {
       await lessonPlanStorage.deleteLessonPlan(plan.id);
       await loadLessonPlans();
@@ -137,10 +138,10 @@ const LessonPlanManager: React.FC = () => {
     });
   };
 
-  const filteredPlans = searchQuery.trim() 
-    ? lessonPlans.filter(plan => 
-        plan.topic.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const filteredPlans = searchQuery.trim()
+    ? lessonPlans.filter(plan =>
+      plan.topic.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : lessonPlans;
 
   if (viewMode === 'view' && selectedPlan) {
@@ -162,7 +163,7 @@ const LessonPlanManager: React.FC = () => {
                 </svg>
                 返回教案列表
               </button>
-              <a 
+              <a
                 href={`${import.meta.env.BASE_URL}`}
                 className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
               >
@@ -193,8 +194,8 @@ const LessonPlanManager: React.FC = () => {
 
         {/* Content Display */}
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <LearningContentDisplay 
-            content={selectedPlan.content} 
+          <LearningContentDisplay
+            content={selectedPlan.content as ExtendedLearningContent}
             topic={selectedPlan.topic}
             selectedLevel={selectedPlan.content.selectedLevel || null}
             selectedVocabularyLevel={selectedPlan.content.selectedVocabularyLevel || null}
@@ -207,7 +208,7 @@ const LessonPlanManager: React.FC = () => {
                 lastAccessedAt: new Date().toISOString()
               };
               setSelectedPlan(updatedPlan);
-              
+
               // 更新到 IndexedDB
               try {
                 await lessonPlanStorage.saveLessonPlan(updatedPlan);
@@ -232,7 +233,7 @@ const LessonPlanManager: React.FC = () => {
               <AcademicCapIcon className="w-8 h-8 text-indigo-600" />
               <h1 className="text-2xl font-bold text-gray-900">我的教案庫</h1>
             </div>
-            <a 
+            <a
               href={`${import.meta.env.BASE_URL}`}
               className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
             >
@@ -321,7 +322,7 @@ const LessonPlanManager: React.FC = () => {
               {searchQuery.trim() ? `搜索結果 (${filteredPlans.length})` : '所有教案'}
             </h2>
           </div>
-          
+
           {loading ? (
             <div className="p-8 text-center">
               <LoadingSpinner />

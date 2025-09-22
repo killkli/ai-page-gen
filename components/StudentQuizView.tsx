@@ -400,7 +400,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
           <div className="space-y-8">
             {(Object.keys(quizTypeLabels) as QuizContentKey[]).map((type) => {
               const questions = currentQuizSet[type];
-              const component = getQuizComponent(type, questions);
+              const component = getQuizComponent(type, questions ?? []);
 
               if (!component) return null;
 

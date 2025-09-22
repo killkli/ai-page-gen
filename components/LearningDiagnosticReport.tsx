@@ -4,7 +4,6 @@ import {
   LearningDiagnosticResult,
   DiagnosticSession,
   // DiagnosticReportConfig,
-  OnlineInteractiveQuiz
 } from '../types';
 import {
   generateLearningDiagnostic,
@@ -18,7 +17,6 @@ import LoadingSpinner from './LoadingSpinner';
 
 interface LearningDiagnosticReportProps {
   topic: string;
-  quizData?: OnlineInteractiveQuiz;
   studentId?: string;
   apiKey?: string;
   mode?: 'student' | 'teacher' | 'both';
