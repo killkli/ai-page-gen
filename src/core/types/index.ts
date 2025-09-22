@@ -65,11 +65,11 @@ export interface ConfusingPointItem {
   teachingExample?: string;
   errorType?: string;
   commonErrors?: string[];
-  correctVsWrong?: Array<{
+  correctVsWrong?: {
     correct: string;
     wrong: string;
     explanation: string;
-  }>;
+  }[];
   preventionStrategy?: string;
   correctionMethod?: string;
   practiceActivities?: string[];
@@ -147,11 +147,11 @@ export interface AIFeedback {
   score: number;
   strengths: string[];
   improvements: string[];
-  grammarCorrections?: Array<{
+  grammarCorrections?: {
     original: string;
     corrected: string;
     explanation: string;
-  }>;
+  }[];
   vocabularyTips?: string[];
   structureFeedback?: string;
   overallComment: string;
@@ -267,56 +267,6 @@ export interface OnlineInteractiveQuiz {
   hard: QuizDifficultyContent;
 }
 
-// 舊版學習內容接口 - 向後兼容
-export interface LearningObjectiveItem {
-  objective: string;
-  description: string;
-  teachingExample?: string;
-}
-
-export interface ContentBreakdownItem {
-  topic: string;
-  details: string;
-  teachingExample?: string;
-  // Enhanced fields for English learning
-  coreConcept?: string;
-  teachingSentences?: string[];
-  teachingTips?: string;
-}
-
-export interface ConfusingPointItem {
-  point: string;
-  clarification: string;
-  teachingExample?: string;
-  // Enhanced fields
-  errorType?: string;
-  commonErrors?: string[];
-  correctVsWrong?: {
-    correct: string;
-    wrong: string;
-    explanation: string;
-  }[];
-  preventionStrategy?: string;
-  correctionMethod?: string;
-  practiceActivities?: string[];
-}
-
-export interface ClassroomActivity {
-  title: string;
-  description: string;
-  objective?: string;
-  timing?: string;
-  materials?: string;
-  environment?: string;
-  steps?: string[];
-  assessmentPoints?: string[];
-}
-
-// 對話相關 - 向後兼容
-export interface DialogueLine {
-  speaker: string;
-  line: string;
-}
 
 export interface GeneratedLearningContent {
   topic?: string;
@@ -332,17 +282,7 @@ export interface GeneratedLearningContent {
   writingPractice?: WritingPracticeContent;
 }
 
-export interface LearningLevel {
-  id: string;
-  name: string;
-  description: string;
-  order: number; // For sorting the levels
-}
 
-export interface LearningLevelSuggestions {
-  suggestedLevels: LearningLevel[];
-  defaultLevelId: string; // Which level to select by default
-}
 
 export enum QuizDifficulty {
   Easy = "easy",
@@ -350,13 +290,6 @@ export enum QuizDifficulty {
   Hard = "hard",
 }
 
-// Vocabulary level for English-related topics
-export interface VocabularyLevel {
-  id: string;
-  name: string;
-  wordCount: number;
-  description: string;
-}
 
 export interface VocabularyLevelSuggestions {
   suggestedLevels: VocabularyLevel[];
@@ -416,40 +349,8 @@ export const QUIZ_TYPE_LIMITS: Record<QuizContentKey, number> = {
 };
 
 // Writing and sentence practice types
-export interface SentencePracticePrompt {
-  id: string;
-  instruction: string;        // 造句指示
-  keywords: string[];         // 必須使用的關鍵詞
-  exampleSentence?: string;   // 範例句子
-  hints?: string[];          // 提示要點
-  difficulty: 'easy' | 'normal' | 'hard';
-}
 
-export interface WritingPracticePrompt {
-  id: string;
-  title: string;              // 寫作題目
-  instruction: string;        // 寫作指示
-  structure: string[];        // 建議結構（段落安排）
-  keywords?: string[];        // 建議使用詞彙
-  minLength: number;          // 最少字數
-  maxLength: number;          // 最多字數
-  exampleOutline?: string;    // 範例大綱
-  difficulty: 'easy' | 'normal' | 'hard';
-}
 
-export interface AIFeedback {
-  score: number;              // 分數 (0-100)
-  strengths: string[];        // 優點
-  improvements: string[];     // 改進建議
-  grammarCorrections?: {      // 語法修正
-    original: string;
-    corrected: string;
-    explanation: string;
-  }[];
-  vocabularyTips?: string[];  // 詞彙建議
-  structureFeedback?: string; // 結構回饋
-  overallComment: string;     // 整體評語
-}
 
 export interface StudentSubmission {
   id: string;
@@ -460,11 +361,6 @@ export interface StudentSubmission {
   teacherFeedback?: string;   // 教師額外回饋
 }
 
-export interface WritingPracticeContent {
-  sentencePractice: SentencePracticePrompt[];
-  writingPractice: WritingPracticePrompt[];
-  instructions: string;       // 使用說明
-}
 
 // Extended learning content with writing practice
 export interface ExtendedLearningContent extends GeneratedLearningContent {
