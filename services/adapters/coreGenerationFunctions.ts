@@ -97,7 +97,14 @@ export const generateLearningLevelSuggestions = async (topic: string, apiKey: st
 // 檢查是否為英語相關主題
 export const isEnglishRelatedTopic = (topic: string): boolean => {
   // 簡單的英語主題檢測邏輯
-  const englishKeywords = ['english', 'grammar', 'vocabulary', 'conversation', 'speaking', 'listening', 'reading', 'writing', 'toefl', 'ielts', 'business english', '英文', '英語'];
+  const englishKeywords = [
+    'english', 'grammar', 'vocabulary', 'pronunciation', 'speaking', 'writing', 'reading', 'listening',
+    'conversation', 'toefl', 'ielts', 'toeic', 'english literature', 'business english', 'academic english',
+    'phrasal verbs', 'idioms', 'prepositions', 'tenses', 'articles', 'adjectives', 'adverbs', 'nouns', 'verbs',
+    '英語', '英文', '文法', '單字', '發音', '口說', '寫作', '閱讀', '聽力', 
+    '對話', '會話', '托福', '雅思', '多益', '商業英文', '學術英文',
+    '片語動詞', '慣用語', '介系詞', '時態', '冠詞', '形容詞', '副詞', '名詞', '動詞'
+  ];
   const lowerTopic = topic.toLowerCase();
   return englishKeywords.some(keyword => lowerTopic.includes(keyword));
 };
