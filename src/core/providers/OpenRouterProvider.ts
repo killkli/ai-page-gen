@@ -156,10 +156,10 @@ export class OpenRouterProvider extends BaseProvider {
       presence_penalty: config.settings.presence_penalty
     };
 
-    // 添加 response_format 如果需要 JSON
-    if (needsJsonFormat) {
-      params.response_format = { type: 'json_object' };
-    }
+    // // 添加 response_format 如果需要 JSON
+    // if (needsJsonFormat) {
+    //   params.response_format = { type: 'json_object' };
+    // }
 
     // 添加 provider 配置如果存在
     if (config.settings.provider) {
