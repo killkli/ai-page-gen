@@ -11,7 +11,6 @@ import {
   AIRequest,
   ProviderInfo,
   ProviderType,
-  ProviderCapabilities
 } from '../types/providers';
 
 export class GeminiProvider extends BaseProvider {

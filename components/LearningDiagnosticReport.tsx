@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { 
-  QuestionResponse, 
-  LearningDiagnosticResult, 
+import {
+  QuestionResponse,
+  LearningDiagnosticResult,
   DiagnosticSession,
-  DiagnosticReportConfig,
+  // DiagnosticReportConfig,
   OnlineInteractiveQuiz
 } from '../types';
-import { 
-  generateLearningDiagnostic, 
-  createDiagnosticSession, 
-  completeDiagnosticSession 
+import {
+  generateLearningDiagnostic,
+  createDiagnosticSession,
+  completeDiagnosticSession
 } from '../services/diagnosticService';
 import { updateStudentResults } from '../services/jsonbinService';
 import StudentLearningFeedback from './StudentLearningFeedback';
@@ -60,25 +60,25 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
     setError(null);
 
     try {
-      const config: DiagnosticReportConfig = {
-        includeDetailedAnalysis: true,
-        includeComparativeData: false,
-        includeVisualCharts: false,
-        language: 'zh-TW',
-        reportFormat: 'standard'
-      };
+      // const config: DiagnosticReportConfig = {
+      //   includeDetailedAnalysis: true,
+      //   includeComparativeData: false,
+      //   includeVisualCharts: false,
+      //   language: 'zh-TW',
+      //   reportFormat: 'standard'
+      // };
 
-      const result = await generateLearningDiagnostic(diagnosticSession, apiKey, config);
-      
+      const result = await generateLearningDiagnostic(diagnosticSession);
+
       // 添加生成時間和結果 binId
       const enhancedResult = {
         ...result,
         generatedAt: new Date().toISOString(),
         resultsBinId: resultsBinId
       };
-      
+
       setDiagnosticResult(enhancedResult);
-      
+
       // 自動儲存報告到學生作答結果中
       if (resultsBinId) {
         try {
@@ -127,9 +127,9 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
 
     const dataStr = JSON.stringify(reportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    
+
     const exportFileDefaultName = `learning_diagnostic_${topic}_${new Date().toISOString().split('T')[0]}.json`;
-    
+
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
@@ -138,7 +138,7 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
 
   const handleSaveReport = useCallback(() => {
     if (!diagnosticResult) return;
-    
+
     // TODO: 實現保存到本地儲存或伺服器的邏輯
     const savedReports = JSON.parse(localStorage.getItem('learningDiagnosticReports') || '[]');
     savedReports.push({
@@ -149,7 +149,7 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
       result: diagnosticResult
     });
     localStorage.setItem('learningDiagnosticReports', JSON.stringify(savedReports));
-    
+
     alert('診斷報告已儲存至本地');
   }, [diagnosticResult, topic, studentId]);
 
@@ -184,14 +184,14 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
           <h2 className="text-xl font-bold text-gray-800 mb-2">生成報告失敗</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="flex gap-3 justify-center">
-            <button 
+            <button
               onClick={() => session && generateDiagnosticReport(session)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               重新生成
             </button>
             {onClose && (
-              <button 
+              <button
                 onClick={onClose}
                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
@@ -214,7 +214,7 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
           <h2 className="text-xl font-bold text-gray-800 mb-2">等待診斷數據</h2>
           <p className="text-gray-600 mb-6">請先完成測驗以生成學習診斷報告</p>
           {onClose && (
-            <button 
+            <button
               onClick={onClose}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
@@ -238,28 +238,26 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
                 <div className="flex bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setCurrentView('student')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      currentView === 'student'
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentView === 'student'
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                      }`}
                   >
                     學生版
                   </button>
                   <button
                     onClick={() => setCurrentView('teacher')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      currentView === 'teacher'
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentView === 'teacher'
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                      }`}
                   >
                     教師版
                   </button>
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {currentView === 'teacher' && (
                 <>
@@ -306,7 +304,7 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
             showActions={mode !== 'both'}
           />
         )}
-        
+
         {(mode === 'teacher' || (mode === 'both' && currentView === 'teacher')) && (
           <TeacherDiagnosticReport
             report={diagnosticResult.teacherReport}

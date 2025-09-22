@@ -33,7 +33,7 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
   
   // 保存最新的語音識別結果
   const latestResultRef = useRef<{ text: string; confidence: number }>({ text: '', confidence: 0 });

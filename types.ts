@@ -262,6 +262,7 @@ export interface WritingPracticeContent {
 
 // Extended learning content with writing practice
 export interface ExtendedLearningContent extends GeneratedLearningContent {
+  transformedData: {};
   writingPractice?: WritingPracticeContent;
   stepQuizData?: { [stepId: string]: any };
 }

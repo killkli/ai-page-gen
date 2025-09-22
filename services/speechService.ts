@@ -187,17 +187,17 @@ class SpeechService {
       };
 
       this.recognition.onresult = (event: any) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
+        let _finalTranscript = '';
+        let _interimTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           const confidence = event.results[i][0].confidence;
 
           if (event.results[i].isFinal) {
-            finalTranscript += transcript;
+            _finalTranscript += transcript;
           } else {
-            interimTranscript += transcript;
+            _interimTranscript += transcript;
           }
 
           onResult?.({

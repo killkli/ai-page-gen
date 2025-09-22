@@ -7,6 +7,7 @@ import MarkdownRenderer from '../MarkdownRenderer';
 import TrueFalseQuizItem from '../quizTypes/TrueFalseQuizItem';
 import MultipleChoiceQuizItem from '../quizTypes/MultipleChoiceQuizItem';
 import MemoryCardGameQuizItem from '../quizTypes/MemoryCardGameQuizItem';
+import { MemoryCardGameQuestion, MultipleChoiceQuestion, TrueFalseQuestion } from '@/types-legacy';
 
 // 定義學習步驟類型
 type StudentLearningStep = {
@@ -538,7 +539,7 @@ const StudentInteractivePage: React.FC = () => {
                   </h3>
                   <div className="bg-indigo-50 rounded-xl p-6">
                     <div className="space-y-4">
-                      {currentStep.content.keyPoints.map((point, index) => (
+                      {currentStep.content.keyPoints.map((point: string, index: number) => (
                         <div key={index} className="flex items-start">
                           <span className="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                             {index + 1}
@@ -561,7 +562,7 @@ const StudentInteractivePage: React.FC = () => {
                   </h3>
                   <div className="bg-green-50 rounded-xl p-6">
                     <div className="space-y-4">
-                      {currentStep.content.realLifeExamples.map((example, index) => (
+                      {currentStep.content.realLifeExamples.map((example: string, index: number) => (
                         <div key={index} className="flex items-start">
                           <span className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                             {index + 1}
@@ -721,7 +722,7 @@ const StudentInteractivePage: React.FC = () => {
                   </h3>
                   <div className="bg-blue-50 rounded-xl p-6">
                     <div className="space-y-6">
-                      {currentStep.content.practiceExamples.map((example, index) => (
+                      {currentStep.content.practiceExamples.map((example: string | Record<string, string>, index: number) => (
                         <div key={index} className="border-l-4 border-blue-400 pl-4">
                           <div className="flex items-start mb-3">
                             <span className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
@@ -785,7 +786,7 @@ const StudentInteractivePage: React.FC = () => {
                   </h3>
                   <div className="bg-purple-50 rounded-xl p-6">
                     <div className="space-y-4">
-                      {currentStep.content.rememberingTricks.map((trick, index) => (
+                      {currentStep.content.rememberingTricks.map((trick: string, index: number) => (
                         <div key={index} className="flex items-start">
                           <span className="flex-shrink-0 w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                             {index + 1}
@@ -1048,12 +1049,11 @@ const StudentInteractivePage: React.FC = () => {
                     <span>✓</span> 是非判斷題
                   </h3>
                   <div className="space-y-4">
-                    {currentStepQuiz.trueFalse.map((question, index) => (
+                    {currentStepQuiz.trueFalse.map((question: TrueFalseQuestion, index: number) => (
                       <TrueFalseQuizItem
                         key={`tf-${index}`}
                         question={question}
-                        questionIndex={index}
-                        showExplanations={true}
+                        itemNumber={index+1}
                       />
                     ))}
                   </div>
@@ -1067,12 +1067,11 @@ const StudentInteractivePage: React.FC = () => {
                     <span>📝</span> 選擇題
                   </h3>
                   <div className="space-y-4">
-                    {currentStepQuiz.multipleChoice.map((question, index) => (
+                    {currentStepQuiz.multipleChoice.map((question:MultipleChoiceQuestion, index:number) => (
                       <MultipleChoiceQuizItem
                         key={`mc-${index}`}
                         question={question}
-                        questionIndex={index}
-                        showExplanations={true}
+                        itemNumber={index+1}
                       />
                     ))}
                   </div>
@@ -1086,7 +1085,7 @@ const StudentInteractivePage: React.FC = () => {
                     <span>🧠</span> 記憶卡配對
                   </h3>
                   <div className="space-y-4">
-                    {currentStepQuiz.memoryCardGame.map((game, index) => (
+                    {currentStepQuiz.memoryCardGame.map((game:MemoryCardGameQuestion, index:number) => (
                       <MemoryCardGameQuizItem
                         key={`mcg-${index}`}
                         question={game}

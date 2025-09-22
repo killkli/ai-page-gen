@@ -14,9 +14,7 @@ import {
   AIRequest,
   AIResponse,
   ProviderError,
-  IProviderError,
   ProviderErrorType,
-  ProviderResponse
 } from '../types/providers';
 
 import { GeminiProvider } from './GeminiProvider';
@@ -77,8 +75,6 @@ export class ProviderManager {
         return new GeminiProvider(config);
       case ProviderType.OPENROUTER:
         return new OpenRouterProvider(config);
-      default:
-        throw new Error(`不支援的 Provider 類型: ${config.type}`);
     }
   }
 

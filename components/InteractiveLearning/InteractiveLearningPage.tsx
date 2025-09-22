@@ -258,13 +258,13 @@ const InteractiveLearningPage: React.FC = () => {
 
       switch (step.type) {
         case 'objective':
-          transformedData = await transformLearningObjectiveForStudent(step.data);
+          transformedData = await transformLearningObjectiveForStudent(step.data, '');
           break;
         case 'breakdown':
-          transformedData = await transformContentBreakdownForStudent(step.data);
+          transformedData = await transformContentBreakdownForStudent(step.data, '');
           break;
         case 'confusing':
-          transformedData = await transformConfusingPointForStudent(step.data);
+          transformedData = await transformConfusingPointForStudent(step.data, '');
           break;
         default:
           return null;
@@ -908,7 +908,7 @@ const InteractiveLearningPage: React.FC = () => {
                       </h4>
                       <div className="bg-purple-50 rounded-xl p-6">
                         <div className="space-y-4">
-                          {transformedData.rememberingTricks.map((trick:string, trickIndex:number) => (
+                          {transformedData.rememberingTricks.map((trick: string, trickIndex: number) => (
                             <div key={trickIndex} className="flex items-start">
                               <span className="flex-shrink-0 w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                                 {trickIndex + 1}
@@ -926,7 +926,7 @@ const InteractiveLearningPage: React.FC = () => {
                   {/* 練習例子 */}
                   {transformedData.practiceExamples && transformedData.practiceExamples.length > 0 && (
                     <div className="space-y-6">
-                      {transformedData.practiceExamples.map((example:Record<string,string>, exampleIndex:number) => (
+                      {transformedData.practiceExamples.map((example: Record<string, string>, exampleIndex: number) => (
                         <div key={exampleIndex} className="bg-white rounded-2xl shadow-xl p-8">
                           <h4 className="text-xl font-bold text-slate-800 mb-6 text-center">
                             練習情境 {exampleIndex + 1}
@@ -1015,7 +1015,7 @@ const InteractiveLearningPage: React.FC = () => {
               {/* 正確 vs 錯誤對比 */}
               {confusingItem.correctVsWrong && confusingItem.correctVsWrong.length > 0 && (
                 <div className="space-y-8 mb-8">
-                  {confusingItem.correctVsWrong.map((comparison:Record<string,string>, compIndex:number) => (
+                  {confusingItem.correctVsWrong.map((comparison: Record<string, string>, compIndex: number) => (
                     <div key={compIndex} className="bg-white rounded-2xl shadow-xl p-8">
                       <h4 className="text-xl font-bold text-slate-800 mb-6 text-center">
                         對比例子 {compIndex + 1}
@@ -1073,7 +1073,7 @@ const InteractiveLearningPage: React.FC = () => {
                   </h4>
                   <div className="bg-red-50 rounded-xl p-6">
                     <div className="space-y-3">
-                      {confusingItem.commonErrors.map((error:string, errorIndex:number) => (
+                      {confusingItem.commonErrors.map((error: string, errorIndex: number) => (
                         <div key={errorIndex} className="flex items-start">
                           <span className="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                             {errorIndex + 1}
@@ -1124,7 +1124,7 @@ const InteractiveLearningPage: React.FC = () => {
                   </h4>
                   <div className="bg-cyan-50 rounded-xl p-6">
                     <div className="space-y-4">
-                      {confusingItem.practiceActivities.map((activity:string, activityIndex:number) => (
+                      {confusingItem.practiceActivities.map((activity: string, activityIndex: number) => (
                         <div key={activityIndex} className="flex items-start">
                           <span className="flex-shrink-0 w-8 h-8 bg-cyan-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">
                             {activityIndex + 1}

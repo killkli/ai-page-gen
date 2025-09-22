@@ -11,12 +11,12 @@ import {
   QuizContentKey,
   // DiagnosticReportConfig
 } from '../types';
+import { callGemini } from './geminiServiceAdapter';
 
 // 內部函數：調用 Provider 系統
 const callProviderForDiagnostic = async (prompt: string): Promise<any> => {
   try {
     // 動態導入以避免循環依賴
-    const { callGemini } = await import('./geminiServiceAdapter');
     const response = await callGemini(prompt);
 
     // 保持原有的 JSON 解析邏輯，確保與原功能完全一致
@@ -94,33 +94,33 @@ export const analyzeQuizResults = (responses: QuestionResponse[]): QuestionTypeP
   // 計算統計數據
   responses.forEach(response => {
     const performance = performanceMap.get(response.questionType)!;
-    
+
     performance.totalQuestions++;
     if (response.isCorrect) {
       performance.correctCount++;
     }
-    
+
     // 更新難度分解統計
     const difficultyStats = performance.difficultyBreakdown[response.difficulty];
     difficultyStats.total++;
     if (response.isCorrect) {
       difficultyStats.correct++;
     }
-    difficultyStats.accuracy = difficultyStats.total > 0 
-      ? Math.round((difficultyStats.correct / difficultyStats.total) * 100) 
+    difficultyStats.accuracy = difficultyStats.total > 0
+      ? Math.round((difficultyStats.correct / difficultyStats.total) * 100)
       : 0;
   });
 
   // 計算整體正確率和平均時間
   performanceMap.forEach(performance => {
-    performance.accuracy = performance.totalQuestions > 0 
-      ? Math.round((performance.correctCount / performance.totalQuestions) * 100) 
+    performance.accuracy = performance.totalQuestions > 0
+      ? Math.round((performance.correctCount / performance.totalQuestions) * 100)
       : 0;
-    
+
     const responsesForType = responses.filter(r => r.questionType === performance.questionType);
     const timesWithData = responsesForType.filter(r => r.responseTime).map(r => r.responseTime!);
-    performance.averageTime = timesWithData.length > 0 
-      ? Math.round(timesWithData.reduce((sum, time) => sum + time, 0) / timesWithData.length) 
+    performance.averageTime = timesWithData.length > 0
+      ? Math.round(timesWithData.reduce((sum, time) => sum + time, 0) / timesWithData.length)
       : undefined;
   });
 
@@ -130,7 +130,7 @@ export const analyzeQuizResults = (responses: QuestionResponse[]): QuestionTypeP
 // 計算整體得分 - 使用簡單的答對比例
 export const calculateOverallScore = (responses: QuestionResponse[]): number => {
   if (responses.length === 0) return 0;
-  
+
   const correctAnswers = responses.filter(r => r.isCorrect).length;
   return Math.round((correctAnswers / responses.length) * 100);
 };
@@ -148,11 +148,11 @@ export const generateLearningAnalysisWithAI = async (
   responses: QuestionResponse[],
   // performances: QuestionTypePerformance[]
 ): Promise<{ strengths: LearningStrength[], weaknesses: LearningWeakness[], learningStyle?: string, cognitivePattern?: string }> => {
-  
+
   // 整理錯誤的具體題目和答案
   const incorrectResponses = responses.filter(r => !r.isCorrect);
   const correctResponses = responses.filter(r => r.isCorrect);
-  
+
   const errorAnalysis = incorrectResponses.map(r => {
     return `
     題型: ${r.questionType}
@@ -161,7 +161,7 @@ export const generateLearningAnalysisWithAI = async (
     正確答案: ${JSON.stringify(r.correctAnswer)}
     嘗試次數: ${r.attempts || 1}`;
   }).join('\n');
-  
+
   const correctAnalysis = correctResponses.map(r => {
     return `
     題型: ${r.questionType}
@@ -279,12 +279,12 @@ export const generateStudentFeedback = async (
   studentId?: string,
   responses?: QuestionResponse[]
 ): Promise<StudentLearningFeedback> => {
-  
+
   // 整理錯誤題目的具體資訊
   const incorrectResponses = responses?.filter(r => !r.isCorrect) || [];
   const errorDetails = incorrectResponses.map(r => `
   - ${r.questionType} (難度: ${r.difficulty}): 你的答案「${JSON.stringify(r.userAnswer)}」，正確答案是「${JSON.stringify(r.correctAnswer)}」`).join('');
-  
+
   const prompt = `
     為學生提供關於主題「${topic}」的學習回饋和指導。
     
@@ -354,7 +354,7 @@ export const generateTeachingRecommendations = async (
   differentiation: string[];
   parentGuidance?: string[];
 }> => {
-  
+
   // 整理錯誤資訊供教師參考
   const incorrectResponses = responses?.filter(r => !r.isCorrect) || [];
   const errorPatterns = incorrectResponses.map(r => `
@@ -362,7 +362,7 @@ export const generateTeachingRecommendations = async (
     學生答案: ${JSON.stringify(r.userAnswer)}
     正確答案: ${JSON.stringify(r.correctAnswer)}
     嘗試次數: ${r.attempts || 1}`).join('');
-  
+
   const prompt = `
     為主題「${topic}」提供教學建議，根據學生評量結果。
     
@@ -467,7 +467,7 @@ export const generateLearningDiagnostic = async (
       overallPerformance: {
         totalScore: overallScore,
         level: learningLevel,
-        timeSpent: session.endTime && session.startTime 
+        timeSpent: session.endTime && session.startTime
           ? Math.round((new Date(session.endTime).getTime() - new Date(session.startTime).getTime()) / 60000)
           : 0
       },
@@ -489,7 +489,8 @@ export const generateLearningDiagnostic = async (
       rawData: {
         responses: session.responses,
         statistics: performanceStats
-      }
+      },
+      generatedAt: new Date().toISOString()
     };
 
   } catch (error) {
@@ -504,7 +505,7 @@ export const createDiagnosticSession = (
   studentId?: string
 ): DiagnosticSession => {
   return {
-    sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    sessionId: `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
     studentId,
     topic,
     startTime: new Date().toISOString(),

@@ -8,7 +8,6 @@ import {
   ProviderResponse,
   AIRequest,
   ProviderInfo,
-  ProviderCapabilities
 } from '../types/providers';
 
 export abstract class BaseProvider {
@@ -39,7 +38,7 @@ export abstract class BaseProvider {
 
   // 更新配置
   public updateConfig(newConfig: Partial<ProviderConfig>): void {
-    this.config = { ...this.config, ...newConfig };
+    this.config = { ...this.config, ...newConfig } as ProviderConfig;
   }
 
   // 檢查是否啟用
@@ -69,7 +68,7 @@ export abstract class BaseProvider {
 
   // 驗證 API Key 格式
   protected validateApiKey(apiKey: string): boolean {
-    return apiKey && apiKey.trim().length > 0;
+    return Boolean(apiKey) && apiKey.trim().length > 0
   }
 
   // 處理 API 錯誤

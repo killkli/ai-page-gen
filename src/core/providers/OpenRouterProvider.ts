@@ -10,7 +10,6 @@ import {
   AIRequest,
   ProviderInfo,
   ProviderType,
-  ProviderCapabilities
 } from '../types/providers';
 
 export class OpenRouterProvider extends BaseProvider {
@@ -229,7 +228,7 @@ export class OpenRouterProvider extends BaseProvider {
         console.log('OpenRouter JSON 解析成功:', typeof parsed, Object.keys(parsed || {}));
         return parsed;
       } catch (error) {
-        console.error('OpenRouter 回應 JSON 解析失敗:', error.message);
+        console.error('OpenRouter 回應 JSON 解析失敗:', String(error));
         console.log('JSON 解析失敗的內容:', cleanedContent);
         return cleanedContent;
       }
@@ -239,7 +238,7 @@ export class OpenRouterProvider extends BaseProvider {
     return cleanedContent;
   }
 
-  protected extractUsageInfo(rawData: any, ...args: any[]): { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined {
+  protected extractUsageInfo(_rawData: any, ...args: any[]): { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined {
     // OpenRouter 提供詳細的使用資訊
     const response = args[0]; // 從 executeApiCall 傳回的完整回應
 
