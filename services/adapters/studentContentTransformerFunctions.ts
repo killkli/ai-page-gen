@@ -15,24 +15,30 @@ export const transformLearningObjectiveForStudent = async (
   providerCall: ProviderCall
 ): Promise<any> => {
   const prompt = `
-    Transform the following learning objective into student-friendly language and interactive format:
-
-    Original Objective: ${JSON.stringify(objective)}
-
-    Create a JSON response with:
+    Transform the following teacher-oriented learning objective into student-friendly, engaging content suitable for interactive learning:
+    
+    Original Learning Objective:
+    ${JSON.stringify(objective)}
+    
+    Transform it into student-centered language that:
+    1. Uses "你" (you) instead of "學生" (students)
+    2. Makes it personally relevant and motivating
+    3. Explains WHY this learning is important to the student
+    4. Uses encouraging, accessible language
+    5. Includes concrete examples that students can relate to
+    6. Makes the learning goal feel achievable and exciting
+    
+    Output MUST be a valid JSON object with this structure:
     {
-      "studentFriendlyTitle": "吸引學生的標題...",
-      "whatYouWillLearn": "你將學會什麼的簡短說明...",
-      "keyPoints": ["重點1", "重點2", "重點3"],
-      "practicalExample": "生活中的實際例子...",
-      "successCriteria": "完成這個目標後你會能夠...",
-      "estimatedTime": "預估學習時間",
-      "difficulty": "初級/中級/高級"
+      "objective": "學習目標改寫為學生導向的語言",
+      "description": "詳細說明為什麼你需要學會這個，以及學會後對你的好處",
+      "teachingExample": "具體的、與學生生活相關的例子或應用情境",
+      "personalRelevance": "這個學習與你的日常生活、未來發展的關係",
+      "encouragement": "鼓勵學生的話語，讓學習感覺有趣且可達成"
     }
-
-    Make it engaging, clear, and motivating for students.
-    Use Traditional Chinese for all text content.
-    Do NOT include explanation, only return the JSON object.
+    
+    Make the content engaging, personal, and motivational. Use Traditional Chinese.
+    Do NOT include any explanation or extra text. Only output the JSON object.
   `;
 
   return await providerCall(prompt, apiKey);
@@ -44,32 +50,32 @@ export const transformContentBreakdownForStudent = async (
   providerCall: ProviderCall
 ): Promise<any> => {
   const prompt = `
-    Transform the following content breakdown into an engaging, step-by-step learning path for students:
-
-    Original Breakdown: ${JSON.stringify(breakdown)}
-
-    Create a JSON response with:
+    Transform the following teacher-oriented content breakdown into student-friendly, digestible learning content:
+    
+    Original Content Breakdown:
+    ${JSON.stringify(breakdown)}
+    
+    Transform it into student-centered content that:
+    1. Uses conversational, friendly tone
+    2. Explains concepts in simple, relatable terms
+    3. Connects to real-world applications students care about
+    4. Includes step-by-step learning guidance
+    5. Makes complex topics feel approachable
+    6. Uses analogies and examples from student life
+    
+    Output MUST be a valid JSON object with this structure:
     {
-      "learningPath": [
-        {
-          "stepNumber": 1,
-          "title": "步驟標題...",
-          "description": "這一步你會學到什麼...",
-          "timeNeeded": "預估時間",
-          "keySkills": ["技能1", "技能2"],
-          "practiceTask": "實作任務說明...",
-          "checkpointQuestion": "檢查理解的問題..."
-        }
-      ],
-      "totalEstimatedTime": "總預估時間",
-      "prerequisiteSkills": ["前置技能1", "前置技能2"],
-      "learningTips": ["學習訣竅1", "學習訣竅2"]
+      "title": "子主題標題用學生容易理解的語言表達",
+      "introduction": "用友善的語調介紹這個概念，說明為什麼要學習它",
+      "keyPoints": ["要點1用簡單語言解釋", "要點2用實際例子說明", "要點3連結到生活應用"],
+      "realLifeExamples": ["生活中的例子1", "生活中的例子2", "生活中的例子3"],
+      "learningTips": "學習這個概念的小技巧和方法",
+      "nextSteps": "學會這個概念後，你可以進一步探索什麼",
+      "encouragement": "給學生的鼓勵話語"
     }
-
-    Make each step clear, actionable, and connected to the next.
-    Use encouraging language and provide practical guidance.
-    Use Traditional Chinese for all content.
-    Do NOT include explanation, only return the JSON object.
+    
+    Make the content feel like a friendly tutor explaining concepts personally to the student.
+    Use Traditional Chinese. Do NOT include any explanation or extra text. Only output the JSON object.
   `;
 
   return await providerCall(prompt, apiKey);
@@ -81,31 +87,40 @@ export const transformConfusingPointForStudent = async (
   providerCall: ProviderCall
 ): Promise<any> => {
   const prompt = `
-    Transform the following confusing point into student-friendly guidance:
-
-    Original Confusing Point: ${JSON.stringify(confusingPoint)}
-
-    Create a JSON response with:
+    Transform the following teacher-oriented confusing point analysis into student-friendly, helpful guidance:
+    
+    Original Confusing Point:
+    ${JSON.stringify(confusingPoint)}
+    
+    Transform it into student-centered guidance that:
+    1. Acknowledges that confusion is normal and okay
+    2. Explains the common mistake without making students feel bad
+    3. Provides clear, memorable strategies to avoid the mistake
+    4. Uses positive, encouraging language
+    5. Includes memorable tricks or mnemonics
+    6. Shows both wrong and right examples in a supportive way
+    
+    Output MUST be a valid JSON object with this structure:
     {
-      "commonMistakeTitle": "常見錯誤：...",
-      "whyItHappens": "為什麼會發生這個錯誤...",
-      "howToAvoid": "如何避免這個錯誤...",
-      "easyRememberTip": "好記的小訣竅...",
-      "practiceExercises": [
+      "title": "易混淆概念的標題用友善語言表達",
+      "normalizeConfusion": "告訴學生這種混淆很正常，不用擔心",
+      "commonMistake": "用溫和的語言說明常見的錯誤想法",
+      "whyItHappens": "解釋為什麼會有這種混淆（讓學生理解而不是感到愚蠢）",
+      "clearExplanation": "用簡單明瞭的方式解釋正確概念",
+      "rememberingTricks": ["記憶技巧1", "記憶技巧2", "記憶技巧3"],
+      "practiceExamples": [
         {
-          "exercise": "練習題目...",
-          "solution": "解答說明...",
-          "whyThisWorks": "為什麼這樣做是對的..."
+          "situation": "情境描述",
+          "wrongThinking": "錯誤的想法",
+          "rightThinking": "正確的想法",
+          "explanation": "為什麼這樣想是對的"
         }
       ],
-      "confidenceBooster": "增強信心的鼓勵話語..."
+      "confidenceBooster": "提升學生信心的話語，讓他們知道掌握這個概念是可以做到的"
     }
-
-    Focus on helping students understand and overcome the confusion.
-    Use supportive, non-judgmental language.
-    Provide practical, actionable advice.
-    Use Traditional Chinese for all content.
-    Do NOT include explanation, only return the JSON object.
+    
+    Make the content supportive and empowering, helping students learn from mistakes without judgment.
+    Use Traditional Chinese. Do NOT include any explanation or extra text. Only output the JSON object.
   `;
 
   return await providerCall(prompt, apiKey);

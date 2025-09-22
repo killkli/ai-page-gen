@@ -102,6 +102,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
             classroomActivities: lessonPlan.content.classroomActivities,
             onlineInteractiveQuiz: lessonPlan.content.quiz,
             writingPractice: lessonPlan.content.writingPractice,
+            transformedData: {},
           };
         } else {
           throw new Error('缺少必要參數：contentId 或 binId');
@@ -134,7 +135,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
     // 學習目標
     if (content.learningObjectives && content.learningObjectives.length > 0) {
       content.learningObjectives.forEach((objective, index) => {
-        const stepId = `objective_${index}`;
+        const stepId = `step_${steps.length}`;
         steps.push({
           id: stepId,
           title: `學習目標 ${index + 1}`,
@@ -159,7 +160,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
     // 內容分解
     if (content.contentBreakdown && content.contentBreakdown.length > 0) {
       content.contentBreakdown.forEach((item, index) => {
-        const stepId = `breakdown_${index}`;
+        const stepId = `step_${steps.length}`;
         steps.push({
           id: stepId,
           title: `深度學習 ${index + 1}`,
@@ -184,7 +185,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
     // 易混淆點
     if (content.confusingPoints && content.confusingPoints.length > 0) {
       content.confusingPoints.forEach((item, index) => {
-        const stepId = `confusing_${index}`;
+        const stepId = `step_${steps.length}`;
         steps.push({
           id: stepId,
           title: `易混淆點 ${index + 1}`,
@@ -236,13 +237,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
       switch (step.type) {
         case 'objective':
-          transformedData = await transformLearningObjectiveForStudent(step.data);
+          transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
           break;
         case 'breakdown':
-          transformedData = await transformContentBreakdownForStudent(step.data);
+          transformedData = await transformContentBreakdownForStudent(step.data, apiKey);
           break;
         case 'confusing':
-          transformedData = await transformConfusingPointForStudent(step.data);
+          transformedData = await transformConfusingPointForStudent(step.data, apiKey);
           break;
       }
 
@@ -403,13 +404,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
           switch (step.type) {
             case 'objective':
-              transformedData = await transformLearningObjectiveForStudent(step.data);
+              transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
               break;
             case 'breakdown':
-              transformedData = await transformContentBreakdownForStudent(step.data);
+              transformedData = await transformContentBreakdownForStudent(step.data, apiKey);
               break;
             case 'confusing':
-              transformedData = await transformConfusingPointForStudent(step.data);
+              transformedData = await transformConfusingPointForStudent(step.data, apiKey);
               break;
           }
 
@@ -519,13 +520,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
           switch (step.type) {
             case 'objective':
-              transformedData = await transformLearningObjectiveForStudent(step.data);
+              transformedData = await transformLearningObjectiveForStudent(step.data, apiKey);
               break;
             case 'breakdown':
-              transformedData = await transformContentBreakdownForStudent(step.data);
+              transformedData = await transformContentBreakdownForStudent(step.data, apiKey);
               break;
             case 'confusing':
-              transformedData = await transformConfusingPointForStudent(step.data);
+              transformedData = await transformConfusingPointForStudent(step.data, apiKey);
               break;
           }
 
@@ -662,8 +663,8 @@ const TeacherInteractivePrepPage: React.FC = () => {
 
     } catch (error) {
       console.error('❌ 保存版本失敗:', error);
-      console.error('錯誤堆棧:', error.stack);
-      alert(`保存版本失敗：${error.message || error}`);
+      console.error('錯誤堆棧:', (error as Error).stack);
+      alert(`保存版本失敗：${(error as Error).message || error}`);
     }
 
     console.log('=== 保存版本結束 ===');
@@ -1411,7 +1412,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                         <div className="text-indigo-800">
                           <strong>重點概念：</strong>
                           <div className="mt-1 space-y-1">
-                            {currentTransformation.transformed.keyPoints.map((point, idx) => (
+                            {currentTransformation.transformed.keyPoints.map((point: string, idx: number) => (
                               <div key={idx}>• {renderText(point)}</div>
                             ))}
                           </div>
@@ -1614,7 +1615,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                       </h4>
                       <div className="mt-2 text-sm text-yellow-700">
                         <ul className="list-disc list-inside space-y-1">
-                          {previewQuizData._validationWarnings.map((warning, index) => (
+                          {previewQuizData._validationWarnings.map((warning: string, index: number) => (
                             <li key={index}>{warning}</li>
                           ))}
                         </ul>
@@ -1634,7 +1635,7 @@ const TeacherInteractivePrepPage: React.FC = () => {
                     <span>✓</span> 是非判斷題 ({previewQuizData.trueFalse.length} 題)
                   </h4>
                   <div className="space-y-3">
-                    {previewQuizData.trueFalse.map((question, index) => (
+                    {previewQuizData.trueFalse.map((question: any, index: number) => (
                       <div key={index} className="bg-slate-50 p-4 rounded-lg">
                         <div className="font-medium text-slate-800 mb-2">
                           {index + 1}. {question.statement}
@@ -1660,13 +1661,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
                     <span>📝</span> 選擇題 ({previewQuizData.multipleChoice.length} 題)
                   </h4>
                   <div className="space-y-3">
-                    {previewQuizData.multipleChoice.map((question, index) => (
+                    {previewQuizData.multipleChoice.map((question: any, index: number) => (
                       <div key={index} className="bg-slate-50 p-4 rounded-lg">
                         <div className="font-medium text-slate-800 mb-2">
                           {index + 1}. {question.question}
                         </div>
                         <div className="ml-4 space-y-1">
-                          {question.options.map((option, optIndex) => (
+                          {question.options.map((option: string, optIndex: number) => (
                             <div key={optIndex} className={`text-sm ${optIndex === question.correctAnswerIndex ? 'text-green-700 font-medium' : 'text-slate-600'}`}>
                               {String.fromCharCode(65 + optIndex)}. {option}
                               {optIndex === question.correctAnswerIndex && ' ✓'}
@@ -1691,13 +1692,13 @@ const TeacherInteractivePrepPage: React.FC = () => {
                     <span>🧠</span> 記憶卡配對 ({previewQuizData.memoryCardGame.length} 組)
                   </h4>
                   <div className="space-y-3">
-                    {previewQuizData.memoryCardGame.map((game, index) => (
+                    {previewQuizData.memoryCardGame.map((game: any, index: number) => (
                       <div key={index} className="bg-slate-50 p-4 rounded-lg">
                         <div className="font-medium text-slate-800 mb-3">
                           第 {index + 1} 組：{game.title || '配對遊戲'}
                         </div>
                         <div className="grid md:grid-cols-2 gap-2">
-                          {game.pairs.map((pair, pairIndex) => (
+                          {game.pairs.map((pair: any, pairIndex: number) => (
                             <div key={pairIndex} className="flex items-center gap-2 text-sm">
                               <div className="bg-blue-100 px-2 py-1 rounded flex-1">
                                 {pair.left}

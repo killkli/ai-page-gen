@@ -312,15 +312,15 @@ export const generateStepQuiz = async (
 ): Promise<any> => {
   const prompt = `
     Based on the following transformed student-friendly content, generate quiz questions that help students practice and reinforce their understanding:
-
+    
     Step Type: ${stepType}
     Content: ${JSON.stringify(stepContent)}
-
+    
     Generate EXACTLY the requested number of questions for each type:
     - True/False: ${quizConfig.trueFalse} questions
-    - Multiple Choice: ${quizConfig.multipleChoice} questions
+    - Multiple Choice: ${quizConfig.multipleChoice} questions  
     - Memory Card Game: ${quizConfig.memoryCardGame} pair set(s)
-
+    
     Quiz Design Principles:
     1. Questions should directly test understanding of the content provided
     2. Use student-friendly language that matches the transformed content tone
@@ -328,7 +328,7 @@ export const generateStepQuiz = async (
     4. Include clear explanations for correct answers
     5. For memory card games, create concept-definition or question-answer pairs
     6. Avoid trick questions; focus on genuine comprehension
-
+    
     CRITICAL for Memory Card Games:
     - Each "left" and "right" content must be COMPLETELY UNIQUE across all pairs
     - NO duplicate content on either left or right side
@@ -337,21 +337,21 @@ export const generateStepQuiz = async (
     - All content in left column must be distinct from each other
     - All content in right column must be distinct from each other
     - Create clear, unambiguous one-to-one relationships
-
+    
     Output MUST be a valid JSON object with this exact structure:
     {
       "trueFalse": [
-        {
-          "statement": "清楚的是非判斷陳述句...",
-          "isTrue": true,
+        { 
+          "statement": "清楚的是非判斷陳述句...", 
+          "isTrue": true, 
           "explanation": "解釋為什麼這個陳述是正確/錯誤的..."
         }
         // exactly ${quizConfig.trueFalse} items
       ],
       "multipleChoice": [
-        {
-          "question": "測試理解的選擇題問題...",
-          "options": ["選項A", "選項B", "選項C", "選項D"],
+        { 
+          "question": "測試理解的選擇題問題...", 
+          "options": ["選項A", "選項B", "選項C", "選項D"], 
           "correctAnswerIndex": 0,
           "explanation": "解釋為什麼這個答案是正確的..."
         }
@@ -372,7 +372,7 @@ export const generateStepQuiz = async (
         // exactly ${quizConfig.memoryCardGame} games
       ]
     }
-
+    
     All content should be in Traditional Chinese and directly related to the provided learning content.
     Make questions that genuinely help students practice and remember the key concepts.
     Do NOT include any explanation or extra text outside the JSON structure.

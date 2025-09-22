@@ -7,7 +7,7 @@ import MarkdownRenderer from '../MarkdownRenderer';
 import TrueFalseQuizItem from '../quizTypes/TrueFalseQuizItem';
 import MultipleChoiceQuizItem from '../quizTypes/MultipleChoiceQuizItem';
 import MemoryCardGameQuizItem from '../quizTypes/MemoryCardGameQuizItem';
-import { MemoryCardGameQuestion, MultipleChoiceQuestion, TrueFalseQuestion } from '@/types-legacy';
+import { MemoryCardGameQuestion, MultipleChoiceQuestion, TrueFalseQuestion } from '../../types-legacy';
 
 // 定義學習步驟類型
 type StudentLearningStep = {
@@ -119,8 +119,8 @@ const StudentInteractivePage: React.FC = () => {
     console.log('Transformed data:', transformedData);
 
     // 檢查是否有 originalContent 來幫助映射
-    if (content.originalContent) {
-      console.log('Original content from JSON:', content.originalContent);
+    if ((content as any).originalContent) {
+      console.log('Original content from JSON:', (content as any).originalContent);
     }
 
     // 直接根據轉換數據的鍵來創建步驟
@@ -133,19 +133,19 @@ const StudentInteractivePage: React.FC = () => {
     console.log('Sorted step IDs:', sortedStepIds);
 
     // 直接使用 includedSteps 來建立正確的映射關係
-    const includedSteps = content.includedSteps || Object.keys(transformedData);
+    const includedSteps = (content as any).includedSteps || Object.keys(transformedData);
     console.log('Included steps:', includedSteps);
 
     // 建立原始內容的查找表
     const originalLookup: { [key: string]: { content: any, type: string, index: number } } = {};
 
     // 如果有 originalContent，使用它來建立映射
-    if (content.originalContent) {
+    if ((content as any).originalContent) {
       console.log('Using originalContent from JSON for mapping');
 
       // originalContent 應該是一個物件，每個 stepId 對應一個原始內容
-      Object.keys(content.originalContent).forEach((stepId) => {
-        const originalItem = content.originalContent[stepId];
+      Object.keys((content as any).originalContent).forEach((stepId) => {
+        const originalItem = (content as any).originalContent[stepId];
         if (originalItem && includedSteps.includes(stepId)) {
           originalLookup[stepId] = {
             content: originalItem.content,
@@ -185,7 +185,7 @@ const StudentInteractivePage: React.FC = () => {
 
       // 根據 includedSteps 的順序建立查找表
       // 由於只收到了部分原始內容，我們按照 includedSteps 的順序來映射
-      includedSteps.forEach((stepId, arrayIndex) => {
+      includedSteps.forEach((stepId: string, arrayIndex: number) => {
         if (arrayIndex < allOriginalContent.length) {
           const originalItem = allOriginalContent[arrayIndex];
           originalLookup[stepId] = {
@@ -202,7 +202,7 @@ const StudentInteractivePage: React.FC = () => {
 
     // 根據轉換數據創建步驟
     sortedStepIds.forEach((stepId) => {
-      const transformedContent = transformedData[stepId];
+      const transformedContent = (transformedData as any)[stepId];
       const original = originalLookup[stepId];
 
       if (transformedContent && original) {
