@@ -237,6 +237,9 @@ const App: React.FC = () => {
   const [showingVocabularySelection, setShowingVocabularySelection] = useState<boolean>(false);
   const [isEnglishTopic, setIsEnglishTopic] = useState<boolean>(false);
 
+  // 新增：Provider 分享狀態
+  const [providerShareId, setProviderShareId] = useState<string | null>(null);
+
   React.useEffect(() => {
     const initializeApp = async () => {
       // 1. 先檢查 URL 參數
@@ -253,7 +256,7 @@ const App: React.FC = () => {
         return;
       }
 
-      // 2. 初始化 Provider 系統
+      // 2. 初始化 Provider 系統（對所有情況都需要，包括 provider 分享）
       if (!providerSystemInitialized) {
         try {
           await initializeProviderSystem();
@@ -263,7 +266,20 @@ const App: React.FC = () => {
         }
       }
 
-      // 3. 再檢查 localStorage
+      // 3. 如果是 provider 分享，設置狀態並初始化相關功能
+      if (shareInfo.type === 'provider' && shareInfo.value) {
+        setProviderShareId(shareInfo.value);
+        // 載入可用的 Providers（provider 分享時也需要）
+        try {
+          const providers = await providerService.getProviders();
+          setAvailableProviders(providers);
+        } catch (error) {
+          console.error('載入 Providers 失敗:', error);
+        }
+        return;
+      }
+
+      // 4. 一般應用初始化：檢查 localStorage
       const storedKey = localStorage.getItem(LOCALSTORAGE_KEY);
       if (storedKey) {
         setApiKey(storedKey);
@@ -467,6 +483,29 @@ const App: React.FC = () => {
     setTimeout(() => setCopySuccess(null), 3000);
   }, []);
 
+  // Provider 分享導入完成處理
+  const handleProviderImported = useCallback((count: number) => {
+    console.log(`已導入 ${count} 個 Provider 配置`);
+    // 導入完成後跳轉回主頁
+    window.location.href = `${window.location.origin}${import.meta.env.BASE_URL}`;
+  }, []);
+
+  // 如果是 Provider 分享模式，顯示 ProviderShareReceiver
+  if (providerShareId) {
+    return (
+      <ErrorBoundary>
+        <ProviderShareReceiver
+          binId={providerShareId}
+          onProviderImported={handleProviderImported}
+          onClose={() => {
+            // 關閉時跳轉回主頁
+            window.location.href = `${window.location.origin}${import.meta.env.BASE_URL}`;
+          }}
+        />
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <Router basename={import.meta.env.BASE_URL}>
       <ErrorBoundary>
@@ -559,7 +598,7 @@ const App: React.FC = () => {
                   )}
                 </div>
 
-                {/* Provider 分享 Modal */}
+                {/* Provider 分享Modal */}
                 <ProviderShareModal
                   isOpen={showProviderShareModal}
                   onClose={() => setShowProviderShareModal(false)}
