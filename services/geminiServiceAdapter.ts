@@ -13,8 +13,11 @@ import {
   GeneratedLearningContent,
   LearningObjectiveItem,
   VocabularyLevel,
-  // WritingPracticeContent,
-  // AIFeedback
+  LearningLevelSuggestions,
+  WritingPracticeContent,
+  AIFeedback,
+  SentencePracticePrompt,
+  WritingPracticePrompt
 } from '../types';
 
 // Provider 系統的核心調用函數
@@ -194,7 +197,7 @@ const generateConfusingPoints = async (topic: string, apiKey: string, learningOb
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties students may have with "${topic}".
-
+    
     Output MUST be a valid JSON array with the following comprehensive structure:
     [
       {
@@ -205,20 +208,26 @@ const generateConfusingPoints = async (topic: string, apiKey: string, learningOb
         "commonErrors": ["學生典型錯誤示例1", "學生典型錯誤示例2", "學生典型錯誤示例3"],
         "correctVsWrong": [
           {
-            "correct": "正確理解或做法",
-            "wrong": "錯誤理解或做法",
-            "explanation": "為什麼會有這種錯誤以及如何糾正"
+            "correct": "正確示例",
+            "wrong": "錯誤示例", 
+            "explanation": "對比說明"
           }
-          // ... 2-3個對比例子
         ],
-        "preventionStrategy": "預防此類錯誤的教學策略",
-        "correctionMethod": "發現錯誤後的糾正方法",
-        "practiceActivities": ["練習活動建議1", "練習活動建議2", "練習活動建議3"]
+        "preventionStrategy": "預防策略 - 如何防止學生犯錯",
+        "correctionMethod": "糾正方法 - 發現錯誤後的補救措施",
+        "practiceActivities": ["針對性練習活動1", "針對性練習活動2", "針對性練習活動3"]
       }
-      // ... 至少3個以上的項目
     ]
-
-    The content must be in the primary language of the topic. Only output the JSON array, no explanation or extra text.
+    
+    Requirements:
+    - Each confusing point should include ALL fields above
+    - commonErrors: Provide at least 3 typical student mistakes
+    - correctVsWrong: Provide at least 1 comparison (more if helpful)  
+    - practiceActivities: Provide at least 3 targeted practice activities
+    - All text should be in the primary language of the topic
+    - Focus on practical teaching guidance that educators can immediately apply
+    
+    Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callProviderSystem(prompt, apiKey);
 };
@@ -227,36 +236,32 @@ const generateConfusingPoints = async (topic: string, apiKey: string, learningOb
 const generateClassroomActivities = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Create at least 3 (but more is better if appropriate) engaging classroom activities for teaching "${topic}".
-
-    Each activity should be based on gamification principles and provide clear instructions for implementation.
-
-    Output MUST be a valid JSON array with the following structure:
+    Suggest at least 3 (but more is better if appropriate) engaging, interactive classroom activities (preferably game-like) for the topic "${topic}".
+    For each activity, provide the following comprehensive fields:
+      - title: 活動名稱/主題 (The name of the activity)
+      - description: 活動的標題或核心概念 (Brief description of the core concept)
+      - objective: 學習目標 (Main learning goal or purpose)
+      - timing: 使用時機 (When to use: lesson introduction, during unit, after unit, review, etc.)
+      - materials: 所需教具 (Required tools, materials, or props)
+      - environment: 環境要求 (Seating arrangement, space needs, equipment conditions)
+      - steps: 活動步驟 (Step-by-step process of teacher-student interactions as array)
+      - assessmentPoints: 評估重點 (Learning effectiveness observation and assessment criteria as array)
+    
+    Output MUST be a valid JSON array of objects, e.g.:
     [
       {
-        "title": "活動標題",
-        "description": "活動詳細描述與目標",
-        "objective": "此活動的具體學習目標",
-        "timing": "建議時間長度 (例如: 15分鐘, 30分鐘)",
-        "materials": "所需材料與資源 (例如: 白板、卡片、投影機等)",
-        "environment": "建議的學習環境 (例如: 教室、小組討論區、戶外等)",
-        "steps": [
-          "步驟1: 詳細說明第一個步驟",
-          "步驟2: 詳細說明第二個步驟",
-          "步驟3: 詳細說明第三個步驟",
-          "步驟4: 詳細說明第四個步驟 (可選)",
-          "步驟5: 詳細說明第五個步驟 (可選)"
-        ],
-        "assessmentPoints": [
-          "評估要點1: 觀察學生是否能夠...",
-          "評估要點2: 檢查學生是否理解...",
-          "評估要點3: 確認學生能夠應用..."
-        ]
-      }
-      // ... 至少3個以上的活動
+        "title": "遊戲化活動1",
+        "description": "活動1的核心概念與玩法簡述...",
+        "objective": "活動1的學習目標...",
+        "timing": "適用於單元導入/單元後/複習時等...",
+        "materials": "所需教材、道具或工具...",
+        "environment": "座位安排、空間需求、設備條件...",
+        "steps": ["步驟1: 教師說明規則...", "步驟2: 學生分組...", "步驟3: 進行活動..."],
+        "assessmentPoints": ["觀察學生參與度", "檢查概念理解程度", "評估協作能力"]
+      },
+      // ... more items
     ]
-
-    The content must be in the primary language of the topic. Focus on interactive, engaging activities that promote active learning. Only output the JSON array, no explanation or extra text.
+    Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callProviderSystem(prompt, apiKey);
 };
@@ -266,7 +271,6 @@ const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, lear
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate quiz content for "${topic}" in the following JSON structure (no explanation, no extra text):
-
     {
       "easy": {
         "trueFalse": [
@@ -275,53 +279,40 @@ const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, lear
           // ... 至少 5 題，若有更多更好
         ],
         "multipleChoice": [
-          { "question": "簡單選擇題1...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 0 }
+          { "question": "簡單選擇題1...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 0 },
+          { "question": "簡單選擇題2...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 1 }
           // ... 至少 5 題，若有更多更好
         ],
         "fillInTheBlanks": [
-          { "sentenceWithBlank": "這是一個__空格的句子。", "correctAnswer": "有" }
+          { "sentenceWithBlank": "簡單填空題1...____...", "correctAnswer": "正確答案1" },
+          { "sentenceWithBlank": "簡單填空題2...____...", "correctAnswer": "正確答案2" }
           // ... 至少 5 題，若有更多更好
         ],
         "sentenceScramble": [
-          { "originalSentence": "完整的原始句子", "scrambledWords": ["打亂", "的", "詞序", "陣列"] }
+          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
+          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
           // ... 至少 5 題，若有更多更好
         ],
         "memoryCardGame": [
           {
             "pairs": [
-              { "question": "問題1", "answer": "答案1" },
-              { "question": "問題2", "answer": "答案2" },
-              { "question": "問題3", "answer": "答案3" },
-              { "question": "問題4", "answer": "答案4" },
-              { "question": "問題5", "answer": "答案5" }
-              // ... 至少 5 對，若有更多更好
+              { "question": "卡片1正面", "answer": "卡片1背面" },
+              { "question": "卡片2正面", "answer": "卡片2背面" },
+              { "question": "卡片3正面", "answer": "卡片3背面" },
+              { "question": "卡片4正面", "answer": "卡片4背面" },
+              { "question": "卡片5正面", "answer": "卡片5背面" }
+              // ... 至少 5 組配對，若有更多更好
             ],
-            "instructions": "遊戲說明",
-            "title": "記憶卡片遊戲標題"
+            "instructions": "請將每個卡片正面與正確的背面配對。"
           }
-          // 記憶卡遊戲通常只需要1個
         ]
       },
-      "normal": {
-        // 相同結構，但難度適中
-        "trueFalse": [],
-        "multipleChoice": [],
-        "fillInTheBlanks": [],
-        "sentenceScramble": [],
-        "memoryCardGame": []
-      },
-      "hard": {
-        // 相同結構，但難度較高
-        "trueFalse": [],
-        "multipleChoice": [],
-        "fillInTheBlanks": [],
-        "sentenceScramble": [],
-        "memoryCardGame": []
-      }
+      "normal": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ },
+      "hard": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ }
     }
-
-    For each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble), generate at least 5 questions per difficulty level.
-    For memoryCardGame, generate ONLY 1 question per difficulty, but the "pairs" array inside must contain at least 5 pairs.
+    For each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble), generate at least 5 questions per difficulty level (easy, normal, hard), but more is better if appropriate.
+    For memoryCardGame, generate ONLY 1 question per difficulty, but the "pairs" array inside must contain at least 5 pairs (each pair is a related concept, word/definition, Q&A, or translation relevant to '${topic}'), and more is better if appropriate.
+    Each memoryCardGame question should include clear "instructions" for the matching task.
     All text must be in the primary language of the topic. Only output the JSON object, no explanation or extra text.
   `;
   return await callProviderSystem(prompt, apiKey);
@@ -333,8 +324,8 @@ const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, lear
 
 // 生成自訂測驗 (替代 generateCustomQuiz)
 export const generateCustomQuiz = async (
-  topic: string, 
-  apiKey: string, 
+  topic: string,
+  _apiKey: string,
   learningObjectives: any[],
   quizConfig: any,
   selectedLevel?: any,
@@ -346,7 +337,7 @@ export const generateCustomQuiz = async (
     for (const difficulty of ['easy', 'normal', 'hard']) {
       if (!validated[difficulty]) validated[difficulty] = {};
       const diffConfig = validated[difficulty];
-      
+
       // 設定預設值和限制
       diffConfig.trueFalse = Math.min(Math.max(diffConfig.trueFalse || 0, 0), 10);
       diffConfig.multipleChoice = Math.min(Math.max(diffConfig.multipleChoice || 0, 0), 10);
@@ -358,16 +349,16 @@ export const generateCustomQuiz = async (
   };
 
   const validatedConfig = validateQuizConfig(quizConfig);
-  
+
   const generateQuizForDifficulty = async (difficulty: string) => {
     const config = validatedConfig[difficulty];
-    
+
     // 構建基於自訂題數的 prompt
     let difficultyPrompt = '';
     if (selectedLevel) {
       difficultyPrompt = `適合「${selectedLevel.name}」程度學習者 (${selectedLevel.description}) 的`;
     }
-    
+
     let vocabularyConstraints = '';
     if (vocabularyLevel) {
       vocabularyConstraints = `
@@ -416,7 +407,7 @@ export const generateCustomQuiz = async (
       - All text must be in the primary language of the topic
       - Do NOT include any explanation or extra text, only output the JSON object
     `;
-    
+
     return await callGemini(prompt);
   };
 
@@ -445,12 +436,13 @@ export const regenerateQuizWithConfig = async (
 export const getAIFeedback = async (
   studentWork: string,
   promptType: 'sentence' | 'writing',
-  prompt: any,
-  vocabularyLevel?: any
-): Promise<any> => {
+  prompt: SentencePracticePrompt | WritingPracticePrompt,
+  _apiKey: string,
+  vocabularyLevel?: VocabularyLevel
+): Promise<AIFeedback> => {
   const isEnglish = /[a-zA-Z]/.test(studentWork);
   const language = isEnglish ? 'English' : 'Chinese';
-  
+
   const feedbackPrompt = `
     Please provide detailed feedback for this ${promptType} practice work:
     
@@ -538,7 +530,7 @@ export const transformLearningObjectiveForStudent = async (
     Make the content engaging, personal, and motivational. Use Traditional Chinese.
     Do NOT include any explanation or extra text. Only output the JSON object.
   `;
-  
+
   return await callGemini(prompt);
 };
 
@@ -546,33 +538,34 @@ export const transformContentBreakdownForStudent = async (
   contentItem: any
 ): Promise<any> => {
   const prompt = `
-    Transform the following teacher-oriented content breakdown into student-friendly, engaging content suitable for interactive learning:
+    Transform the following teacher-oriented content breakdown into student-friendly, digestible learning content:
     
     Original Content Breakdown:
     ${JSON.stringify(contentItem)}
     
-    Transform it into student-centered language that:
-    1. Uses "你" (you) instead of "學生" (students)
-    2. Breaks down complex concepts into digestible steps
-    3. Provides clear, relatable examples
-    4. Uses encouraging and accessible language
-    5. Shows practical applications in daily life
-    6. Makes learning feel manageable and interesting
+    Transform it into student-centered content that:
+    1. Uses conversational, friendly tone
+    2. Explains concepts in simple, relatable terms
+    3. Connects to real-world applications students care about
+    4. Includes step-by-step learning guidance
+    5. Makes complex topics feel approachable
+    6. Uses analogies and examples from student life
     
     Output MUST be a valid JSON object with this structure:
     {
-      "title": "學生友善的標題",
-      "details": "轉換為以學生為中心的詳細內容，使用 '你' 的語調",
-      "examples": ["與學生生活相關的具體例子1", "具體例子2"],
-      "practicalApplications": ["這個概念如何在你的生活中應用1", "應用2"],
-      "learningTips": ["幫助你更好理解和記憶的小技巧1", "技巧2"],
-      "encouragement": "鼓勵學生的話語，讓他們對學習這個內容感到興奮"
+      "title": "子主題標題用學生容易理解的語言表達",
+      "introduction": "用友善的語調介紹這個概念，說明為什麼要學習它",
+      "keyPoints": ["要點1用簡單語言解釋", "要點2用實際例子說明", "要點3連結到生活應用"],
+      "realLifeExamples": ["生活中的例子1", "生活中的例子2", "生活中的例子3"],
+      "learningTips": "學習這個概念的小技巧和方法",
+      "nextSteps": "學會這個概念後，你可以進一步探索什麼",
+      "encouragement": "給學生的鼓勵話語"
     }
     
-    Make the content engaging, personal, and motivational. Use Traditional Chinese.
-    Do NOT include any explanation or extra text. Only output the JSON object.
+    Make the content feel like a friendly tutor explaining concepts personally to the student.
+    Use Traditional Chinese. Do NOT include any explanation or extra text. Only output the JSON object.
   `;
-  
+
   return await callGemini(prompt);
 };
 
@@ -580,72 +573,80 @@ export const transformConfusingPointForStudent = async (
   confusingPoint: any
 ): Promise<any> => {
   const prompt = `
-    Transform the following teacher-oriented confusing point into student-friendly, supportive content that helps students overcome learning challenges:
+    Transform the following teacher-oriented confusing point analysis into student-friendly, helpful guidance:
     
     Original Confusing Point:
     ${JSON.stringify(confusingPoint)}
     
-    Transform it into student-centered language that:
-    1. Uses "你" (you) instead of "學生" (students)
-    2. Acknowledges that confusion is normal and okay
-    3. Provides clear, step-by-step clarification
-    4. Uses relatable analogies and examples
-    5. Offers practical strategies to overcome the confusion
-    6. Is encouraging and supportive in tone
+    Transform it into student-centered guidance that:
+    1. Acknowledges that confusion is normal and okay
+    2. Explains the common mistake without making students feel bad
+    3. Provides clear, memorable strategies to avoid the mistake
+    4. Uses positive, encouraging language
+    5. Includes memorable tricks or mnemonics
+    6. Shows both wrong and right examples in a supportive way
     
     Output MUST be a valid JSON object with this structure:
     {
-      "confusingConcept": "用學生友善的語言描述容易混淆的概念",
-      "whyConfusing": "為什麼這個概念容易讓你感到困惑（正常化困惑感受）",
-      "clarification": "清楚的解釋和澄清，使用你能理解的語言",
-      "helpfulAnalogies": ["幫助你理解的比喻或類比1", "類比2"],
-      "practicalStrategies": ["克服這個困惑的實用方法1", "方法2"],
-      "commonMistakes": ["避免這些常見錯誤1", "錯誤2"],
-      "encouragement": "鼓勵的話語，讓你知道克服這個困難是可能的"
+      "title": "易混淆概念的標題用友善語言表達",
+      "normalizeConfusion": "告訴學生這種混淆很正常，不用擔心",
+      "commonMistake": "用溫和的語言說明常見的錯誤想法",
+      "whyItHappens": "解釋為什麼會有這種混淆（讓學生理解而不是感到愚蠢）",
+      "clearExplanation": "用簡單明瞭的方式解釋正確概念",
+      "rememberingTricks": ["記憶技巧1", "記憶技巧2", "記憶技巧3"],
+      "practiceExamples": [
+        {
+          "situation": "情境描述",
+          "wrongThinking": "錯誤的想法",
+          "rightThinking": "正確的想法",
+          "explanation": "為什麼這樣想是對的"
+        }
+      ],
+      "confidenceBooster": "提升學生信心的話語，讓他們知道掌握這個概念是可以做到的"
     }
     
-    Make the content supportive, clear, and motivational. Use Traditional Chinese.
-    Do NOT include any explanation or extra text. Only output the JSON object.
+    Make the content supportive and empowering, helping students learn from mistakes without judgment.
+    Use Traditional Chinese. Do NOT include any explanation or extra text. Only output the JSON object.
   `;
-  
+
   return await callGemini(prompt);
 };
 
 // 記憶卡遊戲驗證函數
 const validateMemoryCardGame = (memoryCardGames: any[]): { isValid: boolean; issues: string[] } => {
   const issues: string[] = [];
-  
+
   memoryCardGames.forEach((game, gameIndex) => {
     if (!game.pairs || !Array.isArray(game.pairs)) {
       issues.push(`遊戲 ${gameIndex + 1}: 缺少 pairs 陣列`);
       return;
     }
-    
+
     const leftContents = new Set();
     const rightContents = new Set();
-    
+
     game.pairs.forEach((pair: any, pairIndex: number) => {
       if (!pair.left || !pair.right) {
         issues.push(`遊戲 ${gameIndex + 1}, 配對 ${pairIndex + 1}: 缺少 left 或 right 內容`);
         return;
       }
-      
+
       if (leftContents.has(pair.left)) {
         issues.push(`遊戲 ${gameIndex + 1}: 重複的左側內容 "${pair.left}"`);
       }
       if (rightContents.has(pair.right)) {
         issues.push(`遊戲 ${gameIndex + 1}: 重複的右側內容 "${pair.right}"`);
       }
-      
+
       leftContents.add(pair.left);
       rightContents.add(pair.right);
     });
-    
+
     if (game.pairs.length < 5) {
       issues.push(`遊戲 ${gameIndex + 1}: 配對數量不足，至少需要 5 對，目前只有 ${game.pairs.length} 對`);
     }
   });
-  
+
   return {
     isValid: issues.length === 0,
     issues
@@ -653,6 +654,114 @@ const validateMemoryCardGame = (memoryCardGames: any[]): { isValid: boolean; iss
 };
 
 // 生成步驟測驗
+// 生成寫作練習內容 (完整原始版本)
+// 6. 產生 englishConversation (完整原始版本)
+const generateEnglishConversation = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  const prompt = `
+    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
+    Please generate a short, natural English conversation (at least 3 lines, but more is better if appropriate, 2 speakers) about the topic "${topic}" (use English translation if topic is not English).
+    Output MUST be a valid JSON array, e.g.:
+    [
+      { "speaker": "Speaker A", "line": "Hello! Let's talk about ${topic}." },
+      { "speaker": "Speaker B", "line": "Great idea! What's the first thing we should discuss regarding ${topic}?" },
+      { "speaker": "Speaker A", "line": "Perhaps we can start with..." },
+      { "speaker": "Speaker B", "line": "I think examples would help." }
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  return await callProviderSystem(prompt, apiKey);
+};
+export const generateWritingPractice = async (
+  topic: string,
+  _apiKey: string,
+  learningObjectives: LearningObjectiveItem[],
+  selectedLevel?: any,
+  vocabularyLevel?: VocabularyLevel
+): Promise<WritingPracticeContent> => {
+  
+  // 生成造句練習
+  const sentencePracticePrompt = `
+    Based on the topic "${topic}" and learning objectives: ${JSON.stringify(learningObjectives)}
+    Generate 6 sentence-making practice prompts (2 easy, 2 normal, 2 hard difficulty).
+    
+    ${selectedLevel ? `The content should be suitable for "${selectedLevel.name}" level learners (${selectedLevel.description}).` : ''}
+    ${vocabularyLevel ? `
+    VOCABULARY CONSTRAINTS for English content:
+    - All instructions and keywords must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - Examples should be appropriate for ${vocabularyLevel.description}
+    ` : ''}
+    
+    Output MUST be a valid JSON array:
+    [
+      {
+        "id": "sentence_1",
+        "instruction": "造句指示說明",
+        "keywords": ["關鍵詞1", "關鍵詞2", "關鍵詞3"],
+        "exampleSentence": "範例句子",
+        "hints": ["提示1", "提示2"],
+        "difficulty": "easy"
+      }
+    ]
+    
+    Requirements:
+    - Each prompt should include 2-4 keywords that must be used
+    - Provide clear instructions in the primary language of the topic
+    - Include helpful hints for sentence construction
+    - Example sentences should demonstrate proper usage
+    - Progressive difficulty from easy to hard
+    
+    Do NOT include explanation, only output the JSON array.
+  `;
+
+  // 生成寫作練習
+  const writingPracticePrompt = `
+    Based on the topic "${topic}" and learning objectives: ${JSON.stringify(learningObjectives)}
+    Generate 6 writing practice prompts (2 easy, 2 normal, 2 hard difficulty).
+    
+    ${selectedLevel ? `The content should be suitable for "${selectedLevel.name}" level learners (${selectedLevel.description}).` : ''}
+    ${vocabularyLevel ? `
+    VOCABULARY CONSTRAINTS for English content:
+    - All instructions and suggested keywords must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
+    - Writing requirements should match ${vocabularyLevel.description}
+    ` : ''}
+    
+    Output MUST be a valid JSON array:
+    [
+      {
+        "id": "writing_1", 
+        "title": "寫作題目標題",
+        "instruction": "詳細的寫作指示",
+        "structure": ["段落1：介紹", "段落2：主要內容", "段落3：結論"],
+        "keywords": ["建議詞彙1", "建議詞彙2"],
+        "minLength": 100,
+        "maxLength": 300,
+        "exampleOutline": "範例大綱結構",
+        "difficulty": "easy"
+      }
+    ]
+    
+    Requirements:
+    - Easy: 100-200 words, simple structure
+    - Normal: 200-400 words, moderate complexity  
+    - Hard: 300-600 words, complex structure
+    - Provide clear writing guidelines and structure suggestions
+    - Include relevant vocabulary recommendations
+    - All text in the primary language of the topic
+    
+    Do NOT include explanation, only output the JSON array.
+  `;
+
+  const [sentencePractice, writingPractice] = await Promise.all([
+    callGemini(sentencePracticePrompt),
+    callGemini(writingPracticePrompt)
+  ]);
+
+  return {
+    sentencePractice,
+    writingPractice,
+    instructions: `這裡提供了造句和寫作練習，幫助學習者提升語言表達能力。造句練習著重於詞彙運用，寫作練習則訓練文章結構和論述能力。完成後可以使用AI批改功能獲得即時回饋。`
+  };
+};
 export const generateStepQuiz = async (
   stepContent: any,
   stepType: 'objective' | 'breakdown' | 'confusing',
@@ -729,70 +838,81 @@ export const generateStepQuiz = async (
     Make questions that genuinely help students practice and remember the key concepts.
     Do NOT include any explanation or extra text outside the JSON structure.
   `;
-  
+
   // 生成測驗內容
   const quizData = await callGemini(prompt);
-  
+
   // 驗證記憶卡遊戲內容
   if (quizData.memoryCardGame && Array.isArray(quizData.memoryCardGame)) {
     const validation = validateMemoryCardGame(quizData.memoryCardGame);
-    
+
     if (!validation.isValid) {
       console.warn('記憶卡遊戲驗證失敗:', validation.issues);
-      
+
       // 可選：如果驗證失敗，重新生成或給出警告
       // 這裡我們選擇記錄警告但仍返回結果，讓老師能在預覽中看到問題
       quizData._validationWarnings = validation.issues;
     }
   }
-  
+
   return quizData;
+};
+
+const generateLearningLevels = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<LearningLevelSuggestions> => {
+  const prompt = `
+    Based on the topic "${topic}" and learning objectives: ${JSON.stringify(learningObjectives)}
+    Please generate 3-4 learning levels that are specific to this topic. Each level should have a unique name, description, and order.
+    The levels should progress from basic understanding to advanced mastery, tailored specifically to the subject matter.
+    
+    Output MUST be a valid JSON object with this exact structure:
+    {
+      "suggestedLevels": [
+        {
+          "id": "beginner",
+          "name": "初學者",
+          "description": "適合首次接觸${topic}的學習者，著重基礎概念理解",
+          "order": 1
+        },
+        {
+          "id": "intermediate", 
+          "name": "進階者",
+          "description": "已具備基礎知識，能進行${topic}的實際應用",
+          "order": 2
+        },
+        {
+          "id": "advanced",
+          "name": "專精者", 
+          "description": "深度掌握${topic}，能分析複雜情況並提供解決方案",
+          "order": 3
+        }
+      ],
+      "defaultLevelId": "beginner"
+    }
+    
+    Make sure to:
+    1. Create level names and descriptions that are specific to the topic (not generic)
+    2. Use appropriate terminology for the subject area
+    3. Ensure descriptions explain what learners at each level can do
+    4. Use the primary language of the topic for names and descriptions
+    
+    Do NOT include any explanation or extra text. Only output the JSON object.
+  `;
+  return await callGemini(prompt, apiKey);
 };
 
 // 生成學習程度建議函數
 export const generateLearningLevelSuggestions = async (topic: string, apiKey: string): Promise<any> => {
   console.log(`生成學習程度建議 (Provider 系統): ${topic}`);
+  // 先產生基本的學習目標來輔助程度建議
+  const basicObjectives = await generateLearningObjectives(topic, apiKey);
 
-  const prompt = `
-    Based on the learning topic "${topic}", please provide 3 different learning level suggestions.
-
-    Output format should be JSON only:
-    {
-      "suggestedLevels": [
-        {
-          "id": "beginner",
-          "label": "初學者",
-          "description": "適合初學者的學習內容",
-          "targetAudience": "沒有相關背景知識的學習者",
-          "estimatedHours": 2
-        },
-        {
-          "id": "intermediate",
-          "label": "中級",
-          "description": "適合有基礎知識的學習者",
-          "targetAudience": "有一定基礎的學習者",
-          "estimatedHours": 4
-        },
-        {
-          "id": "advanced",
-          "label": "進階",
-          "description": "適合進階學習者的深度內容",
-          "targetAudience": "有豐富經驗想深入學習的學習者",
-          "estimatedHours": 6
-        }
-      ]
-    }
-
-    Only output JSON, no explanation.
-  `;
-
-  return await callProviderSystem(prompt, apiKey);
+  return await generateLearningLevels(topic, apiKey, basicObjectives);
 };
 
 // 檢查是否為英語相關主題
-export const isEnglishRelatedTopic =  (topic: string): boolean => {
+export const isEnglishRelatedTopic = (topic: string): boolean => {
   // 簡單的英語主題檢測邏輯
-  const englishKeywords = ['english', 'grammar', 'vocabulary', 'conversation', 'speaking', 'listening', 'reading', 'writing', 'toefl', 'ielts', 'business english','英文','英語'];
+  const englishKeywords = ['english', 'grammar', 'vocabulary', 'conversation', 'speaking', 'listening', 'reading', 'writing', 'toefl', 'ielts', 'business english', '英文', '英語'];
   const lowerTopic = topic.toLowerCase();
   return englishKeywords.some(keyword => lowerTopic.includes(keyword));
 };
@@ -806,22 +926,27 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
   console.log('✓ 學習目標生成完成');
 
   // 2. 並行生成其他部分
-  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz] = await Promise.all([
+  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, learningLevels, writingPractice] = await Promise.all([
     generateContentBreakdown(topic, apiKey, learningObjectives),
     generateConfusingPoints(topic, apiKey, learningObjectives),
     generateClassroomActivities(topic, apiKey, learningObjectives),
-    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives)
+    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives),
+    generateEnglishConversation(topic, apiKey, learningObjectives),
+    generateLearningLevels(topic, apiKey, learningObjectives),
+    generateWritingPractice(topic, apiKey, learningObjectives)
   ]);
 
   console.log('✓ 所有內容生成完成 (Provider 系統)');
 
   return {
-    topic,
     learningObjectives,
     contentBreakdown,
     confusingPoints,
     classroomActivities,
-    onlineInteractiveQuiz
+    onlineInteractiveQuiz,
+    englishConversation,
+    learningLevels,
+    writingPractice
   };
 };
 
@@ -834,11 +959,14 @@ export const generateLearningPlanWithLevel = async (topic: string, selectedLevel
   console.log('✓ 學習目標生成完成');
 
   // 2. 並行生成其他部分
-  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz] = await Promise.all([
+  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, learningLevels, writingPractice] = await Promise.all([
     generateContentBreakdown(topic, apiKey, learningObjectives),
     generateConfusingPoints(topic, apiKey, learningObjectives),
     generateClassroomActivities(topic, apiKey, learningObjectives),
-    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives)
+    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives),
+    generateEnglishConversation(topic, apiKey, learningObjectives),
+    generateLearningLevels(topic, apiKey, learningObjectives),
+    generateWritingPractice(topic, apiKey, learningObjectives, selectedLevel)
   ]);
 
   console.log('✓ 所有內容生成完成 (有程度設定, Provider 系統)');
@@ -850,7 +978,10 @@ export const generateLearningPlanWithLevel = async (topic: string, selectedLevel
     contentBreakdown,
     confusingPoints,
     classroomActivities,
-    onlineInteractiveQuiz
+    onlineInteractiveQuiz,
+    englishConversation,
+    learningLevels,
+    writingPractice
   };
 };
 
@@ -868,45 +999,31 @@ export const generateLearningPlanWithVocabularyLevel = async (
   console.log('✓ 學習目標生成完成');
 
   // 2. 並行生成其他部分
-  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz] = await Promise.all([
+  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, learningLevels, writingPractice] = await Promise.all([
     generateContentBreakdown(topic, apiKey, learningObjectives),
     generateConfusingPoints(topic, apiKey, learningObjectives),
     generateClassroomActivities(topic, apiKey, learningObjectives),
-    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives)
+    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives),
+    generateEnglishConversation(topic, apiKey, learningObjectives),
+    generateLearningLevels(topic, apiKey, learningObjectives),
+    generateWritingPractice(topic, apiKey, learningObjectives, selectedLevel, vocabularyLevel)
   ]);
 
   console.log('✓ 所有內容生成完成 (有詞彙程度設定, Provider 系統)');
 
   return {
-    topic,
-    selectedLevel,
-    selectedVocabularyLevel: vocabularyLevel,
     learningObjectives,
     contentBreakdown,
     confusingPoints,
     classroomActivities,
-    onlineInteractiveQuiz
+    onlineInteractiveQuiz,
+    englishConversation,
+    learningLevels,
+    writingPractice,
+    selectedLevel,
+    selectedVocabularyLevel: vocabularyLevel
   };
 };
-
-// // 重新匯出其他可能需要的功能 (委託給原始服務)
-// export const generateEnglishConversationForLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<any[]> => {
-//   console.log('委託生成英語對話到原始服務');
-//   const { generateEnglishConversationForLevel: original } = await import('./geminiService');
-//   return await original(topic, selectedLevel, apiKey);
-// };
-//
-// export const generateWritingPractice = async (topic: string, apiKey: string): Promise<WritingPracticeContent> => {
-//   console.log('委託生成寫作練習到原始服務');
-//   const { generateWritingPractice: original } = await import('./geminiService');
-//   return await original(topic, apiKey);
-// };
-//
-// export const generateAIFeedback = async (practiceType: string, userWork: string, prompt: any, apiKey: string): Promise<AIFeedback> => {
-//   console.log('委託生成 AI 回饋到原始服務');
-//   const { generateAIFeedback: original } = await import('./geminiService');
-//   return await original(practiceType, userWork, prompt, apiKey);
-// };
 
 // Provider 管理函數
 export const hasConfiguredProviders = async (): Promise<boolean> => {
