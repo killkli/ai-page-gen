@@ -151,7 +151,7 @@ export class ProviderManager {
     try {
       const testRequest: AIRequest = {
         prompt: '測試連接：請回應 "OK"',
-        options: { maxTokens: 100, responseFormat: 'text' }
+        options: { maxTokens: 500, responseFormat: 'text' }
       };
 
       const response = await testProvider.generateContent(testRequest);

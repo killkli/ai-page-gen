@@ -40,8 +40,8 @@ export class GeminiProvider extends BaseProvider {
   public async testConnection(): Promise<boolean> {
     try {
       const testRequest: AIRequest = {
-        prompt: '測試連接：請以 JSON 格式回應 {"status": "OK"}',
-        options: { maxTokens: 100, responseFormat: 'json' }
+        prompt: '測試連接：請回應"OK"',
+        options: { maxTokens: 500 }
       };
 
       const response = await this.generateContent(testRequest);
