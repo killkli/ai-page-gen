@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 學習內容生成系統 - 白話流程說明</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        .step-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .arrow-big {
+            font-size: 48px;
+            color: #667eea;
+            text-align: center;
+            margin: 1rem 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-left: 5px solid #f39c12;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+
+        .code-simple {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-family: 'Courier New', monospace;
+            color: #2d3436;
+            display: inline-block;
+        }
+
+        .parallel-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .parallel-item {
+            background: white;
+            border: 3px solid #74b9ff;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .parallel-item:hover {
+            background: #74b9ff;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .timeline-line {
+            width: 4px;
+            height: 80px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto;
+        }
+
+        .info-badge {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen p-6">
+    <div class="max-w-6xl mx-auto">
+
+        <!-- 主標題 -->
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-black text-gray-800 mb-4">
+                🤖 AI 學習內容生成系統
+            </h1>
+            <p class="text-2xl text-gray-600 font-medium">
+                系統運作流程白話說明
+            </p>
+            <p class="text-lg text-gray-500 mt-2">
+                從使用者輸入到產生完整學習內容的完整過程
+            </p>
+        </div>
+
+        <!-- 步驟 0: 開始 -->
+        <div class="step-card mb-8 border-4 border-blue-400">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="step-number">🚀</div>
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">開始：使用者輸入主題</h2>
+                    <p class="text-gray-600 text-lg mt-1">一切都從這裡開始</p>
+                </div>
+            </div>
+            <div class="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
+                <p class="text-xl font-medium text-gray-700 mb-3">
+                    📝 <strong>使用者做什麼？</strong>
+                </p>
+                <p class="text-lg text-gray-700 leading-relaxed">
+                    輸入想學習的主題，例如：「全球暖化」、「Python 基礎」、「英文現在完成式」等等
+                </p>
+            </div>
+        </div>
+
+        <div class="timeline-line"></div>
+        <div class="arrow-big">⬇️</div>
+
+        <!-- 步驟 1: 判斷主題類型 -->
+        <div class="step-card mb-8 border-4 border-amber-400">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="step-number" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">1</div>
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">系統自動判斷：這是什麼類型的主題？</h2>
+                    <p class="text-gray-600 text-lg mt-1">決定要走哪條路</p>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 p-6 rounded-xl border-2 border-amber-200 mb-6">
+                <p class="text-xl font-medium text-gray-700 mb-3">
+                    🔍 <strong>系統會判斷：</strong>
+                </p>
+                <p class="text-lg text-gray-700 leading-relaxed">
+                    這個主題是「英語學習」還是「一般主題」？<br>
+                    例如：「英文文法」→ 英語學習，「數學」→ 一般主題
+                </p>
+            </div>
+
+            <!-- 兩條路徑 -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- 路徑 A -->
+                <div class="bg-gradient-to-br from-green-100 to-emerald-100 p-6 rounded-xl border-4 border-green-400">
+                    <div class="text-2xl font-bold text-green-700 mb-3 flex items-center gap-2">
+                        <span>📚</span> 路徑 A：英語主題
+                    </div>
+                    <div class="space-y-2">
+                        <div class="info-badge bg-green-200 text-green-800">✓ 主題名稱</div>
+                        <div class="info-badge bg-green-200 text-green-800">✓ 學習程度（初級/中級/高級）</div>
+                        <div class="info-badge bg-green-200 text-green-800">✓ 單字難度（A1-C2 等級）</div>
+                    </div>
+                    <div class="mt-4 text-sm text-green-700 bg-white p-3 rounded-lg">
+                        <strong>為什麼多一個參數？</strong><br>
+                        因為英語學習需要控制單字難度，讓學習更有效！
+                    </div>
+                </div>
+
+                <!-- 路徑 B -->
+                <div class="bg-gradient-to-br from-purple-100 to-violet-100 p-6 rounded-xl border-4 border-purple-400">
+                    <div class="text-2xl font-bold text-purple-700 mb-3 flex items-center gap-2">
+                        <span>📖</span> 路徑 B：一般主題
+                    </div>
+                    <div class="space-y-2">
+                        <div class="info-badge bg-purple-200 text-purple-800">✓ 主題名稱</div>
+                        <div class="info-badge bg-purple-200 text-purple-800">✓ 學習程度（初級/中級/高級）</div>
+                    </div>
+                    <div class="mt-4 text-sm text-purple-700 bg-white p-3 rounded-lg">
+                        <strong>比較簡單！</strong><br>
+                        一般主題只需要主題和程度，就能開始生成內容
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box mt-6">
+                💡 <strong>重點：</strong>不管走哪條路，接下來的流程都一樣！兩條路最後會合併
+            </div>
+        </div>
+
+        <div class="timeline-line"></div>
+        <div class="arrow-big">⬇️</div>
+
+        <!-- 階段一 -->
+        <div class="step-card mb-8 border-4 border-indigo-500 bg-gradient-to-br from-indigo-50 to-blue-50">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="step-number" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">2</div>
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">階段一：先產生「學習目標」</h2>
+                    <p class="text-gray-600 text-lg mt-1">這是整個系統的基礎！</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl border-3 border-indigo-300 shadow-lg mb-6">
+                <div class="text-xl font-bold text-indigo-700 mb-4">
+                    🎯 為什麼要先產生學習目標？
+                </div>
+                <p class="text-lg text-gray-700 leading-relaxed mb-4">
+                    因為後面所有的內容（測驗、活動、練習等）都要「根據學習目標」來設計！<br>
+                    就像蓋房子要先打地基一樣重要。
+                </p>
+                <div class="bg-indigo-50 p-4 rounded-lg">
+                    <p class="text-md text-gray-700">
+                        <strong>舉例：</strong>如果學習目標是「了解光合作用的過程」，後面的測驗題就會問「光合作用的步驟」，而不是問「植物的種類」
+                    </p>
+                </div>
+            </div>
+
+            <!-- 流程詳解 -->
+            <div class="space-y-4">
+                <div class="bg-blue-100 p-5 rounded-xl border-l-4 border-blue-500">
+                    <div class="font-bold text-lg text-blue-800 mb-2">📤 步驟 2.1：發送第一個 AI 請求</div>
+                    <p class="text-gray-700">系統呼叫函數：<code class="code-simple">generateLearningObjectives()</code></p>
+                    <p class="text-sm text-gray-600 mt-2">把主題、程度、單字等級傳給 AI</p>
+                </div>
+
+                <div class="bg-yellow-100 p-5 rounded-xl border-l-4 border-yellow-500">
+                    <div class="font-bold text-lg text-yellow-800 mb-2">🔧 步驟 2.2：選擇 AI 服務商</div>
+                    <p class="text-gray-700">系統透過 <code class="code-simple">ProviderManager</code> 選擇要用哪個 AI（Gemini、OpenRouter 等）</p>
+                    <p class="text-sm text-gray-600 mt-2">就像選擇要用哪家外送平台點餐一樣</p>
+                </div>
+
+                <div class="bg-cyan-100 p-5 rounded-xl border-l-4 border-cyan-500">
+                    <div class="font-bold text-lg text-cyan-800 mb-2">🚀 步驟 2.3：實際發送請求</div>
+                    <p class="text-gray-700">呼叫 <code class="code-simple">callProviderSystem()</code> 把指令傳給 AI</p>
+                    <div class="mt-3 bg-white p-3 rounded-lg text-sm">
+                        <div class="text-gray-700"><strong>設定：</strong></div>
+                        <div>• 輸出格式：JSON（結構化資料）</div>
+                        <div>• 最大字數：8192 個字元</div>
+                        <div>• 創意度：0.7（適中的創意）</div>
+                    </div>
+                </div>
+
+                <div class="bg-green-100 p-5 rounded-xl border-l-4 border-green-500">
+                    <div class="font-bold text-lg text-green-800 mb-2">✅ 步驟 2.4：收到學習目標</div>
+                    <p class="text-gray-700 mb-3">AI 回傳 <strong>3 個學習目標</strong>，每個包含：</p>
+                    <div class="bg-white p-4 rounded-lg text-sm space-y-2">
+                        <div>📌 <strong>標題：</strong>這個目標的名稱</div>
+                        <div>📝 <strong>描述：</strong>詳細說明要學什麼</div>
+                        <div>🔑 <strong>重點：</strong>幾個關鍵知識點</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlight-box mt-6 text-lg">
+                ⏱️ <strong>這個階段需要等待：</strong>大約 5-10 秒（因為要等 AI 思考和回答）
+            </div>
+        </div>
+
+        <div class="timeline-line"></div>
+        <div class="arrow-big">⬇️</div>
+        <div class="text-center mb-6">
+            <div class="inline-block bg-white px-8 py-4 rounded-full shadow-lg border-3 border-purple-300">
+                <p class="text-xl font-bold text-purple-700">📦 把學習目標傳給下一階段</p>
+            </div>
+        </div>
+        <div class="arrow-big">⬇️</div>
+        <div class="timeline-line"></div>
+
+        <!-- 階段二 -->
+        <div class="step-card mb-8 border-4 border-pink-500 bg-gradient-to-br from-pink-50 to-rose-50">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="step-number" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">3</div>
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">階段二：一次產生所有學習內容</h2>
+                    <p class="text-gray-600 text-lg mt-1">7 個請求同時進行！</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl border-3 border-pink-300 shadow-lg mb-8">
+                <div class="text-xl font-bold text-pink-700 mb-4">
+                    ⚡ 什麼是「並行執行」？為什麼這麼重要？
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-red-50 p-4 rounded-lg border-2 border-red-300">
+                        <div class="text-lg font-bold text-red-700 mb-2">❌ 如果順序執行（一個一個來）</div>
+                        <div class="text-gray-700 space-y-2">
+                            <div>請求 #1 → 等 30 秒</div>
+                            <div>請求 #2 → 再等 30 秒</div>
+                            <div>請求 #3 → 再等 30 秒</div>
+                            <div>⋮（繼續等...）</div>
+                            <div class="font-bold text-xl text-red-600 mt-3">總共要等 210 秒！😱</div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+                        <div class="text-lg font-bold text-green-700 mb-2">✅ 並行執行（同時進行）</div>
+                        <div class="text-gray-700 space-y-2">
+                            <div>請求 #1、#2、#3、#4、#5、#6、#7</div>
+                            <div>▼▼▼▼▼▼▼</div>
+                            <div>全部一起發送！</div>
+                            <div>同時等待...</div>
+                            <div class="font-bold text-xl text-green-600 mt-3">只要等 30-40 秒！🚀</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 bg-yellow-100 p-4 rounded-lg border-2 border-yellow-400 text-center">
+                    <p class="text-2xl font-black text-yellow-800">
+                        效率提升 <span class="text-4xl text-orange-600">5-7 倍</span>！
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-purple-100 p-5 rounded-xl mb-6 border-2 border-purple-400">
+                <p class="text-lg font-bold text-purple-800 mb-2">💻 技術實現：</p>
+                <code class="code-simple text-lg">Promise.all([...7個請求...])</code>
+                <p class="text-sm text-purple-700 mt-2">JavaScript 的並行處理技術</p>
+            </div>
+
+            <!-- 7個請求 -->
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">這 7 個請求分別產生什麼內容？</h3>
+
+                <div class="parallel-container">
+                    <div class="parallel-item">
+                        <div class="text-3xl mb-2">📄</div>
+                        <div class="font-bold text-lg mb-2">請求 #1</div>
+                        <div class="text-md font-medium text-gray-700 mb-2">內容大綱</div>
+                        <div class="text-sm text-gray-600">把主題拆成小單元</div>
+                    </div>
+
+                    <div class="parallel-item">
+                        <div class="text-3xl mb-2">⚠️</div>
+                        <div class="font-bold text-lg mb-2">請求 #2</div>
+                        <div class="text-md font-medium text-gray-700 mb-2">易混淆點</div>
+                        <div class="text-sm text-gray-600">學生常搞錯的地方</div>
+                    </div>
+
+                    <div class="parallel-item">
+                        <div class="text-3xl mb-2">🎯</div>
+                        <div class="font-bold text-lg mb-2">請求 #3</div>
+                        <div class="text-md font-medium text-gray-700 mb-2">課堂活動</div>
+                        <div class="text-sm text-gray-600">實作練習和遊戲</div>
+                    </div>
+
+                    <div class="parallel-item">
+                        <div class="text-3xl mb-2">📝</div>
+                        <div class="font-bold text-lg mb-2">請求 #4</div>
+                        <div class="text-md font-medium text-gray-700 mb-2">線上測驗</div>
+                        <div class="text-sm text-gray-600">各種題型的測驗</div>
+                    </div>
+
+                    <div class="parallel-item">
+                        <div class="text-3xl mb-2">💬</div>
+                        <div class="font-bold text-lg mb-2">請求 #5</div>
+                        <div class="text-md font-medium text-gray-700 mb-2">對話範例</div>
+                        <div class="text-sm text-gray-600">實際應用的對話</div>
+                    </div>
+
+                    <div class="parallel-item">
+                        <div class="text-3xl mb-2">📚</div>
+                        <div class="font-bold text-lg mb-2">請求 #6</div>
+                        <div class="text-md font-medium text-gray-700 mb-2">學習建議</div>
+                        <div class="text-sm text-gray-600">不同程度的建議</div>
+                    </div>
+
+                    <div class="parallel-item">
+                        <div class="text-3xl mb-2">✍️</div>
+                        <div class="font-bold text-lg mb-2">請求 #7</div>
+                        <div class="text-md font-medium text-gray-700 mb-2">寫作練習</div>
+                        <div class="text-sm text-gray-600">創作和表達練習</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-orange-100 p-6 rounded-xl border-3 border-orange-400">
+                <div class="text-xl font-bold text-orange-800 mb-3">⚙️ 統一處理</div>
+                <p class="text-lg text-gray-700">
+                    這 7 個請求都會經過同一個處理系統：<code class="code-simple">callProviderSystem()</code>
+                </p>
+                <p class="text-md text-gray-600 mt-2">
+                    就像 7 個訂單同時送到同一個廚房，廚房會同時處理
+                </p>
+            </div>
+        </div>
+
+        <div class="timeline-line"></div>
+        <div class="arrow-big">⬇️</div>
+
+        <!-- 完成 -->
+        <div class="step-card mb-8 border-4 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="step-number" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">✓</div>
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">完成！展示完整的學習內容</h2>
+                    <p class="text-gray-600 text-lg mt-1">使用者可以開始學習了</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="text-xl font-bold text-green-700 mb-4">🎉 使用者會看到什麼？</div>
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3">
+                        <div class="text-2xl">✅</div>
+                        <div>
+                            <div class="font-bold text-gray-800">3 個學習目標</div>
+                            <div class="text-sm text-gray-600">清楚知道要學什麼</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="text-2xl">✅</div>
+                        <div>
+                            <div class="font-bold text-gray-800">完整的內容大綱</div>
+                            <div class="text-sm text-gray-600">系統化的學習路徑</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="text-2xl">✅</div>
+                        <div>
+                            <div class="font-bold text-gray-800">豐富的測驗題目</div>
+                            <div class="text-sm text-gray-600">驗證學習成果</div>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="text-2xl">✅</div>
+                        <div>
+                            <div class="font-bold text-gray-800">實用的活動和練習</div>
+                            <div class="text-sm text-gray-600">實際應用知識</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 總結 -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-8 rounded-3xl shadow-2xl">
+            <h2 class="text-3xl font-black mb-6 text-center">📊 整個流程總結</h2>
+            <div class="grid md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white/20 backdrop-blur p-5 rounded-xl">
+                    <div class="text-4xl mb-2">⏱️</div>
+                    <div class="font-bold text-xl mb-2">總時間</div>
+                    <div class="text-2xl font-black">35-50 秒</div>
+                </div>
+                <div class="bg-white/20 backdrop-blur p-5 rounded-xl">
+                    <div class="text-4xl mb-2">📡</div>
+                    <div class="font-bold text-xl mb-2">API 請求</div>
+                    <div class="text-2xl font-black">8 次</div>
+                    <div class="text-sm">(1次順序 + 7次並行)</div>
+                </div>
+                <div class="bg-white/20 backdrop-blur p-5 rounded-xl">
+                    <div class="text-4xl mb-2">🚀</div>
+                    <div class="font-bold text-xl mb-2">效率提升</div>
+                    <div class="text-2xl font-black">5-7 倍</div>
+                </div>
+            </div>
+
+            <div class="bg-white/30 backdrop-blur p-6 rounded-xl">
+                <div class="font-bold text-2xl mb-3">🎯 關鍵設計理念</div>
+                <div class="space-y-2 text-lg">
+                    <div>✦ 先產生學習目標，確保所有內容都圍繞目標設計</div>
+                    <div>✦ 使用並行處理，大幅提升生成速度</div>
+                    <div>✦ 模組化設計，每種內容有專門的生成函數</div>
+                    <div>✦ 靈活支援不同類型的主題（英語 vs 一般）</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 頁尾 -->
+        <div class="text-center mt-12 text-gray-500">
+            <p class="text-lg">希望這個說明讓你更了解系統運作流程！</p>
+            <p class="text-md mt-2">有任何疑問歡迎提出 😊</p>
+        </div>
+
+    </div>
+</body>
+</html>
