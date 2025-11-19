@@ -15,16 +15,7 @@ import {
     generateLearningPlanFromObjectives
 } from './coreGenerationFunctions';
 
-// Helper functions for building rich topics
-const buildMathRichTopic = (params: MathGenerationParams): string => {
-    const { selectedMaterials } = params;
-    return `Math Lesson: ${selectedMaterials.map(m => m.title).join(', ')}`;
-};
-
-const buildEnglishRichTopic = (params: EnglishGenerationParams): string => {
-    const { selectedMaterials } = params;
-    return `English Lesson: ${selectedMaterials.map(m => m.title).join(', ')}`;
-};
+import { buildMathRichTopic, buildEnglishRichTopic } from './promptBuilders';
 
 // 數學學習目標生成
 export const generateMathObjectives = async (
