@@ -255,6 +255,9 @@ const App: React.FC = () => {
   // 新增：Provider 分享狀態
   const [providerShareId, setProviderShareId] = useState<string | null>(null);
 
+  // 新增：通用生成器顯示狀態
+  const [showGeneralGenerator, setShowGeneralGenerator] = useState<boolean>(false);
+
   React.useEffect(() => {
     const initializeApp = async () => {
       // 1. 先檢查 URL 參數
@@ -589,70 +592,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Navigation Bar */}
-                <div className="max-w-6xl mx-auto mb-8">
-                  <div className="flex justify-center gap-3 flex-wrap">
-                    <a
-                      href={`${import.meta.env.BASE_URL}lesson-plans`}
-                      className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
-                    >
-                      <AcademicCapIcon className="w-5 h-5" />
-                      我的教案庫
-                    </a>
-                    <Link
-                      to="/math"
-                      className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                      </svg>
-                      數學教材生成
-                    </Link>
-                    <Link
-                      to="/english"
-                      className="flex items-center gap-2 px-4 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors shadow-lg"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
-                      </svg>
-                      英語教材生成
-                    </Link>
-                    <a
-                      href={`${import.meta.env.BASE_URL}conversation-prep`}
-                      className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
-                      </svg>
-                      英文對話練習
-                    </a>
-                    <button
-                      onClick={handleProviderShare}
-                      className="flex items-center gap-2 px-4 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-lg"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
-                      </svg>
-                      分享 Provider 配置
-                    </button>
-                    <button
-                      onClick={handleShareLink}
-                      className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-                      </svg>
-                      分享應用程式連結
-                    </button>
-                  </div>
-                  {copySuccess && (
-                    <div className="mt-3 text-center">
-                      <p className={`text - sm ${copySuccess.includes('請先') ? 'text-red-600' : 'text-green-600'} `}>
-                        {copySuccess}
-                      </p>
-                    </div>
-                  )}
-                </div>
+
 
                 {/* Provider 分享Modal */}
                 <ProviderShareModal
@@ -663,60 +603,259 @@ const App: React.FC = () => {
                 />
 
                 <main className="max-w-4xl mx-auto">
-                  <InputBar
-                    topic={topic}
-                    setTopic={setTopic}
-                    onGenerate={handleGenerateContent}
-                    onGenerateWithLevels={handleGenerateLevelSuggestions}
-                    isLoading={isLoading}
-                  />
+                  {/* 只有在非生成狀態且未顯示結果時顯示輸入區 */}
+                  {!generatedContent && !showingLevelSelection && !showingVocabularySelection && (
+                    <>
+                      {/* 主選單模式：顯示所有功能選項 */}
+                      {!showGeneralGenerator ? (
+                        <div className="mt-8 animate-fade-in">
+                          <h3 className="text-xl font-semibold text-slate-700 mb-6 text-center">請選擇您要使用的學習工具</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* 通用主題生成 (原主功能) */}
+                            <button
+                              onClick={() => setShowGeneralGenerator(true)}
+                              className="flex items-center p-4 bg-white border border-indigo-100 rounded-xl hover:shadow-md hover:border-indigo-300 transition-all group text-left w-full"
+                            >
+                              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <LightbulbIcon className="w-6 h-6" />
+                              </div>
+                              <div className="ml-4">
+                                <h4 className="font-medium text-slate-900">通用主題教案</h4>
+                                <p className="text-sm text-slate-500">輸入任意主題產生完整教案</p>
+                              </div>
+                            </button>
+
+                            <Link
+                              to="/math"
+                              className="flex items-center p-4 bg-white border border-blue-100 rounded-xl hover:shadow-md hover:border-blue-300 transition-all group"
+                            >
+                              <div className="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                </svg>
+                              </div>
+                              <div className="ml-4">
+                                <h4 className="font-medium text-slate-900">數學教材生成</h4>
+                                <p className="text-sm text-slate-500">預選博幼教學目標產生教案教材</p>
+                              </div>
+                            </Link>
+
+                            <Link
+                              to="/english"
+                              className="flex items-center p-4 bg-white border border-teal-100 rounded-xl hover:shadow-md hover:border-teal-300 transition-all group"
+                            >
+                              <div className="p-3 bg-teal-50 text-teal-600 rounded-lg group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                                </svg>
+                              </div>
+                              <div className="ml-4">
+                                <h4 className="font-medium text-slate-900">英語教材生成</h4>
+                                <p className="text-sm text-slate-500">預選博幼教學目標產生教案教材</p>
+                              </div>
+                            </Link>
+
+                            <a
+                              href={`${import.meta.env.BASE_URL}conversation-prep`}
+                              className="flex items-center p-4 bg-white border border-emerald-100 rounded-xl hover:shadow-md hover:border-emerald-300 transition-all group"
+                            >
+                              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+                                </svg>
+                              </div>
+                              <div className="ml-4">
+                                <h4 className="font-medium text-slate-900">英文對話練習</h4>
+                                <p className="text-sm text-slate-500">情境模擬對話</p>
+                              </div>
+                            </a>
+
+                            <a
+                              href={`${import.meta.env.BASE_URL}lesson-plans`}
+                              className="flex items-center p-4 bg-white border border-indigo-100 rounded-xl hover:shadow-md hover:border-indigo-300 transition-all group"
+                            >
+                              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                <AcademicCapIcon className="w-6 h-6" />
+                              </div>
+                              <div className="ml-4">
+                                <h4 className="font-medium text-slate-900">我的教案庫</h4>
+                                <p className="text-sm text-slate-500">查看已儲存的教案</p>
+                              </div>
+                            </a>
+                          </div>
+
+                          <div className="mt-12 flex justify-center gap-4">
+                            <button
+                              onClick={handleProviderShare}
+                              className="text-sm text-slate-500 hover:text-purple-600 flex items-center gap-1 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
+                              </svg>
+                              分享 Provider 配置
+                            </button>
+                            <span className="text-slate-300">|</span>
+                            <button
+                              onClick={handleShareLink}
+                              className="text-sm text-slate-500 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                              </svg>
+                              分享應用程式連結
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* 通用主題生成模式：顯示輸入區與返回按鈕 */
+                        <div className="animate-fade-in">
+                          <button
+                            onClick={() => setShowGeneralGenerator(false)}
+                            className="mb-4 flex items-center text-slate-500 hover:text-indigo-600 transition-colors"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-1">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                            </svg>
+                            返回功能選單
+                          </button>
+
+                          <div className="mb-6 text-center">
+                            <h2 className="text-2xl font-bold text-slate-800">通用主題教案生成</h2>
+                            <p className="text-slate-600">輸入任何您想教學的主題，AI 為您規劃完整教案</p>
+                          </div>
+
+                          <InputBar
+                            topic={topic}
+                            setTopic={setTopic}
+                            onGenerate={handleGenerateContent}
+                            onGenerateWithLevels={handleGenerateLevelSuggestions}
+                            isLoading={isLoading}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
 
                   {error && !isLoading && (
                     <div className="my-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-md">
                       <h3 className="font-bold text-lg mb-2 flex items-center"><LightbulbIcon className="w-6 h-6 mr-2 text-red-600" />產生內容時發生錯誤</h3>
                       <p>{error}</p>
                       <p className="mt-2 text-sm">請嘗試修改您的主題或重試。如果問題持續存在，AI 模型可能暫時不可用，或者 API 金鑰可能存在問題。</p>
+                      <button
+                        onClick={() => {
+                          setError(null);
+                          setShowingLevelSelection(false);
+                          setShowingVocabularySelection(false);
+                        }}
+                        className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                      >
+                        重試
+                      </button>
                     </div>
                   )}
 
                   {isLoading && (
-                    <div className="flex justify-center my-10">
+                    <div className="flex flex-col items-center justify-center my-20">
                       <LoadingSpinner />
+                      <p className="mt-4 text-slate-500 animate-pulse">正在為您精心製作教案...</p>
                     </div>
                   )}
 
                   {/* 顯示學習程度選擇 */}
                   {showingLevelSelection && learningLevels && !isLoading && !error && (
-                    <LearningLevelSelector
-                      learningLevels={learningLevels}
-                      onLevelSelect={setSelectedLevel}
-                      onGenerateWithLevel={handleGenerateContentWithLevel}
-                      selectedLevelId={selectedLevel?.id}
-                      isLoading={isLoading}
-                    />
+                    <div className="animate-fade-in">
+                      <div className="mb-6 flex justify-between items-center">
+                        <h2 className="text-2xl font-bold text-slate-800">選擇適合的程度</h2>
+                        <button
+                          onClick={() => setShowingLevelSelection(false)}
+                          className="text-slate-500 hover:text-slate-700 px-3 py-1 rounded hover:bg-slate-100 transition-colors"
+                        >
+                          返回修改主題
+                        </button>
+                      </div>
+                      <LearningLevelSelector
+                        learningLevels={learningLevels}
+                        onLevelSelect={setSelectedLevel}
+                        onGenerateWithLevel={handleGenerateContentWithLevel}
+                        selectedLevelId={selectedLevel?.id}
+                        isLoading={isLoading}
+                      />
+                    </div>
                   )}
 
                   {/* 顯示英語單字程度選擇 (僅限英語主題) */}
                   {showingVocabularySelection && isEnglishTopic && !isLoading && !error && (
-                    <VocabularyLevelSelector
-                      onVocabularyLevelSelect={setSelectedVocabularyLevel}
-                      selectedLevel={selectedVocabularyLevel}
-                      isVisible={true}
-                    />
+                    <div className="animate-fade-in">
+                      <div className="mb-6 flex justify-between items-center">
+                        <h2 className="text-2xl font-bold text-slate-800">選擇單字難易度</h2>
+                        <button
+                          onClick={() => {
+                            setShowingVocabularySelection(false);
+                            setShowingLevelSelection(true);
+                          }}
+                          className="text-slate-500 hover:text-slate-700 px-3 py-1 rounded hover:bg-slate-100 transition-colors"
+                        >
+                          返回上一步
+                        </button>
+                      </div>
+                      <VocabularyLevelSelector
+                        onVocabularyLevelSelect={setSelectedVocabularyLevel}
+                        selectedLevel={selectedVocabularyLevel}
+                        isVisible={true}
+                      />
+                      <div className="mt-8 flex justify-center">
+                        <button
+                          onClick={() => handleGenerateContentWithLevel(selectedLevel!)}
+                          className="px-8 py-3 bg-indigo-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-indigo-700 hover:shadow-xl transition-all transform hover:-translate-y-1"
+                        >
+                          開始產生教案
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                   {/* 顯示生成的完整內容 */}
                   {generatedContent && !isLoading && !error && !showingLevelSelection && !showingVocabularySelection && (
-                    <ErrorBoundary>
-                      <LearningContentDisplay
-                        content={generatedContent}
-                        topic={topic}
-                        selectedLevel={selectedLevel}
-                        selectedVocabularyLevel={selectedVocabularyLevel}
-                        apiKey={apiKey || undefined}
-                        onContentUpdate={setGeneratedContent}
-                      />
-                    </ErrorBoundary>
+                    <div className="animate-fade-in">
+                      <div className="mb-8 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-indigo-100">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                            <AcademicCapIcon className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <h2 className="font-bold text-slate-800 text-lg">{topic}</h2>
+                            <p className="text-sm text-slate-500">
+                              {selectedLevel ? `${selectedLevel.description} · ` : ''}
+                              {new Date().toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setGeneratedContent(null);
+                            setTopic('');
+                            setLearningLevels(null);
+                            setSelectedLevel(null);
+                            setShowGeneralGenerator(false); // Reset to menu
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                        >
+                          <HomeIcon className="w-4 h-4" />
+                          回首頁重新產生
+                        </button>
+                      </div>
+
+                      <ErrorBoundary>
+                        <LearningContentDisplay
+                          content={generatedContent}
+                          topic={topic}
+                          selectedLevel={selectedLevel}
+                          selectedVocabularyLevel={selectedVocabularyLevel}
+                          apiKey={apiKey || undefined}
+                          onContentUpdate={setGeneratedContent}
+                        />
+                      </ErrorBoundary>
+                    </div>
                   )}
                 </main>
 
