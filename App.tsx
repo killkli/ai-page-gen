@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { ExtendedLearningContent, LearningLevelSuggestions, LearningLevel, VocabularyLevel } from './types';
-import { generateLearningPlan, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel, generateLearningLevelSuggestions, isEnglishRelatedTopic, initializeProviderSystem, hasConfiguredProviders } from './services/geminiServiceAdapter';
+import { generateLearningPlan, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel, generateLearningLevelSuggestions, isEnglishRelatedTopic, initializeProviderSystem, hasConfiguredProviders, generateMathLearningPlan, generateEnglishLearningPlan } from './services/geminiServiceAdapter';
 import { providerService } from './services/providerService';
 import InputBar from './components/InputBar';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -10,7 +10,10 @@ import VocabularyLevelSelector from './components/VocabularyLevelSelector';
 import { LightbulbIcon, AcademicCapIcon, HomeIcon } from './components/icons';
 import ProviderApiKeyModal from './components/ProviderApiKeyModal';
 import ProviderStatusDisplay from './components/ProviderSettings/ProviderStatusDisplay';
-import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useSearchParams, Link } from 'react-router-dom';
+import MathGenerator from './src/components/MaterialGenerator/MathGenerator';
+import EnglishGenerator from './src/components/MaterialGenerator/EnglishGenerator';
+import { MathGenerationParams, EnglishGenerationParams } from './types';
 import { getLearningContent } from './services/jsonbinService';
 import { lessonPlanStorage, createStoredLessonPlan, StoredLessonPlan } from './services/lessonPlanStorage';
 import QuizPage from './components/QuizPage';
@@ -456,6 +459,74 @@ const App: React.FC = () => {
     }
   }, [topic, apiKey]);
 
+  // 數學生成處理
+  const handleGenerateMath = useCallback(async (params: MathGenerationParams) => {
+    // 檢查是否有配置的 Provider 或舊版 API Key
+    const hasProviders = await providerService.hasConfiguredProviders();
+    if (!hasProviders && !apiKey) {
+      setError('請先配置 AI Provider 或設定 API 金鑰。');
+      setShowApiKeyModal(true);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setGeneratedContent(null);
+    setShowingLevelSelection(false);
+    setShowingVocabularySelection(false);
+    setIsEnglishTopic(false);
+
+    try {
+      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : (apiKey || '');
+      const content = await generateMathLearningPlan(params, effectiveApiKey);
+      setGeneratedContent(content);
+
+      // 自動保存到本地存儲
+      const topicSummary = `Math: ${params.selectedMaterials.map(m => m.title).join(', ')}`;
+      setTopic(topicSummary); // 更新主題顯示
+      await saveToLocalStorage(content, topicSummary);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || '產生數學內容時發生未知錯誤。');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiKey]);
+
+  // 英語生成處理
+  const handleGenerateEnglish = useCallback(async (params: EnglishGenerationParams) => {
+    // 檢查是否有配置的 Provider 或舊版 API Key
+    const hasProviders = await providerService.hasConfiguredProviders();
+    if (!hasProviders && !apiKey) {
+      setError('請先配置 AI Provider 或設定 API 金鑰。');
+      setShowApiKeyModal(true);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setGeneratedContent(null);
+    setShowingLevelSelection(false);
+    setShowingVocabularySelection(false);
+    setIsEnglishTopic(true);
+
+    try {
+      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : (apiKey || '');
+      const content = await generateEnglishLearningPlan(params, effectiveApiKey);
+      setGeneratedContent(content);
+
+      // 自動保存到本地存儲
+      const topicSummary = `English: ${params.selectedMaterials.map(m => m.title).join(', ')}`;
+      setTopic(topicSummary); // 更新主題顯示
+      await saveToLocalStorage(content, topicSummary);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || '產生英語內容時發生未知錯誤。');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiKey]);
+
   // 舊版 API Key 分享（向後兼容）
   const handleShareLink = async () => {
     if (!apiKey) {
@@ -521,6 +592,8 @@ const App: React.FC = () => {
           <Route path="student-interactive" element={<ErrorBoundary><StudentInteractivePage /></ErrorBoundary>} />
           <Route path="conversation-prep" element={<ErrorBoundary><ConversationPrepPage /></ErrorBoundary>} />
           <Route path="conversation-practice/:binId" element={<ErrorBoundary><ConversationPracticePage /></ErrorBoundary>} />
+          <Route path="math" element={<ErrorBoundary><MathGenerator onGenerate={handleGenerateMath} isSubmitting={isLoading} /></ErrorBoundary>} />
+          <Route path="english" element={<ErrorBoundary><EnglishGenerator onGenerate={handleGenerateEnglish} isSubmitting={isLoading} /></ErrorBoundary>} />
           <Route path="/" element={
             <ErrorBoundary>
               <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -561,6 +634,24 @@ const App: React.FC = () => {
                       <AcademicCapIcon className="w-5 h-5" />
                       我的教案庫
                     </a>
+                    <Link
+                      to="/math"
+                      className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                      </svg>
+                      數學教材生成
+                    </Link>
+                    <Link
+                      to="/english"
+                      className="flex items-center gap-2 px-4 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors shadow-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                      </svg>
+                      英語教材生成
+                    </Link>
                     <a
                       href={`${import.meta.env.BASE_URL}conversation-prep`}
                       className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
