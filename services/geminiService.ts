@@ -1,5 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { GeneratedLearningContent, LearningLevelSuggestions, VocabularyLevel, LearningObjectiveItem, QuizCustomConfig, QuizTypeConfig, QUIZ_TYPE_LIMITS, WritingPracticeContent, SentencePracticePrompt, WritingPracticePrompt, AIFeedback } from '../types';
+import { GeneratedLearningContent, LearningLevelSuggestions, VocabularyLevel, LearningObjectiveItem, QuizCustomConfig, QuizTypeConfig, QUIZ_TYPE_LIMITS, WritingPracticeContent, SentencePracticePrompt, WritingPracticePrompt, AIFeedback, MathGenerationParams, EnglishGenerationParams } from '../types';
 
 // 單一欄位生成工具
 export const callGemini = async (prompt: string, apiKey: string): Promise<any> => {
@@ -96,7 +96,7 @@ const generateLearningObjectives = async (topic: string, apiKey: string): Promis
 const generateContentBreakdown = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   // Detect if this is English language learning
   const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
-  
+
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units. For each, provide a sub-topic, a brief explanation, and a concrete teaching example.
@@ -307,7 +307,7 @@ const generateLearningObjectivesForLevel = async (topic: string, selectedLevel: 
 const generateContentBreakdownForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   // Detect if this is English language learning
   const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
-  
+
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}). For each, provide a sub-topic, a brief explanation, and a concrete teaching example.
@@ -540,11 +540,11 @@ export const isEnglishRelatedTopic = (topic: string): boolean => {
     'english', 'grammar', 'vocabulary', 'pronunciation', 'speaking', 'writing', 'reading', 'listening',
     'conversation', 'toefl', 'ielts', 'toeic', 'english literature', 'business english', 'academic english',
     'phrasal verbs', 'idioms', 'prepositions', 'tenses', 'articles', 'adjectives', 'adverbs', 'nouns', 'verbs',
-    '英語', '英文', '文法', '單字', '發音', '口說', '寫作', '閱讀', '聽力', 
+    '英語', '英文', '文法', '單字', '發音', '口說', '寫作', '閱讀', '聽力',
     '對話', '會話', '托福', '雅思', '多益', '商業英文', '學術英文',
     '片語動詞', '慣用語', '介系詞', '時態', '冠詞', '形容詞', '副詞', '名詞', '動詞'
   ];
-  
+
   const topicLower = topic.toLowerCase();
   return englishKeywords.some(keyword => topicLower.includes(keyword.toLowerCase()));
 };
@@ -554,7 +554,7 @@ export const generateLearningLevelSuggestions = async (topic: string, apiKey: st
   if (!apiKey) {
     throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
   }
-  
+
   // 先產生基本的學習目標來輔助程度建議
   const basicObjectives = await generateLearningObjectives(topic, apiKey);
   return await generateLearningLevels(topic, apiKey, basicObjectives);
@@ -565,10 +565,10 @@ export const generateLearningPlanWithLevel = async (topic: string, selectedLevel
   if (!apiKey) {
     throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
   }
-  
+
   // 1. 根據選定程度重新產生更精確的學習目標
   const learningObjectives = await generateLearningObjectivesForLevel(topic, selectedLevel, apiKey);
-  
+
   // 2. 其他部分並行產生，都會考慮選定的程度
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, writingPractice] = await Promise.all([
     generateContentBreakdownForLevel(topic, selectedLevel, apiKey, learningObjectives),
@@ -578,7 +578,7 @@ export const generateLearningPlanWithLevel = async (topic: string, selectedLevel
     generateEnglishConversationForLevel(topic, selectedLevel, apiKey, learningObjectives),
     generateWritingPractice(topic, apiKey, learningObjectives, selectedLevel)
   ]);
-  
+
   return {
     learningObjectives,
     contentBreakdown,
@@ -592,18 +592,18 @@ export const generateLearningPlanWithLevel = async (topic: string, selectedLevel
 
 // 第三階段：根據選定的程度和單字量產生英語內容
 export const generateLearningPlanWithVocabularyLevel = async (
-  topic: string, 
-  selectedLevel: any, 
-  vocabularyLevel: VocabularyLevel, 
+  topic: string,
+  selectedLevel: any,
+  vocabularyLevel: VocabularyLevel,
   apiKey: string
 ): Promise<GeneratedLearningContent> => {
   if (!apiKey) {
     throw new Error("Gemini API 金鑰未正確設定或遺失。請檢查應用程式的環境設定。");
   }
-  
+
   // 1. 根據選定程度和單字量重新產生更精確的學習目標
   const learningObjectives = await generateLearningObjectivesForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey);
-  
+
   // 2. 其他部分並行產生，都會考慮選定的程度和單字量
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, writingPractice] = await Promise.all([
     generateContentBreakdownForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
@@ -613,7 +613,7 @@ export const generateLearningPlanWithVocabularyLevel = async (
     generateEnglishConversationForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
     generateWritingPractice(topic, apiKey, learningObjectives, selectedLevel, vocabularyLevel)
   ]);
-  
+
   return {
     learningObjectives,
     contentBreakdown,
@@ -625,7 +625,175 @@ export const generateLearningPlanWithVocabularyLevel = async (
   };
 };
 
-// 針對單字量的內容生成函數
+
+// Math Generation Function
+export const generateMathLearningPlan = async (params: MathGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
+  if (!apiKey) {
+    throw new Error("Gemini API 金鑰未正確設定或遺失。");
+  }
+
+  const { studentCount, classDuration, teachingContext, priorExperience, studentGrade, selectedMaterials, teachingMethod } = params;
+  const topic = `Math Lesson: ${selectedMaterials.join(', ')}`;
+
+  // Context description for the prompt
+  const contextDesc = `
+    Target Audience: ${studentGrade} students
+    Class Size: ${studentCount} students
+    Duration: ${classDuration} minutes
+    Setting: ${teachingContext === 'physical' ? 'Physical Classroom' : 'Online Class'}
+    Prior Experience: ${priorExperience}
+    Teaching Method: ${teachingMethod}
+    Selected Materials: ${selectedMaterials.join(', ')}
+  `;
+
+  // 1. Generate Objectives
+  const objectivesPrompt = `
+    Please generate at least 3 clear and distinct learning objectives for a math lesson based on:
+    ${contextDesc}
+
+    The objectives should be aligned with the selected teaching method (${teachingMethod}) and appropriate for the grade level.
+    Output MUST be a valid JSON array of objects (same format as standard objectives):
+    [
+      { "objective": "...", "description": "...", "teachingExample": "..." }
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  const learningObjectives = await callGemini(objectivesPrompt, apiKey);
+
+  // 2. Generate other sections in parallel
+  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz] = await Promise.all([
+    // Content Breakdown
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Break down the lesson into micro-units.
+      Output JSON array: [{ "topic": "...", "details": "...", "teachingExample": "..." }]
+    `, apiKey),
+
+    // Confusing Points
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Identify common misconceptions.
+      Output JSON array (standard format): [{ "point": "...", "clarification": "...", "teachingExample": "...", "errorType": "...", "commonErrors": [...], "correctVsWrong": [...], "preventionStrategy": "...", "correctionMethod": "...", "practiceActivities": [...] }]
+    `, apiKey),
+
+    // Classroom Activities
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Suggest interactive activities using the ${teachingMethod} method.
+      Output JSON array (standard format): [{ "title": "...", "description": "...", "objective": "...", "timing": "...", "materials": "...", "environment": "...", "steps": [...], "assessmentPoints": [...] }]
+    `, apiKey),
+
+    // Quiz
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Generate a quiz.
+      Output JSON object (standard format): { "easy": {...}, "normal": {...}, "hard": {...} }
+    `, apiKey)
+  ]);
+
+  return {
+    topic,
+    learningObjectives,
+    contentBreakdown,
+    confusingPoints,
+    classroomActivities,
+    onlineInteractiveQuiz
+  };
+};
+
+// English Generation Function
+export const generateEnglishLearningPlan = async (params: EnglishGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
+  if (!apiKey) {
+    throw new Error("Gemini API 金鑰未正確設定或遺失。");
+  }
+
+  const { studentCount, classDuration, teachingContext, priorExperience, studentGrade, selectedMaterials, teachingMethod } = params;
+  const topic = `English Lesson: ${selectedMaterials.join(', ')}`;
+
+  // Context description
+  const contextDesc = `
+    Target Audience: ${studentGrade} students
+    Class Size: ${studentCount} students
+    Duration: ${classDuration} minutes
+    Setting: ${teachingContext === 'physical' ? 'Physical Classroom' : 'Online Class'}
+    Prior Experience: ${priorExperience}
+    Teaching Method: ${teachingMethod}
+    Selected Materials: ${selectedMaterials.join(', ')}
+  `;
+
+  // 1. Generate Objectives
+  const objectivesPrompt = `
+    Please generate at least 3 clear and distinct learning objectives for an English lesson based on:
+    ${contextDesc}
+
+    The objectives should be aligned with the selected teaching method (${teachingMethod}).
+    Output MUST be a valid JSON array of objects:
+    [
+      { "objective": "...", "description": "...", "teachingExample": "..." }
+    ]
+    Do NOT include any explanation or extra text. Only output the JSON array.
+  `;
+  const learningObjectives = await callGemini(objectivesPrompt, apiKey);
+
+  // 2. Generate other sections in parallel
+  const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation] = await Promise.all([
+    // Content Breakdown
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Break down the lesson.
+      Output JSON array (English format with coreConcept, teachingSentences, teachingTips): 
+      [{ "topic": "...", "details": "...", "teachingExample": "...", "coreConcept": "...", "teachingSentences": [...], "teachingTips": "..." }]
+    `, apiKey),
+
+    // Confusing Points
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Identify common misconceptions.
+      Output JSON array (standard format).
+    `, apiKey),
+
+    // Classroom Activities
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Suggest interactive activities using the ${teachingMethod} method.
+      Output JSON array (standard format).
+    `, apiKey),
+
+    // Quiz
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Generate a quiz.
+      Output JSON object (standard format).
+    `, apiKey),
+
+    // Conversation
+    callGemini(`
+      Based on these objectives: ${JSON.stringify(learningObjectives)}
+      And context: ${contextDesc}
+      Generate a natural conversation.
+      Output JSON array: [{ "speaker": "...", "line": "..." }]
+    `, apiKey)
+  ]);
+
+  return {
+    topic,
+    learningObjectives,
+    contentBreakdown,
+    confusingPoints,
+    classroomActivities,
+    onlineInteractiveQuiz,
+    englishConversation
+  };
+};
+
 const generateLearningObjectivesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string): Promise<LearningObjectiveItem[]> => {
   const prompt = `
     Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}" appropriate for learning level "${selectedLevel.name}" (${selectedLevel.description}) and English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
@@ -664,7 +832,7 @@ const generateLearningObjectivesForLevelAndVocabulary = async (topic: string, se
 const generateContentBreakdownForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
   // Detect if this is English language learning
   const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
-  
+
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
@@ -914,8 +1082,8 @@ const validateQuizConfig = (config: QuizCustomConfig): QuizCustomConfig => {
 
 // 支援自訂題數的測驗生成函數
 export const generateCustomQuiz = async (
-  topic: string, 
-  apiKey: string, 
+  topic: string,
+  apiKey: string,
   learningObjectives: LearningObjectiveItem[],
   quizConfig: QuizCustomConfig,
   selectedLevel?: any,
@@ -925,13 +1093,13 @@ export const generateCustomQuiz = async (
   const validatedConfig = validateQuizConfig(quizConfig);
   const generateQuizForDifficulty = async (difficulty: keyof QuizCustomConfig) => {
     const config = validatedConfig[difficulty];
-    
+
     // 構建基於自訂題數的 prompt
     let difficultyPrompt = '';
     if (selectedLevel) {
       difficultyPrompt = `適合「${selectedLevel.name}」程度學習者 (${selectedLevel.description}) 的`;
     }
-    
+
     let vocabularyConstraints = '';
     if (vocabularyLevel) {
       vocabularyConstraints = `
@@ -980,7 +1148,7 @@ export const generateCustomQuiz = async (
       - All text must be in the primary language of the topic
       - Do NOT include any explanation or extra text, only output the JSON object
     `;
-    
+
     return await callGemini(prompt, apiKey);
   };
 
@@ -997,7 +1165,7 @@ export const generateCustomQuiz = async (
 // 重新生成測驗的便利函數
 export const regenerateQuizWithConfig = async (
   topic: string,
-  apiKey: string, 
+  apiKey: string,
   learningObjectives: LearningObjectiveItem[],
   quizConfig: QuizCustomConfig,
   selectedLevel?: any,
@@ -1014,7 +1182,7 @@ export const generateWritingPractice = async (
   selectedLevel?: any,
   vocabularyLevel?: VocabularyLevel
 ): Promise<WritingPracticeContent> => {
-  
+
   // 生成造句練習
   const sentencePracticePrompt = `
     Based on the topic "${topic}" and learning objectives: ${JSON.stringify(learningObjectives)}
@@ -1109,7 +1277,7 @@ export const getAIFeedback = async (
 ): Promise<AIFeedback> => {
   const isEnglish = /[a-zA-Z]/.test(studentWork);
   const language = isEnglish ? 'English' : 'Chinese';
-  
+
   const feedbackPrompt = `
     Please provide detailed feedback for this ${promptType} practice work:
     
@@ -1202,7 +1370,7 @@ export const transformLearningObjectiveForStudent = async (
     Make the content engaging, personal, and motivational. Use Traditional Chinese.
     Do NOT include any explanation or extra text. Only output the JSON object.
   `;
-  
+
   return await callGemini(prompt, apiKey);
 };
 
@@ -1239,7 +1407,7 @@ export const transformContentBreakdownForStudent = async (
     Make the content feel like a friendly tutor explaining concepts personally to the student.
     Use Traditional Chinese. Do NOT include any explanation or extra text. Only output the JSON object.
   `;
-  
+
   return await callGemini(prompt, apiKey);
 };
 
@@ -1284,39 +1452,39 @@ export const transformConfusingPointForStudent = async (
     Make the content supportive and empowering, helping students learn from mistakes without judgment.
     Use Traditional Chinese. Do NOT include any explanation or extra text. Only output the JSON object.
   `;
-  
+
   return await callGemini(prompt, apiKey);
 };
 
 // 檢查記憶卡遊戲是否有重複內容
 const validateMemoryCardGame = (memoryCardData: any[]): { isValid: boolean; issues: string[] } => {
   const issues: string[] = [];
-  
+
   for (const game of memoryCardData) {
     if (!game.pairs || !Array.isArray(game.pairs)) continue;
-    
-    const leftContents = game.pairs.map((pair:Record<string,string>) => pair.left?.toLowerCase().trim()).filter(Boolean);
-    const rightContents = game.pairs.map((pair:Record<string,string>) => pair.right?.toLowerCase().trim()).filter(Boolean);
-    
+
+    const leftContents = game.pairs.map((pair: Record<string, string>) => pair.left?.toLowerCase().trim()).filter(Boolean);
+    const rightContents = game.pairs.map((pair: Record<string, string>) => pair.right?.toLowerCase().trim()).filter(Boolean);
+
     // 檢查左側內容重複
-    const leftDuplicates = leftContents.filter((item:string, index:number) => leftContents.indexOf(item) !== index);
+    const leftDuplicates = leftContents.filter((item: string, index: number) => leftContents.indexOf(item) !== index);
     if (leftDuplicates.length > 0) {
       issues.push(`記憶卡左側有重複內容: ${leftDuplicates.join(', ')}`);
     }
-    
+
     // 檢查右側內容重複
-    const rightDuplicates = rightContents.filter((item:string, index:number) => rightContents.indexOf(item) !== index);
+    const rightDuplicates = rightContents.filter((item: string, index: number) => rightContents.indexOf(item) !== index);
     if (rightDuplicates.length > 0) {
       issues.push(`記憶卡右側有重複內容: ${rightDuplicates.join(', ')}`);
     }
-    
+
     // 檢查左右側交叉重複
-    const crossDuplicates = leftContents.filter((left:string) => rightContents.includes(left));
+    const crossDuplicates = leftContents.filter((left: string) => rightContents.includes(left));
     if (crossDuplicates.length > 0) {
       issues.push(`記憶卡左右側有交叉重複內容: ${crossDuplicates.join(', ')}`);
     }
   }
-  
+
   return { isValid: issues.length === 0, issues };
 };
 
@@ -1398,22 +1566,22 @@ export const generateStepQuiz = async (
     Make questions that genuinely help students practice and remember the key concepts.
     Do NOT include any explanation or extra text outside the JSON structure.
   `;
-  
+
   // 生成測驗內容
   const quizData = await callGemini(prompt, apiKey);
-  
+
   // 驗證記憶卡遊戲內容
   if (quizData.memoryCardGame && Array.isArray(quizData.memoryCardGame)) {
     const validation = validateMemoryCardGame(quizData.memoryCardGame);
-    
+
     if (!validation.isValid) {
       console.warn('記憶卡遊戲驗證失敗:', validation.issues);
-      
+
       // 可選：如果驗證失敗，重新生成或給出警告
       // 這裡我們選擇記錄警告但仍返回結果，讓老師能在預覽中看到問題
       quizData._validationWarnings = validation.issues;
     }
   }
-  
+
   return quizData;
 };

@@ -43,7 +43,8 @@ import {
   generateWritingPractice
 } from './studentContentTransformers';
 
-const generateLearningLevels = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[], providerCall: (prompt: string, apiKey: string) => Promise<any>): Promise<LearningLevelSuggestions> => {
+// 生成學習程度建議 (基本版本)
+export const generateLearningLevels = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[], providerCall: (prompt: string, apiKey: string) => Promise<any>): Promise<LearningLevelSuggestions> => {
   const prompt = `
     Based on the topic "${topic}" and learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate 3-4 learning levels that are specific to this topic. Each level should have a unique name, description, and order.
@@ -101,7 +102,7 @@ export const isEnglishRelatedTopic = (topic: string): boolean => {
     'english', 'grammar', 'vocabulary', 'pronunciation', 'speaking', 'writing', 'reading', 'listening',
     'conversation', 'toefl', 'ielts', 'toeic', 'english literature', 'business english', 'academic english',
     'phrasal verbs', 'idioms', 'prepositions', 'tenses', 'articles', 'adjectives', 'adverbs', 'nouns', 'verbs',
-    '英語', '英文', '文法', '單字', '發音', '口說', '寫作', '閱讀', '聽力', 
+    '英語', '英文', '文法', '單字', '發音', '口說', '寫作', '閱讀', '聽力',
     '對話', '會話', '托福', '雅思', '多益', '商業英文', '學術英文',
     '片語動詞', '慣用語', '介系詞', '時態', '冠詞', '形容詞', '副詞', '名詞', '動詞'
   ];

@@ -13,6 +13,7 @@ import { callProviderSystem } from './adapters/basicGenerators';
 import * as studentContentTransformerFunctions from './adapters/studentContentTransformerFunctions';
 import * as coreGenerationFunctions from './adapters/coreGenerationFunctions';
 import * as providerManagementFunctions from './adapters/providerManagementFunctions';
+import * as subjectGenerators from './adapters/subjectGenerators';
 
 // 重新導出基礎生成函數以維持向後兼容
 export {
@@ -53,6 +54,8 @@ import {
   GeneratedLearningContent,
   LearningObjectiveItem,
   VocabularyLevel,
+  MathGenerationParams,
+  EnglishGenerationParams
 } from '../types';
 
 // 為了向後兼容，保持 callGemini 別名
@@ -116,6 +119,16 @@ export const generateLearningPlanWithVocabularyLevel = async (
   apiKey: string
 ): Promise<GeneratedLearningContent> => {
   return await coreGenerationFunctions.generateLearningPlanWithVocabularyLevel(topic, selectedLevel, vocabularyLevel, apiKey, callProviderSystem);
+};
+
+// 數學學習計畫生成
+export const generateMathLearningPlan = async (params: MathGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
+  return await subjectGenerators.generateMathLearningPlan(params, apiKey, callProviderSystem);
+};
+
+// 英語學習計畫生成
+export const generateEnglishLearningPlan = async (params: EnglishGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
+  return await subjectGenerators.generateEnglishLearningPlan(params, apiKey, callProviderSystem);
 };
 
 // =============================================================================
