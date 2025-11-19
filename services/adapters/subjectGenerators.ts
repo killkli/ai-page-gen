@@ -12,119 +12,120 @@ import {
 
 import {
     generateLearningObjectives,
-    generateContentBreakdown,
-    generateConfusingPoints,
-    generateClassroomActivities,
-    generateOnlineInteractiveQuiz,
-    generateEnglishConversation
-} from './basicGenerators';
-
-import {
-    generateLearningLevels
+    generateLearningPlanFromObjectives
 } from './coreGenerationFunctions';
 
-import {
-    generateWritingPractice
-} from './studentContentTransformers';
-
-// 輔助函數：構建數學豐富主題字串
+// Helper functions for building rich topics
 const buildMathRichTopic = (params: MathGenerationParams): string => {
-    const materials = params.selectedMaterials.map(m => `${m.title}${m.content ? `: ${m.content}` : ''}`).join(', ');
-
-    let contextStr = `Math Topic: ${materials}\n`;
-    contextStr += `Target Audience: Grade ${params.studentGrade}, ${params.studentCount} students\n`;
-    contextStr += `Class Duration: ${params.classDuration} minutes\n`;
-    contextStr += `Teaching Context: ${params.teachingContext === 'physical' ? 'Physical Classroom' : 'Online Classroom'}\n`;
-    contextStr += `Prior Experience: ${params.priorExperience}\n`;
-    contextStr += `Teaching Method: ${params.teachingMethod.replace('_', ' ').toUpperCase()}\n`;
-
-    return contextStr;
+    const { selectedMaterials } = params;
+    return `Math Lesson: ${selectedMaterials.map(m => m.title).join(', ')}`;
 };
 
-// 輔助函數：構建英語豐富主題字串
 const buildEnglishRichTopic = (params: EnglishGenerationParams): string => {
-    const materials = params.selectedMaterials.map(m => `${m.title}${m.content ? `: ${m.content}` : ''}`).join(', ');
-
-    let contextStr = `English Topic: ${materials}\n`;
-    contextStr += `Target Audience: Grade ${params.studentGrade}, ${params.studentCount} students\n`;
-    contextStr += `Class Duration: ${params.classDuration} minutes\n`;
-    contextStr += `Teaching Context: ${params.teachingContext === 'physical' ? 'Physical Classroom' : 'Online Classroom'}\n`;
-    contextStr += `Prior Experience: ${params.priorExperience}\n`;
-    contextStr += `Teaching Method: ${params.teachingMethod.replace('_', ' ').toUpperCase()}\n`;
-
-    return contextStr;
+    const { selectedMaterials } = params;
+    return `English Lesson: ${selectedMaterials.map(m => m.title).join(', ')}`;
 };
 
-// 數學學習計畫生成
+// 數學學習目標生成
+export const generateMathObjectives = async (
+    params: MathGenerationParams,
+    apiKey: string
+): Promise<{ topic: string, learningObjectives: any[] }> => {
+    const richTopic = buildMathRichTopic(params);
+    console.log(`開始生成數學學習目標 (Provider 系統): ${richTopic}`);
+
+    const learningObjectives = await generateLearningObjectives(richTopic, apiKey);
+    return { topic: richTopic, learningObjectives };
+};
+
+// 數學學習內容生成
+export const generateMathContent = async (
+    richTopic: string,
+    learningObjectives: any[],
+    apiKey: string,
+    providerCall: (prompt: string, apiKey: string) => Promise<any>
+): Promise<GeneratedLearningContent> => {
+    console.log(`開始生成數學學習內容 (Provider 系統): ${richTopic}`);
+
+    // 使用 coreGenerationFunctions 中的 generateLearningPlan，但我們需要跳過 objectives 生成
+    // 由於 coreGenerationFunctions.generateLearningPlan 內部會重新生成 objectives，
+    // 我們需要一個新的函數來接受已有的 objectives，或者我們在這裡手動調用各個生成函數。
+    // 為了保持一致性，我們應該在 coreGenerationFunctions 中添加一個支持傳入 objectives 的函數。
+    // 但現在為了簡單起見，我們可以直接調用 generateLearningPlan 並傳入 objectives (如果它支持)。
+    // 檢查 coreGenerationFunctions.ts 發現它不支持傳入 objectives。
+    // 所以我們需要修改 coreGenerationFunctions.ts 或者在這裡重新實現並行調用。
+
+    // 讓我們在這裡重新實現並行調用，使用 coreGenerationFunctions 導出的基礎函數。
+    // 但是 coreGenerationFunctions 並沒有導出所有基礎函數 (如 generateContentBreakdown 等)。
+    // 它們在 basicGenerators.ts 中。
+
+    // 為了避免循環依賴和過度複雜，我們假設 basicGenerators 已經導出了我們需要的函數。
+    // 我們需要從 basicGenerators 導入。
+
+    // 暫時方案：我們修改 coreGenerationFunctions.ts 來支持傳入 objectives，
+    // 或者我們在這裡導入 basicGenerators 的函數。
+    // 讓我們看看 basicGenerators.ts 是否可用。
+    // 根據 geminiServiceAdapter.ts，basicGenerators 導出了所有基礎函數。
+
+    // 為了正確實現，我們應該在 coreGenerationFunctions 中添加 generateLearningPlanFromObjectives。
+    // 但我無法輕易修改 coreGenerationFunctions (它可能很複雜)。
+    // 讓我們嘗試直接導入 basicGenerators 的函數。
+
+    return await generateLearningPlanFromObjectives(richTopic, learningObjectives, apiKey, providerCall, {
+        includeEnglishConversation: false,
+        includeWritingPractice: false
+    });
+};
+
+// 英語學習目標生成
+export const generateEnglishObjectives = async (
+    params: EnglishGenerationParams,
+    apiKey: string
+): Promise<{ topic: string, learningObjectives: any[] }> => {
+    const richTopic = buildEnglishRichTopic(params);
+    console.log(`開始生成英語學習目標 (Provider 系統): ${richTopic}`);
+
+    const learningObjectives = await generateLearningObjectives(richTopic, apiKey);
+    return { topic: richTopic, learningObjectives };
+};
+
+// 英語學習內容生成
+export const generateEnglishContent = async (
+    richTopic: string,
+    learningObjectives: any[],
+    apiKey: string,
+    providerCall: (prompt: string, apiKey: string) => Promise<any>
+): Promise<GeneratedLearningContent> => {
+    console.log(`開始生成英語學習內容 (Provider 系統): ${richTopic}`);
+
+    return await generateLearningPlanFromObjectives(richTopic, learningObjectives, apiKey, providerCall, {
+        includeEnglishConversation: true,
+        includeWritingPractice: true
+    });
+};
+
+// 數學學習計畫生成 (Backward Compatibility)
 export const generateMathLearningPlan = async (
     params: MathGenerationParams,
     apiKey: string,
     providerCall: (prompt: string, apiKey: string) => Promise<any>
 ): Promise<GeneratedLearningContent> => {
-    const richTopic = buildMathRichTopic(params);
-    console.log(`開始生成數學學習計劃 (Provider 系統): ${richTopic}`);
-
-    // 1. 生成學習目標
-    const learningObjectives = await generateLearningObjectives(richTopic, apiKey);
-    console.log('✓ 數學學習目標生成完成');
-
-    // 2. 並行生成其他部分
-    // 數學通常不需要英語對話，但為了類型一致性，我們可以生成空的或通用的
-    const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, learningLevels] = await Promise.all([
-        generateContentBreakdown(richTopic, apiKey, learningObjectives),
-        generateConfusingPoints(richTopic, apiKey, learningObjectives),
-        generateClassroomActivities(richTopic, apiKey, learningObjectives),
-        generateOnlineInteractiveQuiz(richTopic, apiKey, learningObjectives),
-        generateLearningLevels(richTopic, apiKey, learningObjectives, providerCall)
-    ]);
-
-    console.log('✓ 所有數學內容生成完成');
-
-    return {
-        learningObjectives,
-        contentBreakdown,
-        confusingPoints,
-        classroomActivities,
-        onlineInteractiveQuiz,
-        learningLevels,
-        englishConversation: [] // 數學不強制需要英語對話
-    };
+    const { topic, learningObjectives } = await generateMathObjectives(params, apiKey);
+    return await generateMathContent(topic, learningObjectives, apiKey, providerCall);
 };
 
-// 英語學習計畫生成
+// 英語學習計畫生成 (Backward Compatibility)
 export const generateEnglishLearningPlan = async (
     params: EnglishGenerationParams,
     apiKey: string,
     providerCall: (prompt: string, apiKey: string) => Promise<any>
 ): Promise<GeneratedLearningContent> => {
-    const richTopic = buildEnglishRichTopic(params);
-    console.log(`開始生成英語學習計劃 (Provider 系統): ${richTopic}`);
-
-    // 1. 生成學習目標
-    const learningObjectives = await generateLearningObjectives(richTopic, apiKey);
-    console.log('✓ 英語學習目標生成完成');
-
-    // 2. 並行生成其他部分
-    const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, learningLevels, writingPractice] = await Promise.all([
-        generateContentBreakdown(richTopic, apiKey, learningObjectives),
-        generateConfusingPoints(richTopic, apiKey, learningObjectives),
-        generateClassroomActivities(richTopic, apiKey, learningObjectives),
-        generateOnlineInteractiveQuiz(richTopic, apiKey, learningObjectives),
-        generateEnglishConversation(richTopic, apiKey, learningObjectives),
-        generateLearningLevels(richTopic, apiKey, learningObjectives, providerCall),
-        generateWritingPractice(richTopic, apiKey, learningObjectives)
-    ]);
-
-    console.log('✓ 所有英語內容生成完成');
-
-    return {
-        learningObjectives,
-        contentBreakdown,
-        confusingPoints,
-        classroomActivities,
-        onlineInteractiveQuiz,
-        englishConversation,
-        learningLevels,
-        writingPractice
-    };
+    const { topic, learningObjectives } = await generateEnglishObjectives(params, apiKey);
+    return await generateEnglishContent(topic, learningObjectives, apiKey, providerCall);
 };
+
+// ---------------------------------------------------------------------------
+// 我們需要從 coreGenerationFunctions 導入 generateLearningPlanFromObjectives
+// 如果它不存在，我們需要創建它。
+// 讓我們假設我們將在 coreGenerationFunctions.ts 中添加它。
+// ---------------------------------------------------------------------------

@@ -21,6 +21,15 @@ import {
   generateEnglishConversation
 } from './basicGenerators';
 
+export {
+  generateLearningObjectives,
+  generateContentBreakdown,
+  generateConfusingPoints,
+  generateClassroomActivities,
+  generateOnlineInteractiveQuiz,
+  generateEnglishConversation
+};
+
 import {
   generateLearningObjectivesForLevel,
   generateContentBreakdownForLevel,
@@ -110,13 +119,36 @@ export const isEnglishRelatedTopic = (topic: string): boolean => {
   return englishKeywords.some(keyword => lowerTopic.includes(keyword));
 };
 
+export interface GenerationOptions {
+  includeEnglishConversation?: boolean;
+  includeWritingPractice?: boolean;
+}
+
 // 主要生成函數 - 完整版本
-export const generateLearningPlan = async (topic: string, apiKey: string, providerCall: (prompt: string, apiKey: string) => Promise<any>): Promise<GeneratedLearningContent> => {
+export const generateLearningPlan = async (
+  topic: string,
+  apiKey: string,
+  providerCall: (prompt: string, apiKey: string) => Promise<any>,
+  options: GenerationOptions = {}
+): Promise<GeneratedLearningContent> => {
   console.log(`開始生成學習計劃 (Provider 系統): ${topic}`);
 
   // 1. 先生成學習目標
   const learningObjectives = await generateLearningObjectives(topic, apiKey);
   console.log('✓ 學習目標生成完成');
+
+  return await generateLearningPlanFromObjectives(topic, learningObjectives, apiKey, providerCall, options);
+};
+
+// 從現有學習目標生成學習計劃
+export const generateLearningPlanFromObjectives = async (
+  topic: string,
+  learningObjectives: LearningObjectiveItem[],
+  apiKey: string,
+  providerCall: (prompt: string, apiKey: string) => Promise<any>,
+  options: GenerationOptions = {}
+): Promise<GeneratedLearningContent> => {
+  console.log(`開始從現有目標生成學習計劃 (Provider 系統): ${topic}`);
 
   // 2. 並行生成其他部分
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, learningLevels, writingPractice] = await Promise.all([
@@ -124,9 +156,9 @@ export const generateLearningPlan = async (topic: string, apiKey: string, provid
     generateConfusingPoints(topic, apiKey, learningObjectives),
     generateClassroomActivities(topic, apiKey, learningObjectives),
     generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives),
-    generateEnglishConversation(topic, apiKey, learningObjectives),
+    options.includeEnglishConversation !== false ? generateEnglishConversation(topic, apiKey, learningObjectives) : Promise.resolve([]),
     generateLearningLevels(topic, apiKey, learningObjectives, providerCall),
-    generateWritingPractice(topic, apiKey, learningObjectives)
+    options.includeWritingPractice !== false ? generateWritingPractice(topic, apiKey, learningObjectives) : Promise.resolve(undefined)
   ]);
 
   console.log('✓ 所有內容生成完成 (Provider 系統)');

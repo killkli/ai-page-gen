@@ -3,11 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import StepWizard from './Shared/StepWizard';
 import MethodCard from './Shared/MethodCard';
 import MaterialSelector from './Shared/MaterialSelector';
-import { MathGenerationParams, TeachingContext, PriorExperience, MathTeachingMethod, StudentGrade, MaterialItem } from '../../core/types';
+import ObjectivesReview from './Shared/ObjectivesReview';
+import {
+    MathGenerationParams,
+    TeachingContext,
+    PriorExperience,
+    MathTeachingMethod,
+    StudentGrade,
+    MaterialItem,
+    LearningObjectiveItem,
+    GeneratedLearningContent
+} from '../../core/types';
+import { generateMathObjectives, generateMathContent, hasConfiguredProviders } from '../../../services/geminiServiceAdapter';
 
 interface MathGeneratorProps {
-    onGenerate: (params: MathGenerationParams) => Promise<void>;
-    isSubmitting: boolean;
+    onComplete: (content: GeneratedLearningContent, topicSummary: string) => Promise<void>;
+    apiKey: string;
 }
 
 const TEACHING_METHODS: { id: MathTeachingMethod; title: string; description: string }[] = [
@@ -54,9 +65,12 @@ const STUDENT_GRADES: { id: StudentGrade; label: string }[] = [
     { id: 'high_school_review', label: '高中複習' },
 ];
 
-const MathGenerator: React.FC<MathGeneratorProps> = ({ onGenerate, isSubmitting }) => {
+const MathGenerator: React.FC<MathGeneratorProps> = ({ onComplete, apiKey }) => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
+    const [isGeneratingObjectives, setIsGeneratingObjectives] = useState(false);
+    const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Form State
     const [studentCount, setStudentCount] = useState<number>(1);
@@ -67,25 +81,71 @@ const MathGenerator: React.FC<MathGeneratorProps> = ({ onGenerate, isSubmitting 
     const [selectedMaterials, setSelectedMaterials] = useState<MaterialItem[]>([]);
     const [teachingMethod, setTeachingMethod] = useState<MathTeachingMethod>('concept_oriented');
 
-    const handleNext = () => {
-        setStep(2);
+    // Objectives State
+    const [objectives, setObjectives] = useState<LearningObjectiveItem[]>([]);
+    const [generatedTopic, setGeneratedTopic] = useState<string>('');
+
+    const getEffectiveApiKey = async () => {
+        const hasProviders = await hasConfiguredProviders();
+        if (hasProviders) return 'provider-system-placeholder-key';
+        return apiKey;
+    };
+
+    const handleNext = async () => {
+        if (step === 2) {
+            // Generate Objectives
+            setIsGeneratingObjectives(true);
+            setError(null);
+            try {
+                const effectiveKey = await getEffectiveApiKey();
+                if (!effectiveKey) throw new Error("請先設定 API Key 或配置 AI Provider");
+
+                const params: MathGenerationParams = {
+                    studentCount,
+                    classDuration: duration,
+                    teachingContext,
+                    priorExperience,
+                    studentGrade,
+                    selectedMaterials,
+                    teachingMethod
+                };
+                const result = await generateMathObjectives(params, effectiveKey);
+                setObjectives(result.learningObjectives);
+                setGeneratedTopic(result.topic);
+                setStep(3);
+            } catch (err: any) {
+                console.error("Error generating objectives:", err);
+                setError(err.message || "生成學習目標時發生錯誤");
+            } finally {
+                setIsGeneratingObjectives(false);
+            }
+        } else {
+            setStep(step + 1);
+        }
     };
 
     const handleBack = () => {
-        setStep(1);
+        setStep(step - 1);
     };
 
-    const handleGenerate = async () => {
-        await onGenerate({
-            studentCount,
-            classDuration: duration,
-            teachingContext,
-            priorExperience,
-            studentGrade,
-            selectedMaterials,
-            teachingMethod
-        });
-        navigate('/');
+    const handleGenerateContent = async () => {
+        setIsGeneratingContent(true);
+        setError(null);
+        try {
+            const effectiveKey = await getEffectiveApiKey();
+            if (!effectiveKey) throw new Error("請先設定 API Key 或配置 AI Provider");
+
+            const content = await generateMathContent(generatedTopic, objectives, effectiveKey);
+
+            const topicSummary = `Math: ${selectedMaterials.map(m => m.title).join(', ')}`;
+            await onComplete(content, topicSummary);
+            navigate('/');
+        } catch (err: any) {
+            console.error("Error generating content:", err);
+            setError(err.message || "生成教材內容時發生錯誤");
+        } finally {
+            setIsGeneratingContent(false);
+        }
     };
 
     const renderStep1 = () => (
@@ -244,20 +304,37 @@ const MathGenerator: React.FC<MathGeneratorProps> = ({ onGenerate, isSubmitting 
         </div>
     );
 
+    const renderStep3 = () => (
+        <ObjectivesReview
+            objectives={objectives}
+            onObjectivesChange={setObjectives}
+            isGenerating={isGeneratingObjectives}
+        />
+    );
+
     return (
-        <StepWizard
-            currentStep={step}
-            totalSteps={2}
-            title="數學教材生成設定"
-            onNext={handleNext}
-            onPrev={handleBack}
-            onSubmit={handleGenerate}
-            canNext={step === 1} // Step 1 is always valid with defaults
-            canFinish={selectedMaterials.length > 0} // Must select at least one material
-            isSubmitting={isSubmitting}
-        >
-            {step === 1 ? renderStep1() : renderStep2()}
-        </StepWizard>
+        <div className="max-w-4xl mx-auto">
+            {error && (
+                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    {error}
+                </div>
+            )}
+            <StepWizard
+                currentStep={step}
+                totalSteps={3}
+                title="數學教材生成設定"
+                onNext={handleNext}
+                onPrev={handleBack}
+                onSubmit={handleGenerateContent}
+                canNext={step === 1 || (step === 2 && selectedMaterials.length > 0)}
+                canFinish={step === 3 && objectives.length > 0}
+                isSubmitting={isGeneratingObjectives || isGeneratingContent}
+            >
+                {step === 1 && renderStep1()}
+                {step === 2 && renderStep2()}
+                {step === 3 && renderStep3()}
+            </StepWizard>
+        </div>
     );
 };
 

@@ -1,6 +1,19 @@
 import React, { useState, useCallback } from 'react';
-import { ExtendedLearningContent, LearningLevelSuggestions, LearningLevel, VocabularyLevel } from './types';
-import { generateLearningPlan, generateLearningPlanWithLevel, generateLearningPlanWithVocabularyLevel, generateLearningLevelSuggestions, isEnglishRelatedTopic, initializeProviderSystem, hasConfiguredProviders, generateMathLearningPlan, generateEnglishLearningPlan } from './services/geminiServiceAdapter';
+import {
+  ExtendedLearningContent,
+  LearningLevel,
+  VocabularyLevel,
+  LearningLevelSuggestions // Added this
+} from './src/core/types';
+import {
+  hasConfiguredProviders,
+  generateLearningPlan, // Restored
+  generateLearningPlanWithLevel, // Restored
+  generateLearningPlanWithVocabularyLevel, // Restored
+  generateLearningLevelSuggestions, // Restored
+  isEnglishRelatedTopic, // Restored
+  initializeProviderSystem // Restored
+} from './services/geminiServiceAdapter';
 import { providerService } from './services/providerService';
 import InputBar from './components/InputBar';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -13,7 +26,6 @@ import ProviderStatusDisplay from './components/ProviderSettings/ProviderStatusD
 import { BrowserRouter as Router, Routes, Route, useSearchParams, Link } from 'react-router-dom';
 import MathGenerator from './src/components/MaterialGenerator/MathGenerator';
 import EnglishGenerator from './src/components/MaterialGenerator/EnglishGenerator';
-import { MathGenerationParams, EnglishGenerationParams } from './types';
 import { getLearningContent } from './services/jsonbinService';
 import { lessonPlanStorage, createStoredLessonPlan, StoredLessonPlan } from './services/lessonPlanStorage';
 import QuizPage from './components/QuizPage';
@@ -74,16 +86,16 @@ const SharePage: React.FC = () => {
       await lessonPlanStorage.init();
 
       // 檢查是否已經儲存過這個分享教案（避免重複儲存）
-      const existingPlan = await lessonPlanStorage.getLessonPlan(`shared_${shareBinId}`);
+      const existingPlan = await lessonPlanStorage.getLessonPlan(`shared_${shareBinId} `);
       if (existingPlan) {
         // 如果已存在，只更新最後訪問時間
-        await lessonPlanStorage.updateLastAccessed(`shared_${shareBinId}`);
+        await lessonPlanStorage.updateLastAccessed(`shared_${shareBinId} `);
         return;
       }
 
       // 建立儲存格式，使用特殊的 ID 格式來標記這是分享的教案
       const storedPlan: StoredLessonPlan = {
-        id: `shared_${shareBinId}`, // 使用 shared_ 前綴來標記分享教案
+        id: `shared_${shareBinId} `, // 使用 shared_ 前綴來標記分享教案
         topic: content.topic || '分享的教案',
         createdAt: new Date().toISOString(),
         lastAccessedAt: new Date().toISOString(),
@@ -172,7 +184,7 @@ const SharePage: React.FC = () => {
         {/* 導航區域 */}
         <div className="mb-6">
           <a
-            href={`${import.meta.env.BASE_URL}`}
+            href={`${import.meta.env.BASE_URL} `}
             className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors shadow-sm"
           >
             <HomeIcon className="w-4 h-4" />
@@ -459,73 +471,22 @@ const App: React.FC = () => {
     }
   }, [topic, apiKey]);
 
-  // 數學生成處理
-  const handleGenerateMath = useCallback(async (params: MathGenerationParams) => {
-    // 檢查是否有配置的 Provider 或舊版 API Key
-    const hasProviders = await providerService.hasConfiguredProviders();
-    if (!hasProviders && !apiKey) {
-      setError('請先配置 AI Provider 或設定 API 金鑰。');
-      setShowApiKeyModal(true);
-      return;
-    }
+  // 數學生成完成處理
+  const handleMathComplete = useCallback(async (content: ExtendedLearningContent, topicSummary: string) => {
+    setGeneratedContent(content);
+    setTopic(topicSummary);
+    await saveToLocalStorage(content, topicSummary);
+    setIsLoading(false);
+  }, []);
 
-    setIsLoading(true);
-    setError(null);
-    setGeneratedContent(null);
-    setShowingLevelSelection(false);
-    setShowingVocabularySelection(false);
-    setIsEnglishTopic(false);
-
-    try {
-      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : (apiKey || '');
-      const content = await generateMathLearningPlan(params, effectiveApiKey);
-      setGeneratedContent(content);
-
-      // 自動保存到本地存儲
-      const topicSummary = `Math: ${params.selectedMaterials.map(m => m.title).join(', ')}`;
-      setTopic(topicSummary); // 更新主題顯示
-      await saveToLocalStorage(content, topicSummary);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || '產生數學內容時發生未知錯誤。');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [apiKey]);
-
-  // 英語生成處理
-  const handleGenerateEnglish = useCallback(async (params: EnglishGenerationParams) => {
-    // 檢查是否有配置的 Provider 或舊版 API Key
-    const hasProviders = await providerService.hasConfiguredProviders();
-    if (!hasProviders && !apiKey) {
-      setError('請先配置 AI Provider 或設定 API 金鑰。');
-      setShowApiKeyModal(true);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setGeneratedContent(null);
-    setShowingLevelSelection(false);
-    setShowingVocabularySelection(false);
+  // 英語生成完成處理
+  const handleEnglishComplete = useCallback(async (content: ExtendedLearningContent, topicSummary: string) => {
+    setGeneratedContent(content);
+    setTopic(topicSummary);
     setIsEnglishTopic(true);
-
-    try {
-      const effectiveApiKey = hasProviders ? 'provider-system-placeholder-key' : (apiKey || '');
-      const content = await generateEnglishLearningPlan(params, effectiveApiKey);
-      setGeneratedContent(content);
-
-      // 自動保存到本地存儲
-      const topicSummary = `English: ${params.selectedMaterials.map(m => m.title).join(', ')}`;
-      setTopic(topicSummary); // 更新主題顯示
-      await saveToLocalStorage(content, topicSummary);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || '產生英語內容時發生未知錯誤。');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [apiKey]);
+    await saveToLocalStorage(content, topicSummary);
+    setIsLoading(false);
+  }, []);
 
   // 舊版 API Key 分享（向後兼容）
   const handleShareLink = async () => {
@@ -558,7 +519,7 @@ const App: React.FC = () => {
   const handleProviderImported = useCallback((count: number) => {
     console.log(`已導入 ${count} 個 Provider 配置`);
     // 導入完成後跳轉回主頁
-    window.location.href = `${window.location.origin}${import.meta.env.BASE_URL}`;
+    window.location.href = `${window.location.origin}${import.meta.env.BASE_URL} `;
   }, []);
 
   // 如果是 Provider 分享模式，顯示 ProviderShareReceiver
@@ -570,12 +531,16 @@ const App: React.FC = () => {
           onProviderImported={handleProviderImported}
           onClose={() => {
             // 關閉時跳轉回主頁
-            window.location.href = `${window.location.origin}${import.meta.env.BASE_URL}`;
+            window.location.href = `${window.location.origin}${import.meta.env.BASE_URL} `;
           }}
         />
       </ErrorBoundary>
     );
   }
+
+  // ...
+
+  // Get effective API key - REMOVED as it was unused
 
   return (
     <Router basename={import.meta.env.BASE_URL}>
@@ -592,8 +557,8 @@ const App: React.FC = () => {
           <Route path="student-interactive" element={<ErrorBoundary><StudentInteractivePage /></ErrorBoundary>} />
           <Route path="conversation-prep" element={<ErrorBoundary><ConversationPrepPage /></ErrorBoundary>} />
           <Route path="conversation-practice/:binId" element={<ErrorBoundary><ConversationPracticePage /></ErrorBoundary>} />
-          <Route path="math" element={<ErrorBoundary><MathGenerator onGenerate={handleGenerateMath} isSubmitting={isLoading} /></ErrorBoundary>} />
-          <Route path="english" element={<ErrorBoundary><EnglishGenerator onGenerate={handleGenerateEnglish} isSubmitting={isLoading} /></ErrorBoundary>} />
+          <Route path="math" element={<ErrorBoundary><MathGenerator onComplete={handleMathComplete} apiKey={apiKey || ''} /></ErrorBoundary>} />
+          <Route path="english" element={<ErrorBoundary><EnglishGenerator onComplete={handleEnglishComplete} apiKey={apiKey || ''} /></ErrorBoundary>} />
           <Route path="/" element={
             <ErrorBoundary>
               <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -628,7 +593,7 @@ const App: React.FC = () => {
                 <div className="max-w-6xl mx-auto mb-8">
                   <div className="flex justify-center gap-3 flex-wrap">
                     <a
-                      href={`${import.meta.env.BASE_URL}lesson-plans`}
+                      href={`${import.meta.env.BASE_URL} lesson - plans`}
                       className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
                     >
                       <AcademicCapIcon className="w-5 h-5" />
@@ -653,7 +618,7 @@ const App: React.FC = () => {
                       英語教材生成
                     </Link>
                     <a
-                      href={`${import.meta.env.BASE_URL}conversation-prep`}
+                      href={`${import.meta.env.BASE_URL} conversation - prep`}
                       className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -682,7 +647,7 @@ const App: React.FC = () => {
                   </div>
                   {copySuccess && (
                     <div className="mt-3 text-center">
-                      <p className={`text-sm ${copySuccess.includes('請先') ? 'text-red-600' : 'text-green-600'}`}>
+                      <p className={`text - sm ${copySuccess.includes('請先') ? 'text-red-600' : 'text-green-600'} `}>
                         {copySuccess}
                       </p>
                     </div>

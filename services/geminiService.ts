@@ -626,14 +626,14 @@ export const generateLearningPlanWithVocabularyLevel = async (
 };
 
 
-// Math Generation Function
-export const generateMathLearningPlan = async (params: MathGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
+// Math Generation Functions
+export const generateMathObjectives = async (params: MathGenerationParams, apiKey: string): Promise<{ topic: string, learningObjectives: LearningObjectiveItem[] }> => {
   if (!apiKey) {
     throw new Error("Gemini API 金鑰未正確設定或遺失。");
   }
 
   const { studentCount, classDuration, teachingContext, priorExperience, studentGrade, selectedMaterials, teachingMethod } = params;
-  const topic = `Math Lesson: ${selectedMaterials.join(', ')}`;
+  const topic = `Math Lesson: ${selectedMaterials.map(m => m.title).join(', ')}`;
 
   // Context description for the prompt
   const contextDesc = `
@@ -643,7 +643,7 @@ export const generateMathLearningPlan = async (params: MathGenerationParams, api
     Setting: ${teachingContext === 'physical' ? 'Physical Classroom' : 'Online Class'}
     Prior Experience: ${priorExperience}
     Teaching Method: ${teachingMethod}
-    Selected Materials: ${selectedMaterials.join(', ')}
+    Selected Materials: ${selectedMaterials.map(m => m.title).join(', ')}
   `;
 
   // 1. Generate Objectives
@@ -659,6 +659,27 @@ export const generateMathLearningPlan = async (params: MathGenerationParams, api
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   const learningObjectives = await callGemini(objectivesPrompt, apiKey);
+
+  return { topic, learningObjectives };
+};
+
+export const generateMathContent = async (params: MathGenerationParams, learningObjectives: LearningObjectiveItem[], apiKey: string): Promise<GeneratedLearningContent> => {
+  if (!apiKey) {
+    throw new Error("Gemini API 金鑰未正確設定或遺失。");
+  }
+
+  const { studentCount, classDuration, teachingContext, priorExperience, studentGrade, selectedMaterials, teachingMethod } = params;
+  const topic = `Math Lesson: ${selectedMaterials.map(m => m.title).join(', ')}`;
+
+  const contextDesc = `
+    Target Audience: ${studentGrade} students
+    Class Size: ${studentCount} students
+    Duration: ${classDuration} minutes
+    Setting: ${teachingContext === 'physical' ? 'Physical Classroom' : 'Online Class'}
+    Prior Experience: ${priorExperience}
+    Teaching Method: ${teachingMethod}
+    Selected Materials: ${selectedMaterials.map(m => m.title).join(', ')}
+  `;
 
   // 2. Generate other sections in parallel
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz] = await Promise.all([
@@ -705,14 +726,20 @@ export const generateMathLearningPlan = async (params: MathGenerationParams, api
   };
 };
 
-// English Generation Function
-export const generateEnglishLearningPlan = async (params: EnglishGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
+// Deprecated: Wrapper for backward compatibility if needed, or just remove if unused
+export const generateMathLearningPlan = async (params: MathGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
+  const { learningObjectives } = await generateMathObjectives(params, apiKey);
+  return await generateMathContent(params, learningObjectives, apiKey);
+};
+
+// English Generation Functions
+export const generateEnglishObjectives = async (params: EnglishGenerationParams, apiKey: string): Promise<{ topic: string, learningObjectives: LearningObjectiveItem[] }> => {
   if (!apiKey) {
     throw new Error("Gemini API 金鑰未正確設定或遺失。");
   }
 
   const { studentCount, classDuration, teachingContext, priorExperience, studentGrade, selectedMaterials, teachingMethod } = params;
-  const topic = `English Lesson: ${selectedMaterials.join(', ')}`;
+  const topic = `English Lesson: ${selectedMaterials.map(m => m.title).join(', ')}`;
 
   // Context description
   const contextDesc = `
@@ -722,7 +749,7 @@ export const generateEnglishLearningPlan = async (params: EnglishGenerationParam
     Setting: ${teachingContext === 'physical' ? 'Physical Classroom' : 'Online Class'}
     Prior Experience: ${priorExperience}
     Teaching Method: ${teachingMethod}
-    Selected Materials: ${selectedMaterials.join(', ')}
+    Selected Materials: ${selectedMaterials.map(m => m.title).join(', ')}
   `;
 
   // 1. Generate Objectives
@@ -738,6 +765,27 @@ export const generateEnglishLearningPlan = async (params: EnglishGenerationParam
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   const learningObjectives = await callGemini(objectivesPrompt, apiKey);
+
+  return { topic, learningObjectives };
+};
+
+export const generateEnglishContent = async (params: EnglishGenerationParams, learningObjectives: LearningObjectiveItem[], apiKey: string): Promise<GeneratedLearningContent> => {
+  if (!apiKey) {
+    throw new Error("Gemini API 金鑰未正確設定或遺失。");
+  }
+
+  const { studentCount, classDuration, teachingContext, priorExperience, studentGrade, selectedMaterials, teachingMethod } = params;
+  const topic = `English Lesson: ${selectedMaterials.map(m => m.title).join(', ')}`;
+
+  const contextDesc = `
+    Target Audience: ${studentGrade} students
+    Class Size: ${studentCount} students
+    Duration: ${classDuration} minutes
+    Setting: ${teachingContext === 'physical' ? 'Physical Classroom' : 'Online Class'}
+    Prior Experience: ${priorExperience}
+    Teaching Method: ${teachingMethod}
+    Selected Materials: ${selectedMaterials.map(m => m.title).join(', ')}
+  `;
 
   // 2. Generate other sections in parallel
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation] = await Promise.all([
@@ -792,6 +840,12 @@ export const generateEnglishLearningPlan = async (params: EnglishGenerationParam
     onlineInteractiveQuiz,
     englishConversation
   };
+};
+
+// Deprecated: Wrapper for backward compatibility
+export const generateEnglishLearningPlan = async (params: EnglishGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
+  const { learningObjectives } = await generateEnglishObjectives(params, apiKey);
+  return await generateEnglishContent(params, learningObjectives, apiKey);
 };
 
 const generateLearningObjectivesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string): Promise<LearningObjectiveItem[]> => {

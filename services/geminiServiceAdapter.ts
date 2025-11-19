@@ -106,6 +106,10 @@ export const generateLearningPlan = async (topic: string, apiKey: string): Promi
   return await coreGenerationFunctions.generateLearningPlan(topic, apiKey, callProviderSystem);
 };
 
+export const generateLearningPlanFromObjectives = async (topic: string, learningObjectives: LearningObjectiveItem[], apiKey: string): Promise<GeneratedLearningContent> => {
+  return await coreGenerationFunctions.generateLearningPlanFromObjectives(topic, learningObjectives, apiKey, callProviderSystem);
+};
+
 // 帶程度的生成函數
 export const generateLearningPlanWithLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<GeneratedLearningContent> => {
   return await coreGenerationFunctions.generateLearningPlanWithLevel(topic, selectedLevel, apiKey, callProviderSystem);
@@ -126,9 +130,25 @@ export const generateMathLearningPlan = async (params: MathGenerationParams, api
   return await subjectGenerators.generateMathLearningPlan(params, apiKey, callProviderSystem);
 };
 
+export const generateMathObjectives = async (params: MathGenerationParams, apiKey: string): Promise<{ topic: string, learningObjectives: LearningObjectiveItem[] }> => {
+  return await subjectGenerators.generateMathObjectives(params, apiKey);
+};
+
+export const generateMathContent = async (topic: string, learningObjectives: LearningObjectiveItem[], apiKey: string): Promise<GeneratedLearningContent> => {
+  return await subjectGenerators.generateMathContent(topic, learningObjectives, apiKey, callProviderSystem);
+};
+
 // 英語學習計畫生成
 export const generateEnglishLearningPlan = async (params: EnglishGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
   return await subjectGenerators.generateEnglishLearningPlan(params, apiKey, callProviderSystem);
+};
+
+export const generateEnglishObjectives = async (params: EnglishGenerationParams, apiKey: string): Promise<{ topic: string, learningObjectives: LearningObjectiveItem[] }> => {
+  return await subjectGenerators.generateEnglishObjectives(params, apiKey);
+};
+
+export const generateEnglishContent = async (topic: string, learningObjectives: LearningObjectiveItem[], apiKey: string): Promise<GeneratedLearningContent> => {
+  return await subjectGenerators.generateEnglishContent(topic, learningObjectives, apiKey, callProviderSystem);
 };
 
 // =============================================================================
