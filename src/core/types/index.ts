@@ -16,8 +16,8 @@ export type LearningContent = BaseLearningContent;
 export type UserInteraction = BaseUserInteraction;
 
 // 分支特定內容的聯合類型
-export type BranchLearningContent = 
-  | BaseLearningContent 
+export type BranchLearningContent =
+  | BaseLearningContent
 
 // 分支識別類型
 export type BranchType = 'main' | 'english' | 'math';
@@ -250,8 +250,8 @@ export interface SentenceScrambleQuestion {
 }
 
 export interface MemoryCardGameQuestion {
-  pairs: { 
-    question?: string; 
+  pairs: {
+    question?: string;
     answer?: string;
     left?: string;
     right?: string;
@@ -475,7 +475,7 @@ export interface TeacherDiagnosticReport {
   studentId?: string;                   // 學生ID（可選）
   assessmentDate: string;               // 評估日期
   topic: string;                        // 評估主題
-  
+
   // 整體表現摘要
   overallPerformance: {
     totalScore: number;                 // 總分(0-100)
@@ -483,10 +483,10 @@ export interface TeacherDiagnosticReport {
     percentile?: number;                // 百分位數（如果有參考群體）
     timeSpent: number;                  // 總測驗時間(分鐘)
   };
-  
+
   // 各題型表現詳情
   performanceByType: QuestionTypePerformance[];
-  
+
   // 學習分析
   learningAnalysis: {
     strengths: LearningStrength[];       // 學習強項
@@ -494,7 +494,7 @@ export interface TeacherDiagnosticReport {
     learningStyle?: string;              // 學習風格推測
     cognitivePattern?: string;           // 認知模式
   };
-  
+
   // 教學建議
   teachingRecommendations: {
     immediateInterventions: string[];    // 立即介入建議
@@ -502,10 +502,10 @@ export interface TeacherDiagnosticReport {
     differentiation: string[];           // 差異化教學建議
     parentGuidance?: string[];           // 家長指導建議
   };
-  
+
   // 個人化建議
   personalizedRecommendations: PersonalizedRecommendation[];
-  
+
   // 進度追蹤建議
   progressTracking: {
     keyMetrics: string[];               // 關鍵指標
@@ -681,4 +681,80 @@ export interface StoredLessonPlan {
   stepQuizData?: { [stepId: string]: any };
   createdAt?: string;
   updatedAt?: string;
+}
+
+// ==========================================
+// New Types for Material Generation Update
+// ==========================================
+
+// Common Types
+export type TeachingContext = 'physical' | 'online';
+export type PriorExperience = 'special_needs' | 'none' | 'partial';
+
+// Math Specific Types
+export type MathTeachingMethod =
+  | 'visual' // 圖像化教學法
+  | 'cpa' // CPA教學法
+  | 'concept_oriented' // 概念導向教學
+  | 'discovery' // 發現學習法
+  | 'gamification' // 遊戲化教學
+  | 'contextual'; // 情境教學法
+
+export interface MathGenerationParams {
+  studentCount: number;
+  classDuration: number; // minutes
+  teachingContext: TeachingContext;
+  priorExperience: PriorExperience;
+  selectedMaterials: MaterialItem[];
+  teachingMethod: MathTeachingMethod;
+  studentGrade: StudentGrade;
+}
+
+// English Specific Types
+export type EnglishTeachingMethod =
+  | 'clt' // 溝通式教學法
+  | 'tbl' // 任務導向學習
+  | 'pbl' // 專題導向學習
+  | 'tpr' // 全身反應法
+  | 'phonics' // 自然發音法
+  | 'grammar_translation' // 文法翻譯法
+  | 'ppp' // PPP教學模式
+  | 'cooperative' // 合作學習
+  | 'gamification' // 遊戲化教學
+  | 'flipped' // 翻轉教室
+  | 'scaffolding' // 教育戲劇法 (Scaffolding/Drama?) - Image says "教育戲劇法"
+  | 'clil'; // CLIL 雙語整合教學
+
+export type StudentGrade =
+  | 'preschool'
+  | 'elementary_low' // 1-2
+  | 'elementary_mid' // 3-4
+  | 'elementary_high' // 5-6
+  | 'junior_7'
+  | 'junior_8'
+  | 'junior_9'
+  | 'high_school_review';
+
+export interface EnglishGenerationParams {
+  studentCount: number;
+  classDuration: number;
+  teachingContext: TeachingContext;
+  priorExperience: PriorExperience;
+  studentGrade: StudentGrade;
+  selectedMaterials: MaterialItem[];
+  teachingMethod: EnglishTeachingMethod;
+}
+
+// Material Structure
+export interface MaterialItem {
+  unit: string;
+  title: string;
+  content: string;
+  grade: number;
+}
+
+export interface MaterialNode {
+  id: string;
+  label: string;
+  children?: MaterialNode[];
 }

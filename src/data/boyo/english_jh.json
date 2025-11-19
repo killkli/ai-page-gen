@@ -1,0 +1,314 @@
+[
+  {
+    "unit": "**I-1 Be 動詞現在式**",
+    "title": "I-1 (1) 基礎肯定句和單複數 Be 動詞應用",
+    "content": "**Be 動詞 (am, is, are)** 的現在式基本用法；**指示代名詞/形容詞** (this, that, these, those) 的單複數用法；**名詞的單複數變化**；**所有格** (如 `teacher` vs. `teacher's` vs. `their teacher`)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-1 Be 動詞現在式**",
+    "title": "I-1 (2) 疑問句與否定句結構及所有格代名詞",
+    "content": "**Be 動詞的否定句** (is not, are not)；**Be 動詞的一般疑問句和簡答** (如 Are you...?, Yes, they are.)；**所有格代名詞或所有格形容詞的改寫** (如 My name 改為 Her name)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-2 一般動詞現在式和Wh問句**",
+    "title": "I-2 (1) 一般動詞現在式基本用法與否定句",
+    "content": "**一般動詞現在式** (Simple Present Tense) 的肯定句用法，注意**第三人稱單數動詞變化** (V/Vs)；**否定句結構** (do/does not + 原形動詞)；**介系詞** (in, at) 的基本時間和地點用法。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-2 一般動詞現在式和Wh問句**",
+    "title": "I-2 (2) 一般動詞疑問句與 Wh-問句",
+    "content": "**一般動詞的一般疑問句與簡答** (Do/Does + S + V?)；**Wh-問句** (What, Where, Who) 的詢問主詞、職業或地點等用法；**Wh-問句的回答方式**。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-3 祈使句與現在進行式**",
+    "title": "I-3 (1) 祈使句和基礎連接詞",
+    "content": "**祈使句** (Imperatives) 的肯定和否定用法 (如 Please be, Do the dishes, Don't V)；**Let's 句型**；**對等連接詞** (and, but, or) 連結句子或單字。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-3 祈使句與現在進行式**",
+    "title": "I-3 (2) 現在進行式 (Present Continuous) 結構與應用",
+    "content": "**現在進行式** (Be + V-ing) 的肯定、否定及疑問句結構；**地點副詞 (Where) 搭配現在進行式** 的問答；**表示因果的對等連接詞** (so) 的用法。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-4 數量詞和存在詞 there be**",
+    "title": "I-4 (1) 基礎數量表達與存在句",
+    "content": "**存在句** (There is / There are) 的基本肯定、否定和疑問句結構；**數詞** (如 three hundred) 和**序數** (如 the thirty-first, the first)；**可數名詞的數量詞** (如 two eggs, a few, many)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-4 數量詞和存在詞 there be**",
+    "title": "I-4 (2) 不可數名詞的數量表達和集合數量詞",
+    "content": "**不可數名詞的數量詞** (a little, much)；**單位量詞** (a bottle of, a cup of, a bowl of)；**不定數量詞** (a lot of)；**集合數量詞** (both, all, one of)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-5 How old + What time + How many / much**",
+    "title": "I-5 (1) 詢問時間、年齡與基本數量詞",
+    "content": "**詢問年齡** (How old are you/is N?) 及回答；**詢問時間** (What time is it?)；**詢問可數名詞數量** (How many Ns do you have?)；**詢問不可數名詞數量** (How much N do you want?)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-5 How old + What time + How many / much**",
+    "title": "I-5 (2) 搭配一般動詞的 Wh- 問句與回答",
+    "content": "**詢問動作時間** (What time / When do/does S + V?)；**詢問地點** (Where is / Where do S + V?)；**詢問方式** (How do you V?)；**搭配存在句的 How many** (How many Ns are there?)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-6 過去式與易混淆動詞**",
+    "title": "I-6 (1) 一般動詞過去式與否定疑問句",
+    "content": "**一般動詞的過去式** (規則和不規則變化，如 played, ran, read, took)；**過去式時間副詞** (yesterday, last night/Sunday/month/year, days/minutes ago) 的應用；**過去式的否定句** (did not + V)；**過去式的一般疑問句** (Did you V?)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-6 過去式與易混淆動詞**",
+    "title": "I-6 (2) Be 動詞過去式與易混淆動詞",
+    "content": "**Be 動詞的過去式** (was, were)；**過去式的 Wh- 問句** (Who did you talk to?)；**易混淆動詞** 的基礎應用 (如 see vs. watch)；**祈使句** (Watch out!)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-7 過去進行式與易混淆動詞**",
+    "title": "I-7 (1) 過去進行式的結構與時間點應用",
+    "content": "**過去進行式** (was/were + V-ing) 的肯定和否定句結構；**搭配特定過去時間點** (then, at that time, at 19:00 last Tuesday) 表示當時正在發生的動作；**過去進行式與過去簡單式** 的區別應用。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-7 過去進行式與易混淆動詞**",
+    "title": "I-7 (2) 過去進行式的疑問句與 Wh- 問句",
+    "content": "**過去進行式的一般疑問句與簡答** (Were you doing...?)；**過去進行式的 Wh- 問句** (What was S doing?, Who was S talking to?)；**易混淆動詞** (Did S tell V?) 的應用；**祈使句** (Say hello to everyone!)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-8 未來式與not only...but also**",
+    "title": "I-8 (1) 基礎未來式 (will / be going to) 的應用",
+    "content": "**未來式助動詞 will** 的肯定、否定及疑問句結構；**未來式 be going to** 的肯定、否定及疑問句結構；**未來式時間副詞** (tomorrow, next summer/month/Monday)。",
+    "grade": 7
+  },
+  {
+    "unit": "**I-8 未來式與not only...but also**",
+    "title": "I-8 (2) 複合句型 not only...but also 的應用",
+    "content": "**not only...but also (不僅⋯⋯而且⋯⋯)** 的連接名詞或動詞的用法；**過去簡單式** 在未來式語境中的對比使用。",
+    "grade": 7
+  },
+  {
+    "unit": "**II-1 助動詞與have to / had better及不定代名詞one / ones**",
+    "title": "II-1 (1) 基礎助動詞 (Modals) Can/Could, Will/Would, Should, Must",
+    "content": "**助動詞 Can (能力)** 的應用；**助動詞 Will/Would** 的疑問句與禮貌詢問用法；**助動詞 Should (建議)** 的應用；**助動詞 Must (義務/推測)** 的應用。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-1 助動詞與have to / had better及不定代名詞one / ones**",
+    "title": "II-1 (2) have to, had better 等特殊片語",
+    "content": "**表達必要性 have to/had to**；**表達建議/警告 had better**；**助動詞 Could (過去式/推測/禮貌)** 的應用；**搭配助動詞的否定句** (cannot, wouldn't, couldn't)。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-1 助動詞與have to / had better及不定代名詞one / ones**",
+    "title": "II-1 (3) 不定代名詞 one / ones",
+    "content": "**不定代名詞 one / ones** 用以取代前面提到的單數或複數名詞，避免重複；**不定代名詞的形容詞修飾** (a new one, the blue one)。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-2 形容詞比較句型與從屬連接詞because**",
+    "title": "II-2 (1) 比較級和最高級形容詞與副詞",
+    "content": "**形容詞/副詞的比較級** (faster, more boring, worse)；**最高級** (the most important, the tallest, the hottest)；**比較級的修飾語** (much more)；**比較級搭配不定代名詞 one/ones**。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-2 形容詞比較句型與從屬連接詞because**",
+    "title": "II-2 (2) 同級比較與從屬連接詞 because",
+    "content": "**同級比較** (as + Adj/Adv + as)；**數量比較詞** (more noodles/food)；**從屬連接詞 because** (因為) 引起的子句，用於連接因果關係；**介詞片語 more than / less than**。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-3 副詞與時間從屬連接詞**",
+    "title": "II-3 (1) 副詞的位置與類型",
+    "content": "**副詞修飾動詞** (quietly, busily, happily)；**頻率副詞** (always, usually, often, sometimes, seldom, never) 的句中位置；**附和句** (..., too. / ..., either.)。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-3 副詞與時間從屬連接詞**",
+    "title": "II-3 (2) 時間從屬連接詞 before / after",
+    "content": "**時間從屬連接詞 before/after** 引導的子句或片語；**使用 V-ing 簡化時間從屬子句** (Before going to bed, After drinking milk)；**未來時間的從屬子句需用現在式**。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-3 副詞與時間從屬連接詞**",
+    "title": "II-3 (3) 時間從屬連接詞 when 與其他特殊句型",
+    "content": "**時間從屬連接詞 when** 的應用；**特殊副詞句型** (There it is)；**情態助動詞** (Would you like to V?)。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-4 動名詞與不定詞及虛主詞 It**",
+    "title": "II-4 (1) 動名詞與不定詞作主詞及特定動詞後用法",
+    "content": "**動名詞 (V-ing) 作主詞**；**動名詞作受詞** (enjoy V-ing, stop V-ing, couldn't help V-ing, How about V-ing)；**不定詞 (To V) 作受詞** (agree to take, decide to watch, want to plant)。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-4 動名詞與不定詞及虛主詞 It**",
+    "title": "II-4 (2) 虛主詞 It 的應用與不定詞作受詞補語",
+    "content": "**虛主詞 It** 的句型 (It is + Adj + of N + to V, It is + Adj + for N + to V)；**不定詞作受詞補語** (ask N to V)；**不定詞表示目的** (enough time to V)；**too... to V 句型**。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-4 動名詞與不定詞及虛主詞 It**",
+    "title": "II-4 (3) 慣用語與動名詞/不定詞的進階應用",
+    "content": "**動名詞慣用語** (have a good time V-ing, remember V-ing)；**動詞搭配 to V 或 V-ing** (like to play / likes playing)；**It takes 時間 to V** 的句型。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-5 使役與授予動詞及易混淆動詞**",
+    "title": "II-5 (1) 使役動詞 make, let, have 的基礎用法",
+    "content": "**使役動詞 make** (make N V)；**使役動詞 let** (let N V)；**使役動詞 have** (have N V)。使役動詞後的動詞需為**原形動詞**。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-5 使役與授予動詞及易混淆動詞**",
+    "title": "II-5 (2) 授予動詞 (Ditransitive Verbs) 與 to/for 的區別",
+    "content": "**授予動詞** 的兩種句型 (V N1 N2 / V N2 to/for N1)；**介詞 for** (如 buy a car for N) 的應用；**間接受詞代名詞化** 的位置 (give it to me)。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-5 使役與授予動詞及易混淆動詞**",
+    "title": "II-5 (3) 易混淆動詞 cost, spend, take",
+    "content": "**動詞 cost (花費金錢)** 的應用；**動詞 spend (花費金錢/時間)** (spend N on N / spend time V-ing)；**動詞 take (花費時間)** (It takes N time to V)；**不定詞 to V 作為受詞** (forget to buy N)。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-6 連綴與感官動詞及so...that...的用法**",
+    "title": "II-6 (1) 連綴動詞 (Linking Verbs) 的用法",
+    "content": "**連綴動詞** (smell, taste, feel, look) 之後接**形容詞** (good, happy)；**連綴動詞 look** 搭配 **like + N** 表示「看起來像」；**連綴動詞 turn + Adj**。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-6 連綴與感官動詞及so...that...的用法**",
+    "title": "II-6 (2) 感官動詞 (Sensory Verbs) 與 so...that...句型",
+    "content": "**感官動詞** (hear, see, notice, feel) 之後接**受詞 + 原形動詞 (V)** 或**現在分詞 (V-ing)**；**「如此⋯⋯以致於⋯⋯」句型** (so + Adj/Adv + that + 子句)。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-7 現在完成式及所有格代名詞與反身代名詞**",
+    "title": "II-7 (1) 現在完成式 (Present Perfect Tense) 的經驗與持續用法",
+    "content": "**現在完成式** (has/have + Vp.p.) 的基本結構；**搭配副詞** (ever, never) 表示經驗；**搭配副詞** (for, since) 表示動作持續時間；**句型 It has been + 時間 + since + S + V(過去式)**。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-7 現在完成式及所有格代名詞與反身代名詞**",
+    "title": "II-7 (2) 現在完成式的結果用法與時間副詞 yet/already",
+    "content": "**現在完成式** 表示**結果** (has gone to the library)；**搭配 yet/already** 詢問或表示是否已經完成 (Hasn't finished... yet)；**動名詞 (V-ing)** 作為介詞片語中的受詞。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-7 現在完成式及所有格代名詞與反身代名詞**",
+    "title": "II-7 (3) 所有格代名詞與反身代名詞",
+    "content": "**所有格代名詞** (mine, hers, yours, ours, theirs) 取代所有格形容詞 + 名詞；**反身代名詞** (herself, themselves, by oneself) 表示動作的對象是主詞自己或獨自完成；**同級比較 as tall as ours**。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-8 附加問句及感嘆句**",
+    "title": "II-8 (1) 附加問句 (Tag Questions) 的基本原則",
+    "content": "**附加問句** 的基本結構：前肯定後否定，前否定後肯定；**Be 動詞**、**一般動詞**、**助動詞 (have to)**、**現在進行式** 的附加問句用法；**特殊附加問句** (There be, I am) 的用法。",
+    "grade": 8
+  },
+  {
+    "unit": "**II-8 附加問句及感嘆句**",
+    "title": "II-8 (2) 感嘆句 (Exclamatory Sentences) 的用法",
+    "content": "**How 開頭的感嘆句** (How + Adj/Adv + S + V!)；**What 開頭的感嘆句** (What a(n) + Adj + N + S + V!)；**So/Such 的感嘆用法** (So difficult!, Such a good N!)；**Not only... but also** 的進階應用。",
+    "grade": 8
+  },
+  {
+    "unit": "**III-1 被動語態、分詞當形容詞及過去/現在習慣用語**",
+    "title": "III-1 (1) 被動語態 (Passive Voice) 的現在式與過去式",
+    "content": "**被動語態基本結構** (Be + Vp.p.)；**現在簡單式被動** (is/are + Vp.p.)；**過去簡單式被動** (was/were + Vp.p.)；**動作執行者** (by + N)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-1 被動語態、分詞當形容詞及過去/現在習慣用語**",
+    "title": "III-1 (2) 被動語態的助動詞與未來式",
+    "content": "**被動語態搭配助動詞** (can be answered, will be sold, must be followed)；**未來式被動語態** (will be Vp.p. / is going to be Vp.p.)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-1 被動語態、分詞當形容詞及過去/現在習慣用語**",
+    "title": "III-1 (3) 分詞當形容詞 (Participles as Adjectives)",
+    "content": "**現在分詞 (-ing)** 作形容詞表示「令人感到...」 (touching, surprising, interesting)；**過去分詞 (-ed)** 作形容詞表示「感到...」 (touched, surprised, tired, excited, scared, interested)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-1 被動語態、分詞當形容詞及過去/現在習慣用語**",
+    "title": "III-1 (4) 過去/現在習慣用語",
+    "content": "**現在的習慣** (is used to V-ing)；**過去的習慣** (did not have to V, liked to eat N before)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-2 關係代名詞與其子句句型**",
+    "title": "III-2 (1) 關係代名詞 who / whom / which / that 的主詞與受詞用法",
+    "content": "**關係代名詞 who / that** 作**主詞** (The boy who/that won...)；**關係代名詞 which / that / x** 作**受詞** (The cake which/that/x I bought...)；關係子句中的**動詞時態一致性**。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-2 關係代名詞與其子句句型**",
+    "title": "III-2 (2) 關係代名詞 whose 與搭配介系詞的關係代名詞",
+    "content": "**所有格關係代名詞 whose** (a friend whose mom is...)；**介系詞 + which/whom** 的用法 (at which we had dinner)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-2 關係代名詞與其子句句型**",
+    "title": "III-2 (3) 關係副詞 when / where 的用法",
+    "content": "**關係副詞 where** 取代地點 (The house where... / The park where...)；**關係副詞 when** 取代時間 (the moment when... / the date when...)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-2 關係代名詞與其子句句型**",
+    "title": "III-2 (4) 名詞子句 What 的用法",
+    "content": "**名詞子句 what** 引導的子句作主詞或受詞，指稱「...的事物」 (what I bought, what he said)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-3 條件句if與願望表達動詞**",
+    "title": "III-3 (1) 事實條件句 (If S V, S will V)",
+    "content": "**事實條件句** (Real Conditionals)：如果條件是事實或可能發生，主句用未來式或助動詞 (will, may, can)；**條件子句用現在簡單式** (If S don't/doesn't V)；**祈使句在條件句主句** (If S calls, tell him...)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-3 條件句if與願望表達動詞**",
+    "title": "III-3 (2) 與現在事實相反的假設語氣 (If S were, S would V)",
+    "content": "**與現在事實相反的假設語氣** (Unreal Conditionals)：條件子句用**過去式動詞**或 **were** (If S were/V(past)...)；**主要子句用 would/could + 原形動詞** (S would/could V)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-3 條件句if與願望表達動詞**",
+    "title": "III-3 (3) 願望表達動詞 Hope 與 Wish",
+    "content": "**動詞 hope** (希望未來或可能發生的事)；**動詞 wish** (希望現在或過去事實相反的事，後接過去式動詞)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-4 其他從屬連接詞與其子句句型及連接詞片語**",
+    "title": "III-4 (1) 讓步從屬連接詞 (Though/Although) 與名詞子句 (that)",
+    "content": "**讓步從屬連接詞 though/although** (雖然...但是...)；**名詞子句 that** 引導子句作受詞 (hope that, say that)；**連綴動詞搭配 that 子句** (We were sorry that...)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-4 其他從屬連接詞與其子句句型及連接詞片語**",
+    "title": "III-4 (2) 名詞子句 (Wh- Clauses)",
+    "content": "**Wh- 問句轉為名詞子句作受詞** (tell me where/how)；名詞子句動詞的**順序**；**不定詞簡化疑問詞子句** (where to V)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-4 其他從屬連接詞與其子句句型及連接詞片語**",
+    "title": "III-4 (3) 連接詞片語 (Either...or / Neither...nor)",
+    "content": "**連接詞片語 either...or (非 A 即 B)**；**連接詞片語 neither...nor (既不 A 也不 B)**；**連接詞片語的主詞動詞單複數一致性** (就近原則)。",
+    "grade": 9
+  },
+  {
+    "unit": "**III-4 其他從屬連接詞與其子句句型及連接詞片語**",
+    "title": "III-4 (4) 名詞子句 (if/whether)",
+    "content": "**名詞子句 if/whether** (是否) 的應用；**動名詞 as 主詞** (being safe)；**搭配形容詞的介系詞** (be afraid that/of)。",
+    "grade": 9
+  }
+]

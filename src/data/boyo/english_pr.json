@@ -1,0 +1,152 @@
+[
+  {
+    "unit": "第一課",
+    "title": "家人",
+    "content": "主要學習**家庭成員**的基礎詞彙，包括爸爸 (father)、媽媽 (mother)、兒子 (son)、女兒 (daughter)、哥哥 (brother)、姊姊 (sister)、弟弟/妹妹 (brother/sister)。同時練習使用**不定冠詞** `a` (一個) 和**連接詞** `and` (和)，來組成描述性詞組（例如：a mother and a boy, a father and a girl）。",
+    "grade": 3
+  },
+  {
+    "unit": "第二課",
+    "title": "你、我、他",
+    "content": "著重於**人稱代名詞**：我 (I)、你/你們 (You)、他 (He)、她 (She)、牠 (It)、我們 (We)、他們 (They)。核心文法是**Be動詞** (am, is, are) 的基本用法，以及 Be動詞與各人稱代名詞的搭配（例如：I am, You are, She is, We are, It is）。課程也涵蓋**名詞的單複數**概念（例如：a cat 對比 They are dogs）。",
+    "grade": 3
+  },
+  {
+    "unit": "第三課",
+    "title": "有",
+    "content": "介紹**擁有**的動詞 `have` (有)，並學習其在**現在式肯定句**中的變化，包括 **第三人稱單數** 主詞需使用 `has` (例如：He has a sister, She has a daughter)。相關詞彙包括：老師 (teacher)、學生 (student)、很多 (many)、書 (book)、房子 (house)。",
+    "grade": 3
+  },
+  {
+    "unit": "第四課",
+    "title": "數字",
+    "content": "涵蓋**數字** 0 (zero) 到 10 (ten) 的拼寫與應用。重點在於將數字或數量詞 `many` (很多) 用於句子中，並確保後接的**名詞使用複數形式**（例如：five girls, nine dogs）。",
+    "grade": 3
+  },
+  {
+    "unit": "第五課",
+    "title": "所有格-「我的、你的、他的」",
+    "content": "核心為學習和使用**所有格形容詞**，包括我的 (my)、你的/你們的 (your)、他的 (his)、她的 (her)、牠的 (its)、我們的 (our)、他們的 (their)。文法結構上，所有格與 Be動詞和 `has/have` 搭配，例如：My sisters have a dog 或 Your son is a student。",
+    "grade": 4
+  },
+  {
+    "unit": "第六課",
+    "title": "肯定和否定(是、不是)",
+    "content": "專注於**Be動詞的肯定句和否定句**。否定句的結構為 `Be動詞 + not`（例如：am not, is not/isn't, are not/aren't）。同時練習與職業相關的詞彙，如醫生 (doctor)、護士 (nurse)、演員 (actor)、歌星 (singer)。",
+    "grade": 4
+  },
+  {
+    "unit": "第七課",
+    "title": "肯定和否定(有、沒有)",
+    "content": "專注於**一般動詞在現在式的否定句**，特別是表示「擁有」的動詞 `have` 的否定形式。使用助動詞 `do` 或 `does` 加上 `not`（`don't have` 或 `doesn't have`）。強調**第三人稱單數** (She/He/It) 需使用 `doesn't`。相關詞彙包括：車 (car)、腳踏車 (bicycle/bike)、電腦 (computer)、牛奶 (milk)。",
+    "grade": 4
+  },
+  {
+    "unit": "第八課",
+    "title": "動詞",
+    "content": "介紹**一般動詞**在**現在式肯定句和否定句**中的應用，並強調**第三人稱單數**主詞後動詞需要加 `-s` 或 `-es` (例如：He reads, She goes)。否定句使用 `don't` 或 `doesn't` 搭配動詞原形。詞彙涵蓋日常活動和偏好，如：喜歡 (like)、吃 (eat)、喝 (drink)、讀 (read)、上學 (go to school)、午餐 (lunch)、晚餐 (dinner)。",
+    "grade": 4
+  },
+  {
+    "unit": "第九課",
+    "title": "問句(Be動詞問句)",
+    "content": "涵蓋**Be動詞的 Yes/No 疑問句**，結構為將 Be動詞移至主詞之前（例如：Is he a doctor? Are your sisters students?）。同時練習使用 **`or` (或)** 提問選擇性問題（例如：Is she an engineer or a doctor?），並學習如何給予簡短回答 (Yes/No)。",
+    "grade": 4
+  },
+  {
+    "unit": "第十課",
+    "title": "問句(動詞問句)",
+    "content": "涵蓋**一般動詞的 Yes/No 疑問句**，結構為使用助動詞 `Do` 或 `Does` 於句首，後接主詞和動詞原形。強調助動詞需與主詞保持一致（例如：Do you like that book? Does she like this movie?）。並練習帶有 `or` 的選擇性動詞問句（例如：Does his brother eat lunch or dinner?）。",
+    "grade": 4
+  },
+  {
+    "unit": "第十一課",
+    "title": "問句(Wh型問句)-1",
+    "content": "介紹**疑問詞** `Who` (誰)、`What` (什麼) 和 `When` (什麼時候) 的用法。主要練習詢問**身份或職業** (Who is that girl? What does your father do?)，以及詢問**時間** (When does your son eat dinner?）。",
+    "grade": 5
+  },
+  {
+    "unit": "第十一課",
+    "title": "問句(Wh型問句)-2",
+    "content": "介紹**疑問詞** `Where` (哪裡)、`How` (如何) 和 `Which` (哪一個) 的用法。主要練習詢問**地點** (Where does your teacher live?)，詢問**方式**（例如：搭乘 (by) 交通工具去上學，How does the girl go to school?），以及詢問**選擇** (Which book is your book?)。",
+    "grade": 5
+  },
+  {
+    "unit": "第十二課",
+    "title": "現在式和現在進行式",
+    "content": "對比**現在式**（表示習慣或事實，搭配 `every day`）和**現在進行式**（表示當前正在發生的動作，搭配 `now`）。學習現在進行式的構成：`Be動詞 + V-ing`（例如：She is listening to music, They are playing computer games now）。並練習區分兩者在肯定句、否定句和疑問句中的用法。",
+    "grade": 5
+  },
+  {
+    "unit": "第十三課",
+    "title": "過去式(肯定句)",
+    "content": "介紹**簡單過去式肯定句**，搭配過去時間標記如：昨天 (yesterday)、昨晚 (last night)、上星期 (last week)、去年 (last year)、以前 (before)。學習一般動詞的過去式形式，包括**規則動詞**（例如：watched, played）和**不規則動詞**（例如：ate, drank, went, was/were）。",
+    "grade": 5
+  },
+  {
+    "unit": "第十四課",
+    "title": "過去式 (Be動詞否定句和問句)",
+    "content": "專注於**過去式 Be動詞** (was/were) 的**否定句** (`wasn't`, `weren't`) 和 **Yes/No 疑問句**。重點是主詞與過去式 Be動詞的正確匹配（例如：She wasn't our teacher, Were you happy last month?）。",
+    "grade": 5
+  },
+  {
+    "unit": "第十五課",
+    "title": "過去式(動詞否定句和問句)",
+    "content": "專注於**過去式一般動詞**的**否定句** (`didn't + 動詞原形`) 和 **Yes/No 疑問句** (`Did + 主詞 + 動詞原形`)。強調無論主詞為何，助動詞都使用 `did/didn't`，且其後的動詞必須是**原形**（例如：Did you play basketball yesterday? She didn’t like music last year.）。",
+    "grade": 5
+  },
+  {
+    "unit": "第十六課",
+    "title": "未來式(肯定句、否定句、問句)",
+    "content": "介紹**未來式**的表達，使用助動詞 `will` (將會)，搭配未來時間標記如：待會兒 (later)、明天 (tomorrow)、下星期 (next week)。學習其**肯定句** (`will + 動詞原形`)、**否定句** (`will not / won't + 動詞原形`) 和 **Yes/No 疑問句** (`Will + 主詞 + 動詞原形`)。",
+    "grade": 6
+  },
+  {
+    "unit": "第十七課",
+    "title": "打招呼",
+    "content": "涵蓋各種**打招呼和告別用語**，包括：Good morning/afternoon/evening/night (早上好/午安/晚上好/晚安)，以及祝福語（例如：Have a nice day/dream/trip, Have fun!）。此外，也學習使用**副詞 `too` (也)** 來表達「同樣地」，並練習時間介詞 `in the evening` 和 `at night`。",
+    "grade": 6
+  },
+  {
+    "unit": "第十八課",
+    "title": "介紹",
+    "content": "重點在於**詢問及陳述名字** (What is your name? Her name is Wendy) 及**詢問國籍或所在地** (Where are you from? They are from Taiwan)。同時學習介紹他人 (That is my aunt) 和使用禮貌性用語 (Nice to meet you, too)。",
+    "grade": 6
+  },
+  {
+    "unit": "第十九課",
+    "title": "你會嗎?",
+    "content": "介紹**情態助動詞 `can` (能)**，表示能力。學習其**肯定句、否定句** (`can't`) 及 **Yes/No 疑問句**。重要文法規則是 `can/can't` 後面的動詞必須使用**原形**。詞彙涵蓋各類運動（棒球、足球、籃球）、樂器（鋼琴、吉他）和語言（英文）。",
+    "grade": 6
+  },
+  {
+    "unit": "第二十課",
+    "title": "星期幾?",
+    "content": "涵蓋**星期幾**的詞彙（Sunday 到 Friday），並學習詢問和陳述日期 (What day is today? Tomorrow is Tuesday)。文法重點是表達在特定日期或週末進行的活動，使用介詞 `on` 或 `on weekends`。",
+    "grade": 6
+  },
+  {
+    "unit": "第二十一課",
+    "title": "購物",
+    "content": "主要學習**購物和尋求協助**的相關用語，包括：詢問**價格** (How much...)，詢問和表達**願望或顏色偏好** (I would like yellow, What color would you like?)，以及詢問**尺寸** (What is your size?)。詞彙包括：尺寸 (size)、襯衫 (shirt)、台幣 (NT dollar)、藍色 (blue)、尋找 (look for)。",
+    "grade": 6
+  },
+  {
+    "unit": "第二十二課",
+    "title": "比較",
+    "content": "介紹**形容詞的比較級**，用於比較兩者之間的差異（例如：older than, shorter than, heavier than）。學習比較級的構成規則（例如：big $\rightarrow$ bigger, light $\rightarrow$ lighter），以及使用 `so` (這麼的) 來強調形容詞。",
+    "grade": 6
+  },
+  {
+    "unit": "第二十三課",
+    "title": "表示喜歡或不喜歡",
+    "content": "學習如何**詢問他人對事物的看法** (How do you like...?)，以及表達**強烈的喜歡或不喜歡**，使用 `very much` (很喜歡) 和 `not at all` (一點也不喜歡)。詞彙包括：可愛 (cute)、無聊 (boring)、普通 (O.K.)。",
+    "grade": 6
+  },
+  {
+    "unit": "第二十四課",
+    "title": "形容長相",
+    "content": "核心文法是詢問**外貌特徵**的句型 `What does... look like?`。學習使用動詞 `have/has` 來描述身體部位（例如：She has long legs, He has a big head）。同時練習使用動詞 `like` 表示「**長得像**」（例如：He is like my father），以及比較身高 (She is taller than I)。詞彙涵蓋臉 (face)、眼睛 (eye)、頭髮 (hair)、手 (hand) 等身體部位。",
+    "grade": 6
+  }
+]
