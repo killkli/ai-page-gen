@@ -7,8 +7,7 @@
 import {
     GeneratedLearningContent,
     MathGenerationParams,
-    EnglishGenerationParams,
-    LearningObjectiveItem
+    EnglishGenerationParams
 } from '../../types';
 
 import {

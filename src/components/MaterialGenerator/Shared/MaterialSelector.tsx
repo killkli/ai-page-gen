@@ -112,7 +112,7 @@ const MaterialSelector: React.FC<MaterialSelectorProps> = ({
         onSelectionChange(newSelected);
     };
 
-    const handleUnitToggleSelect = (unit: string, items: MaterialItem[]) => {
+    const handleUnitToggleSelect = (_unit: string, items: MaterialItem[]) => {
         const allSelected = items.every(item => selectedMaterials.some(m => m.title === item.title));
 
         if (allSelected) {
