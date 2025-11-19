@@ -107,7 +107,8 @@ export const callProviderSystem = async (prompt: string, apiKey: string = 'provi
 export const generateLearningObjectives = async (topic: string, apiKey: string): Promise<LearningObjectiveItem[]> => {
   const prompt = `
     Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}".
-    The objectives should be based on scaffolding theory and gamification, and written in the primary language of the topic.
+    The objectives should be written in the primary language of the topic.
+    Use any provided context (e.g., grade level, teaching method) to guide the difficulty and style, but do NOT explicitly mention the context settings (like 'Based on CPA method...') in the objective text.
     For each objective, provide the objective statement, a detailed description, and a concrete teaching example (such as a sample sentence, scenario, or application).
     Output MUST be a valid JSON array of objects, e.g.:
     [
