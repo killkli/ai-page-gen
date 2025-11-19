@@ -593,7 +593,7 @@ const App: React.FC = () => {
                 <div className="max-w-6xl mx-auto mb-8">
                   <div className="flex justify-center gap-3 flex-wrap">
                     <a
-                      href={`${import.meta.env.BASE_URL} lesson - plans`}
+                      href={`${import.meta.env.BASE_URL}lesson-plans`}
                       className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
                     >
                       <AcademicCapIcon className="w-5 h-5" />
@@ -618,7 +618,7 @@ const App: React.FC = () => {
                       英語教材生成
                     </Link>
                     <a
-                      href={`${import.meta.env.BASE_URL} conversation - prep`}
+                      href={`${import.meta.env.BASE_URL}conversation-prep`}
                       className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
