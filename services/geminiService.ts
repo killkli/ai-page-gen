@@ -63,7 +63,7 @@ export const callGemini = async (prompt: string, apiKey: string): Promise<any> =
 };
 
 // 1. 產生 learningObjectives
-const generateLearningObjectives = async (topic: string, apiKey: string): Promise<LearningObjectiveItem[]> => {
+export const generateLearningObjectives = async (topic: string, apiKey: string): Promise<LearningObjectiveItem[]> => {
   const prompt = `
     Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}".
     The objectives should be based on scaffolding theory and gamification, and written in the primary language of the topic.
@@ -1150,6 +1150,7 @@ const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string,
           // ... 至少 5 題，若有更多更好
           // ... 至少 5 題，若有更多更好
         ],
+        ${sentenceScrambleSection}
         "memoryCardGame": [
           {
             "pairs": [
