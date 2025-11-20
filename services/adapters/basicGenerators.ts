@@ -108,8 +108,17 @@ export const generateLearningObjectives = async (topic: string, apiKey: string):
   const prompt = `
     Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}".
     The objectives should be written in the primary language of the topic.
+    
+    CRITICAL INSTRUCTION: Focus on **LEARNING OUTCOMES** (what the student will be able to DO after the lesson), NOT just what will be taught.
+    Use Bloom's Taxonomy verbs (e.g., Analyze, Create, Evaluate, Understand, Apply).
+    Format: "Student will be able to [Action] [Content]..."
+    
     Use any provided context (e.g., grade level, teaching method) to guide the difficulty and style, but do NOT explicitly mention the context settings (like 'Based on CPA method...') in the objective text.
-    For each objective, provide the objective statement, a detailed description, and a concrete teaching example (such as a sample sentence, scenario, or application).
+    
+    For each objective, provide:
+    - objective: The competency statement (e.g., "Able to distinguish between...")
+    - description: Why this competency is important and what it entails.
+    - teachingExample: A concrete scenario where this competency is applied.
     Output MUST be a valid JSON array of objects, e.g.:
     [
       {
@@ -141,7 +150,16 @@ export const generateContentBreakdown = async (topic: string, apiKey: string, le
 
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units. For each, provide a sub-topic, a brief explanation, and a concrete teaching example.
+    Please break down the topic "${topic}" into a detailed curriculum structure.
+    
+    CRITICAL INSTRUCTION: Focus on **CURRICULUM STRUCTURE**.
+    For EACH learning objective provided above, generate **at least 2-3 specific micro-units** (sub-topics) that are needed to teach that objective.
+    The total number of items should be (Number of Objectives x 2 or 3).
+    
+    For each item, provide:
+    - topic: The specific sub-topic title (e.g., "Unit 1.1: [Sub-topic Name]"). Use numbering to show which objective it belongs to.
+    - details: Explanation of the concept to be taught.
+    - teachingExample: A concrete example used to explain this concept.
 
     ${isEnglishLearning ? `
     SPECIAL REQUIREMENTS FOR ENGLISH LEARNING TOPICS:

@@ -15,7 +15,7 @@ import { ProviderManager } from '../src/core/providers/ProviderManager';
 
 // JSONBin 服務用於分享配置
 const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3';
-const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_API_KEY; // 請在 .env 設定 VITE_JSONBIN_API_KEY
+const JSONBIN_KEY = (import.meta && import.meta.env && import.meta.env.VITE_JSONBIN_API_KEY) || process.env.VITE_JSONBIN_API_KEY || '';
 
 export class ProviderService {
   private manager: ProviderManager | null = null;
