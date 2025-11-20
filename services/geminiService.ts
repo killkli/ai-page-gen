@@ -131,44 +131,74 @@ const generateContentBreakdown = async (topic: string, apiKey: string, learningO
   return await callGemini(prompt, apiKey);
 };
 
-// 3. 產生 confusingPoints
-const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+// 3. 產生 confusingPoints (Chunked Version)
+const generateSingleConfusingPoint = async (topic: string, apiKey: string, objective: LearningObjectiveItem): Promise<any[]> => {
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties students may have with "${topic}".
+    Based on the topic "${topic}" and this specific learning objective:
+    ${JSON.stringify(objective)}
+
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty STRICTLY related to this specific objective.
     
-    Output MUST be a valid JSON array with the following comprehensive structure:
+    CRITICAL INSTRUCTION: 
+    - Focus ONLY on the specific concept mentioned in the objective. 
+    - Do NOT generate a generic confusing point for the overall topic "${topic}".
+    - Ensure this point is unique and specific to this objective.
+
+    Output MUST be a valid JSON array containing EXACTLY ONE object with the following structure:
     [
       {
-        "point": "易混淆點標題",
-        "clarification": "詳細澄清說明",
-        "teachingExample": "具體教學示例",
-        "errorType": "誤區類型 (概念性/程序性/語言性/理解性)",
-        "commonErrors": ["學生典型錯誤示例1", "學生典型錯誤示例2", "學生典型錯誤示例3"],
+        "point": "Specific Confusing Point Title",
+        "clarification": "Detailed clarification",
+        "teachingExample": "Concrete teaching example",
+        "errorType": "Error Type (Conceptual/Procedural/Linguistic/Understanding)",
+        "commonErrors": ["Typical mistake 1", "Typical mistake 2", "Typical mistake 3"],
         "correctVsWrong": [
           {
-            "correct": "正確示例",
-            "wrong": "錯誤示例", 
-            "explanation": "對比說明"
+            "correct": "Correct example",
+            "wrong": "Wrong example",
+            "explanation": "Comparison explanation"
           }
         ],
-        "preventionStrategy": "預防策略 - 如何防止學生犯錯",
-        "correctionMethod": "糾正方法 - 發現錯誤後的補救措施",
-        "practiceActivities": ["針對性練習活動1", "針對性練習活動2", "針對性練習活動3"]
+        "preventionStrategy": "Prevention strategy",
+        "correctionMethod": "Correction method",
+        "practiceActivities": ["Activity 1", "Activity 2", "Activity 3"]
       }
     ]
-    
+
     Requirements:
-    - Each confusing point should include ALL fields above
+    - Include ALL fields above
     - commonErrors: Provide at least 3 typical student mistakes
-    - correctVsWrong: Provide at least 1 comparison (more if helpful)  
+    - correctVsWrong: Provide at least 1 comparison
     - practiceActivities: Provide at least 3 targeted practice activities
     - All text should be in the primary language of the topic
-    - Focus on practical teaching guidance that educators can immediately apply
-    
+    - Focus on practical teaching guidance
+
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callGemini(prompt, apiKey);
+};
+
+const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  console.log(`Starting chunked confusing points generation for topic: ${topic}. Objectives count: ${learningObjectives.length}`);
+
+  try {
+    const results = await Promise.all(
+      learningObjectives.map((objective) =>
+        generateSingleConfusingPoint(topic, apiKey, objective)
+          .catch(err => {
+            console.warn(`Failed to generate confusing point for objective: ${objective.objective}`, err);
+            return [];
+          })
+      )
+    );
+
+    const flatResults = results.flat();
+    console.log(`Generated ${flatResults.length} confusing points. Titles: ${flatResults.map(r => r.point).join(', ')}`);
+    return flatResults;
+  } catch (error) {
+    console.error("Error generating chunked confusing points:", error);
+    throw error;
+  }
 };
 
 // 4. 產生 classroomActivities
@@ -345,12 +375,20 @@ const generateContentBreakdownForLevel = async (topic: string, selectedLevel: an
   return await callGemini(prompt, apiKey);
 };
 
-const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+// 針對特定程度的易混淆點生成函數 (Chunked Version)
+const generateSingleConfusingPointForLevel = async (topic: string, selectedLevel: any, apiKey: string, objective: LearningObjectiveItem): Promise<any[]> => {
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have with "${topic}".
-    
-    Output MUST be a valid JSON array with the following comprehensive structure:
+    Based on the topic "${topic}" and this specific learning objective:
+    ${JSON.stringify(objective)}
+
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty STRICTLY related to this specific objective that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have.
+
+    CRITICAL INSTRUCTION:
+    - Focus ONLY on the specific concept mentioned in the objective.
+    - Do NOT generate a generic confusing point for the overall topic "${topic}".
+    - Ensure this point is unique and specific to this objective.
+
+    Output MUST be a valid JSON array containing EXACTLY ONE object with the following structure:
     [
       {
         "point": "適合${selectedLevel.name}程度的易混淆點標題",
@@ -361,7 +399,7 @@ const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any
         "correctVsWrong": [
           {
             "correct": "適合${selectedLevel.name}程度的正確示例",
-            "wrong": "此程度學生常犯的錯誤示例", 
+            "wrong": "此程度學生常犯的錯誤示例",
             "explanation": "適合此程度的對比說明"
           }
         ],
@@ -370,19 +408,42 @@ const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any
         "practiceActivities": ["適合此程度的練習活動1", "適合此程度的練習活動2", "適合此程度的練習活動3"]
       }
     ]
-    
+
     Requirements:
     - All content should be appropriate for "${selectedLevel.description}"
-    - Each confusing point should include ALL fields above
+    - Include ALL fields above
     - commonErrors: Provide at least 3 typical student mistakes at this level
-    - correctVsWrong: Provide at least 1 comparison (more if helpful)  
+    - correctVsWrong: Provide at least 1 comparison
     - practiceActivities: Provide at least 3 level-appropriate targeted practice activities
     - All text should be in the primary language of the topic
     - Focus on confusion points specific to "${selectedLevel.name}" level: "${selectedLevel.description}"
-    
+
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callGemini(prompt, apiKey);
+};
+
+const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  console.log(`Starting chunked confusing points generation for topic: ${topic}, level: ${selectedLevel.name}. Objectives count: ${learningObjectives.length}`);
+
+  try {
+    const results = await Promise.all(
+      learningObjectives.map((objective) =>
+        generateSingleConfusingPointForLevel(topic, selectedLevel, apiKey, objective)
+          .catch(err => {
+            console.warn(`Failed to generate confusing point for objective: ${objective.objective}`, err);
+            return [];
+          })
+      )
+    );
+
+    const flatResults = results.flat();
+    console.log(`Generated ${flatResults.length} confusing points for level ${selectedLevel.name}. Titles: ${flatResults.map(r => r.point).join(', ')}`);
+    return flatResults;
+  } catch (error) {
+    console.error("Error generating chunked confusing points:", error);
+    throw error;
+  }
 };
 
 const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
@@ -946,17 +1007,25 @@ const generateContentBreakdownForLevelAndVocabulary = async (topic: string, sele
   return await callGemini(prompt, apiKey);
 };
 
-const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+// 針對特定程度和單字量的易混淆點生成函數 (Chunked Version)
+const generateSingleConfusingPointForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, objective: LearningObjectiveItem): Promise<any[]> => {
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have with "${topic}".
+    Based on the topic "${topic}" and this specific learning objective:
+    ${JSON.stringify(objective)}
+
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty STRICTLY related to this specific objective that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have.
     
+    CRITICAL INSTRUCTION:
+    - Focus ONLY on the specific concept mentioned in the objective.
+    - Do NOT generate a generic confusing point for the overall topic "${topic}".
+    - Ensure this point is unique and specific to this objective.
+
     CRITICAL VOCABULARY CONSTRAINTS for English content:
     - All explanations must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
     - Examples should be appropriate for ${vocabularyLevel.description}
     - Focus on confusion points that arise specifically at this vocabulary level
-    
-    Output MUST be a valid JSON array with the following comprehensive structure:
+
+    Output MUST be a valid JSON array containing EXACTLY ONE object with the following structure:
     [
       {
         "point": "適合${vocabularyLevel.name}詞彙程度的易混淆點標題",
@@ -976,11 +1045,34 @@ const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selec
         "practiceActivities": ["適合此詞彙程度的練習活動1", "適合此詞彙程度的練習活動2", "適合此詞彙程度的練習活動3"]
       }
     ]
-    
+
     All English content must stay within the ${vocabularyLevel.wordCount} word vocabulary limit and match ${selectedLevel.description}.
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callGemini(prompt, apiKey);
+};
+
+const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  console.log(`Starting chunked confusing points generation for topic: ${topic}, level: ${selectedLevel.name}, vocab: ${vocabularyLevel.name}. Objectives count: ${learningObjectives.length}`);
+
+  try {
+    const results = await Promise.all(
+      learningObjectives.map((objective) =>
+        generateSingleConfusingPointForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, objective)
+          .catch(err => {
+            console.warn(`Failed to generate confusing point for objective: ${objective.objective}`, err);
+            return [];
+          })
+      )
+    );
+
+    const flatResults = results.flat();
+    console.log(`Generated ${flatResults.length} confusing points for vocab level ${vocabularyLevel.name}. Titles: ${flatResults.map(r => r.point).join(', ')}`);
+    return flatResults;
+  } catch (error) {
+    console.error("Error generating chunked confusing points:", error);
+    throw error;
+  }
 };
 
 const generateClassroomActivitiesForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
@@ -1022,7 +1114,14 @@ const generateClassroomActivitiesForLevelAndVocabulary = async (topic: string, s
   return await callGemini(prompt, apiKey);
 };
 
-const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
+  const sentenceScrambleSection = isMath ? "" : `
+        "sentenceScramble": [
+          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
+          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
+          // ... 至少 5 題，若有更多更好
+        ],`;
+
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate quiz content for "${topic}" suitable for learning level "${selectedLevel.name}" (${selectedLevel.description}) and English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
@@ -1049,10 +1148,6 @@ const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string,
           { "sentenceWithBlank": "簡單填空題1...____...", "correctAnswer": "正確答案1" },
           { "sentenceWithBlank": "簡單填空題2...____...", "correctAnswer": "正確答案2" }
           // ... 至少 5 題，若有更多更好
-        ],
-        "sentenceScramble": [
-          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
-          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
           // ... 至少 5 題，若有更多更好
         ],
         "memoryCardGame": [

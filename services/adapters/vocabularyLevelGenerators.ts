@@ -118,12 +118,13 @@ export const generateContentBreakdownForLevelAndVocabulary = async (topic: strin
 
 // 針對特定程度和單字量的易混淆點生成函數
 // 針對特定程度和單字量的易混淆點生成函數 (Chunked Version)
-const generateSingleConfusingPointForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[], index: number): Promise<any[]> => {
+const generateSingleConfusingPointForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, objective: LearningObjectiveItem): Promise<any[]> => {
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate **ONE** comprehensive analysis of a common misconception or difficulty that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have with "${topic}".
-    This is request #${index + 1}, so please try to find a unique point if possible.
+    Based on the topic "${topic}" and this specific learning objective:
+    ${JSON.stringify(objective)}
 
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty related to this objective that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have.
+    
     CRITICAL VOCABULARY CONSTRAINTS for English content:
     - All explanations must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
     - Examples should be appropriate for ${vocabularyLevel.description}
@@ -160,11 +161,15 @@ export const generateConfusingPointsForLevelAndVocabulary = async (topic: string
   console.log(`Starting chunked confusing points generation for topic: ${topic}, level: ${selectedLevel.name}, vocab: ${vocabularyLevel.name}`);
 
   try {
-    const results = await Promise.all([
-      generateSingleConfusingPointForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives, 0),
-      generateSingleConfusingPointForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives, 1),
-      generateSingleConfusingPointForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives, 2)
-    ]);
+    const results = await Promise.all(
+      learningObjectives.map((objective) =>
+        generateSingleConfusingPointForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, objective)
+          .catch(err => {
+            console.warn(`Failed to generate confusing point for objective: ${objective.objective}`, err);
+            return [];
+          })
+      )
+    );
 
     return results.flat();
   } catch (error) {

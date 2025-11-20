@@ -107,11 +107,12 @@ export const generateContentBreakdownForLevel = async (topic: string, selectedLe
 
 // 針對特定程度的易混淆點生成函數
 // 針對特定程度的易混淆點生成函數 (Chunked Version)
-const generateSingleConfusingPointForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[], index: number): Promise<any[]> => {
+const generateSingleConfusingPointForLevel = async (topic: string, selectedLevel: any, apiKey: string, objective: LearningObjectiveItem): Promise<any[]> => {
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate **ONE** comprehensive analysis of a common misconception or difficulty that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have with "${topic}".
-    This is request #${index + 1}, so please try to find a unique point if possible.
+    Based on the topic "${topic}" and this specific learning objective:
+    ${JSON.stringify(objective)}
+
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty related to this objective that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have.
 
     Output MUST be a valid JSON array containing EXACTLY ONE object with the following structure:
     [
@@ -152,11 +153,15 @@ export const generateConfusingPointsForLevel = async (topic: string, selectedLev
   console.log(`Starting chunked confusing points generation for topic: ${topic}, level: ${selectedLevel.name}`);
 
   try {
-    const results = await Promise.all([
-      generateSingleConfusingPointForLevel(topic, selectedLevel, apiKey, learningObjectives, 0),
-      generateSingleConfusingPointForLevel(topic, selectedLevel, apiKey, learningObjectives, 1),
-      generateSingleConfusingPointForLevel(topic, selectedLevel, apiKey, learningObjectives, 2)
-    ]);
+    const results = await Promise.all(
+      learningObjectives.map((objective) =>
+        generateSingleConfusingPointForLevel(topic, selectedLevel, apiKey, objective)
+          .catch(err => {
+            console.warn(`Failed to generate confusing point for objective: ${objective.objective}`, err);
+            return [];
+          })
+      )
+    );
 
     return results.flat();
   } catch (error) {

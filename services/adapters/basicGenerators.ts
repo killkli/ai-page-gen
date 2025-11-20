@@ -224,30 +224,37 @@ export const generateContentBreakdown = async (topic: string, apiKey: string, le
 
 // 3. 產生 confusingPoints (完整原始版本)
 // 3. 產生 confusingPoints (Chunked Version)
-const generateSingleConfusingPoint = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[], index: number): Promise<any[]> => {
+// 3. 產生 confusingPoints (Chunked Version)
+const generateSingleConfusingPoint = async (topic: string, apiKey: string, objective: LearningObjectiveItem): Promise<any[]> => {
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate **ONE** comprehensive analysis of a common misconception or difficulty students may have with "${topic}".
-    This is request #${index + 1}, so please try to find a unique point if possible.
+    Based on the topic "${topic}" and this specific learning objective:
+    ${JSON.stringify(objective)}
+
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty STRICTLY related to this specific objective.
+    
+    CRITICAL INSTRUCTION: 
+    - Focus ONLY on the specific concept mentioned in the objective. 
+    - Do NOT generate a generic confusing point for the overall topic "${topic}".
+    - Ensure this point is unique and specific to this objective.
 
     Output MUST be a valid JSON array containing EXACTLY ONE object with the following structure:
     [
       {
-        "point": "易混淆點標題",
-        "clarification": "詳細澄清說明",
-        "teachingExample": "具體教學示例",
-        "errorType": "誤區類型 (概念性/程序性/語言性/理解性)",
-        "commonErrors": ["學生典型錯誤示例1", "學生典型錯誤示例2", "學生典型錯誤示例3"],
+        "point": "Specific Confusing Point Title",
+        "clarification": "Detailed clarification",
+        "teachingExample": "Concrete teaching example",
+        "errorType": "Error Type (Conceptual/Procedural/Linguistic/Understanding)",
+        "commonErrors": ["Typical mistake 1", "Typical mistake 2", "Typical mistake 3"],
         "correctVsWrong": [
           {
-            "correct": "正確示例",
-            "wrong": "錯誤示例",
-            "explanation": "對比說明"
+            "correct": "Correct example",
+            "wrong": "Wrong example",
+            "explanation": "Comparison explanation"
           }
         ],
-        "preventionStrategy": "預防策略 - 如何防止學生犯錯",
-        "correctionMethod": "糾正方法 - 發現錯誤後的補救措施",
-        "practiceActivities": ["針對性練習活動1", "針對性練習活動2", "針對性練習活動3"]
+        "preventionStrategy": "Prevention strategy",
+        "correctionMethod": "Correction method",
+        "practiceActivities": ["Activity 1", "Activity 2", "Activity 3"]
       }
     ]
 
@@ -265,21 +272,24 @@ const generateSingleConfusingPoint = async (topic: string, apiKey: string, learn
 };
 
 export const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
-  console.log(`Starting chunked confusing points generation for topic: ${topic}`);
+  console.log(`Starting chunked confusing points generation for topic: ${topic}. Objectives count: ${learningObjectives.length}`);
 
   try {
-    // Generate 3 points in parallel
-    const results = await Promise.all([
-      generateSingleConfusingPoint(topic, apiKey, learningObjectives, 0),
-      generateSingleConfusingPoint(topic, apiKey, learningObjectives, 1),
-      generateSingleConfusingPoint(topic, apiKey, learningObjectives, 2)
-    ]);
+    const results = await Promise.all(
+      learningObjectives.map((objective) =>
+        generateSingleConfusingPoint(topic, apiKey, objective)
+          .catch(err => {
+            console.warn(`Failed to generate confusing point for objective: ${objective.objective}`, err);
+            return [];
+          })
+      )
+    );
 
-    // Flatten the results
-    return results.flat();
+    const flatResults = results.flat();
+    console.log(`Generated ${flatResults.length} confusing points. Titles: ${flatResults.map(r => r.point).join(', ')}`);
+    return flatResults;
   } catch (error) {
     console.error("Error generating chunked confusing points:", error);
-    // Return whatever we managed to get, or throw if everything failed
     throw error;
   }
 };
