@@ -36,14 +36,18 @@ export const generateLearningObjectivesForLevel = async (topic: string, selected
 };
 
 // 針對特定程度的內容細分生成函數
-export const generateContentBreakdownForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
-  // Detect if this is English language learning
-  const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
-
+// 針對特定程度的內容細分生成函數 (Chunked Version)
+const generateContentBreakdownForLevelAndObjective = async (topic: string, selectedLevel: any, apiKey: string, objective: LearningObjectiveItem, isEnglishLearning: boolean, index: number): Promise<any[]> => {
+  const unitNumber = index + 1;
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}). For each, provide a sub-topic, a brief explanation, and a concrete teaching example.
+    Based on the topic "${topic}" and this specific learning objective (Objective ${unitNumber}):
+    ${JSON.stringify(objective)}
+    
+    Please generate **at least 2 specific micro-units** (sub-topics) appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}).
     The content depth and complexity should match the level description: "${selectedLevel.description}".
+
+    For each, provide a sub-topic, a brief explanation, and a concrete teaching example.
+    - topic: MUST start with "Unit ${unitNumber}.[Sub-unit]" (e.g., "Unit ${unitNumber}.1: [Name]").
 
     ${isEnglishLearning ? `
     SPECIAL REQUIREMENTS FOR ENGLISH LEARNING TOPICS:
@@ -55,7 +59,7 @@ export const generateContentBreakdownForLevel = async (topic: string, selectedLe
     Output format for English learning topics:
     [
       {
-        "topic": "適合${selectedLevel.name}的子主題A",
+        "topic": "Unit ${unitNumber}.1: 適合${selectedLevel.name}的子主題A",
         "details": "子主題A針對${selectedLevel.name}程度的簡要說明...",
         "teachingExample": "子主題A適合此程度的教學示例...",
         "coreConcept": "此要點的核心概念...",
@@ -66,7 +70,7 @@ export const generateContentBreakdownForLevel = async (topic: string, selectedLe
     ` : `
     Standard output format:
     [
-      { "topic": "適合${selectedLevel.name}的子主題A", "details": "子主題A針對${selectedLevel.name}程度的簡要說明...", "teachingExample": "子主題A適合此程度的教學示例..." }
+      { "topic": "Unit ${unitNumber}.1: 適合${selectedLevel.name}的子主題A", "details": "子主題A針對${selectedLevel.name}程度的簡要說明...", "teachingExample": "子主題A適合此程度的教學示例..." }
     ]
     `}
 
@@ -75,13 +79,41 @@ export const generateContentBreakdownForLevel = async (topic: string, selectedLe
   return await callProviderSystem(prompt, apiKey);
 };
 
+export const generateContentBreakdownForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  // Detect if this is English language learning
+  const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
+
+  console.log(`Starting chunked content breakdown generation for topic: ${topic}, level: ${selectedLevel.name}`);
+
+  try {
+    // Process objectives in parallel
+    const results = await Promise.all(
+      learningObjectives.map((objective, index) =>
+        generateContentBreakdownForLevelAndObjective(topic, selectedLevel, apiKey, objective, isEnglishLearning, index)
+          .catch(err => {
+            console.warn(`Failed to generate breakdown for objective: ${objective.objective}`, err);
+            return [];
+          })
+      )
+    );
+
+    // Flatten the results
+    return results.flat();
+  } catch (error) {
+    console.error("Error generating chunked content breakdown:", error);
+    throw error;
+  }
+};
+
 // 針對特定程度的易混淆點生成函數
-export const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+// 針對特定程度的易混淆點生成函數 (Chunked Version)
+const generateSingleConfusingPointForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[], index: number): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have with "${topic}".
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty that "${selectedLevel.name}" level learners (${selectedLevel.description}) may have with "${topic}".
+    This is request #${index + 1}, so please try to find a unique point if possible.
 
-    Output MUST be a valid JSON array with the following comprehensive structure:
+    Output MUST be a valid JSON array containing EXACTLY ONE object with the following structure:
     [
       {
         "point": "適合${selectedLevel.name}程度的易混淆點標題",
@@ -104,9 +136,9 @@ export const generateConfusingPointsForLevel = async (topic: string, selectedLev
 
     Requirements:
     - All content should be appropriate for "${selectedLevel.description}"
-    - Each confusing point should include ALL fields above
+    - Include ALL fields above
     - commonErrors: Provide at least 3 typical student mistakes at this level
-    - correctVsWrong: Provide at least 1 comparison (more if helpful)
+    - correctVsWrong: Provide at least 1 comparison
     - practiceActivities: Provide at least 3 level-appropriate targeted practice activities
     - All text should be in the primary language of the topic
     - Focus on confusion points specific to "${selectedLevel.name}" level: "${selectedLevel.description}"
@@ -114,6 +146,23 @@ export const generateConfusingPointsForLevel = async (topic: string, selectedLev
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callProviderSystem(prompt, apiKey);
+};
+
+export const generateConfusingPointsForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  console.log(`Starting chunked confusing points generation for topic: ${topic}, level: ${selectedLevel.name}`);
+
+  try {
+    const results = await Promise.all([
+      generateSingleConfusingPointForLevel(topic, selectedLevel, apiKey, learningObjectives, 0),
+      generateSingleConfusingPointForLevel(topic, selectedLevel, apiKey, learningObjectives, 1),
+      generateSingleConfusingPointForLevel(topic, selectedLevel, apiKey, learningObjectives, 2)
+    ]);
+
+    return results.flat();
+  } catch (error) {
+    console.error("Error generating chunked confusing points:", error);
+    throw error;
+  }
 };
 
 // 針對特定程度的課堂活動生成函數

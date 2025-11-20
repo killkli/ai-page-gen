@@ -42,19 +42,23 @@ export const generateLearningObjectivesForLevelAndVocabulary = async (topic: str
 };
 
 // 針對特定程度和單字量的內容細分生成函數
-export const generateContentBreakdownForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
-  // Detect if this is English language learning
-  const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
-
+// 針對特定程度和單字量的內容細分生成函數 (Chunked Version)
+const generateContentBreakdownForLevelAndVocabularyAndObjective = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, objective: LearningObjectiveItem, isEnglishLearning: boolean, index: number): Promise<any[]> => {
+  const unitNumber = index + 1;
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Please break down the topic "${topic}" into at least 3 (but more is better if appropriate) micro-units appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
+    Based on the topic "${topic}" and this specific learning objective (Objective ${unitNumber}):
+    ${JSON.stringify(objective)}
+    
+    Please generate **at least 2 specific micro-units** (sub-topics) appropriate for "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
 
     CRITICAL VOCABULARY CONSTRAINTS for English content:
     - All English text must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
     - Teaching examples should match ${vocabularyLevel.description}
     - Avoid complex words that exceed this vocabulary level
     - Sentence structures should be appropriate for ${vocabularyLevel.name} learners
+
+    For each, provide a sub-topic, a brief explanation, and a concrete teaching example.
+    - topic: MUST start with "Unit ${unitNumber}.[Sub-unit]" (e.g., "Unit ${unitNumber}.1: [Name]").
 
     ${isEnglishLearning ? `
     SPECIAL REQUIREMENTS FOR ENGLISH LEARNING TOPICS:
@@ -66,7 +70,7 @@ export const generateContentBreakdownForLevelAndVocabulary = async (topic: strin
     Output format for English learning topics:
     [
       {
-        "topic": "適合${vocabularyLevel.name}的子主題A",
+        "topic": "Unit ${unitNumber}.1: 適合${vocabularyLevel.name}的子主題A",
         "details": "子主題A針對${vocabularyLevel.wordCount}詞彙量的簡要說明...",
         "teachingExample": "子主題A使用${vocabularyLevel.name}程度詞彙的教學示例...",
         "coreConcept": "此要點的核心概念...",
@@ -77,7 +81,7 @@ export const generateContentBreakdownForLevelAndVocabulary = async (topic: strin
     ` : `
     Standard output format:
     [
-      { "topic": "適合${vocabularyLevel.name}的子主題A", "details": "子主題A針對${vocabularyLevel.wordCount}詞彙量的簡要說明...", "teachingExample": "子主題A使用${vocabularyLevel.name}程度詞彙的教學示例..." }
+      { "topic": "Unit ${unitNumber}.1: 適合${vocabularyLevel.name}的子主題A", "details": "子主題A針對${vocabularyLevel.wordCount}詞彙量的簡要說明...", "teachingExample": "子主題A使用${vocabularyLevel.name}程度詞彙的教學示例..." }
     ]
     `}
 
@@ -86,18 +90,46 @@ export const generateContentBreakdownForLevelAndVocabulary = async (topic: strin
   return await callProviderSystem(prompt, apiKey);
 };
 
+export const generateContentBreakdownForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  // Detect if this is English language learning
+  const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
+
+  console.log(`Starting chunked content breakdown generation for topic: ${topic}, level: ${selectedLevel.name}, vocab: ${vocabularyLevel.name}`);
+
+  try {
+    // Process objectives in parallel
+    const results = await Promise.all(
+      learningObjectives.map((objective, index) =>
+        generateContentBreakdownForLevelAndVocabularyAndObjective(topic, selectedLevel, vocabularyLevel, apiKey, objective, isEnglishLearning, index)
+          .catch(err => {
+            console.warn(`Failed to generate breakdown for objective: ${objective.objective}`, err);
+            return [];
+          })
+      )
+    );
+
+    // Flatten the results
+    return results.flat();
+  } catch (error) {
+    console.error("Error generating chunked content breakdown:", error);
+    throw error;
+  }
+};
+
 // 針對特定程度和單字量的易混淆點生成函數
-export const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+// 針對特定程度和單字量的易混淆點生成函數 (Chunked Version)
+const generateSingleConfusingPointForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[], index: number): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have with "${topic}".
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty that "${selectedLevel.name}" level learners (${selectedLevel.description}) with English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}) may have with "${topic}".
+    This is request #${index + 1}, so please try to find a unique point if possible.
 
     CRITICAL VOCABULARY CONSTRAINTS for English content:
     - All explanations must use vocabulary within the ${vocabularyLevel.wordCount} most common English words
     - Examples should be appropriate for ${vocabularyLevel.description}
     - Focus on confusion points that arise specifically at this vocabulary level
 
-    Output MUST be a valid JSON array with the following comprehensive structure:
+    Output MUST be a valid JSON array containing EXACTLY ONE object with the following structure:
     [
       {
         "point": "適合${vocabularyLevel.name}詞彙程度的易混淆點標題",
@@ -122,6 +154,23 @@ export const generateConfusingPointsForLevelAndVocabulary = async (topic: string
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callProviderSystem(prompt, apiKey);
+};
+
+export const generateConfusingPointsForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  console.log(`Starting chunked confusing points generation for topic: ${topic}, level: ${selectedLevel.name}, vocab: ${vocabularyLevel.name}`);
+
+  try {
+    const results = await Promise.all([
+      generateSingleConfusingPointForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives, 0),
+      generateSingleConfusingPointForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives, 1),
+      generateSingleConfusingPointForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives, 2)
+    ]);
+
+    return results.flat();
+  } catch (error) {
+    console.error("Error generating chunked confusing points:", error);
+    throw error;
+  }
 };
 
 // 針對特定程度和單字量的課堂活動生成函數

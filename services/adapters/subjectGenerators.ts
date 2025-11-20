@@ -17,16 +17,42 @@ import {
 
 import { buildMathRichTopic, buildEnglishRichTopic } from './promptBuilders';
 
+// Helper to chunk array
+const chunkArray = <T>(array: T[], size: number): T[][] => {
+    const chunked: T[][] = [];
+    for (let i = 0; i < array.length; i += size) {
+        chunked.push(array.slice(i, i + size));
+    }
+    return chunked;
+};
+
 // 數學學習目標生成
 export const generateMathObjectives = async (
     params: MathGenerationParams,
     apiKey: string
 ): Promise<{ topic: string, learningObjectives: any[] }> => {
-    const richTopic = buildMathRichTopic(params);
-    console.log(`開始生成數學學習目標 (Provider 系統): ${richTopic}`);
+    const fullRichTopic = buildMathRichTopic(params);
 
-    const learningObjectives = await generateLearningObjectives(richTopic, apiKey);
-    return { topic: richTopic, learningObjectives };
+    // Check if we need to chunk (e.g., more than 5 materials)
+    if (params.selectedMaterials.length > 5) {
+        console.log(`Detected large number of materials (${params.selectedMaterials.length}), using chunked generation for objectives.`);
+        const materialChunks = chunkArray(params.selectedMaterials, 5);
+
+        const chunkedObjectivesPromises = materialChunks.map(async (chunk) => {
+            const chunkParams = { ...params, selectedMaterials: chunk };
+            const chunkTopic = buildMathRichTopic(chunkParams);
+            return await generateLearningObjectives(chunkTopic, apiKey);
+        });
+
+        const results = await Promise.all(chunkedObjectivesPromises);
+        const allObjectives = results.flat();
+
+        return { topic: fullRichTopic, learningObjectives: allObjectives };
+    }
+
+    console.log(`開始生成數學學習目標 (Provider 系統): ${fullRichTopic}`);
+    const learningObjectives = await generateLearningObjectives(fullRichTopic, apiKey);
+    return { topic: fullRichTopic, learningObjectives };
 };
 
 // 數學學習內容生成
@@ -73,11 +99,28 @@ export const generateEnglishObjectives = async (
     params: EnglishGenerationParams,
     apiKey: string
 ): Promise<{ topic: string, learningObjectives: any[] }> => {
-    const richTopic = buildEnglishRichTopic(params);
-    console.log(`開始生成英語學習目標 (Provider 系統): ${richTopic}`);
+    const fullRichTopic = buildEnglishRichTopic(params);
 
-    const learningObjectives = await generateLearningObjectives(richTopic, apiKey);
-    return { topic: richTopic, learningObjectives };
+    // Check if we need to chunk (e.g., more than 5 materials)
+    if (params.selectedMaterials.length > 5) {
+        console.log(`Detected large number of materials (${params.selectedMaterials.length}), using chunked generation for objectives.`);
+        const materialChunks = chunkArray(params.selectedMaterials, 5);
+
+        const chunkedObjectivesPromises = materialChunks.map(async (chunk) => {
+            const chunkParams = { ...params, selectedMaterials: chunk };
+            const chunkTopic = buildEnglishRichTopic(chunkParams);
+            return await generateLearningObjectives(chunkTopic, apiKey);
+        });
+
+        const results = await Promise.all(chunkedObjectivesPromises);
+        const allObjectives = results.flat();
+
+        return { topic: fullRichTopic, learningObjectives: allObjectives };
+    }
+
+    console.log(`開始生成英語學習目標 (Provider 系統): ${fullRichTopic}`);
+    const learningObjectives = await generateLearningObjectives(fullRichTopic, apiKey);
+    return { topic: fullRichTopic, learningObjectives };
 };
 
 // 英語學習內容生成

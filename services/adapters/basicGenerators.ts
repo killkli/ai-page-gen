@@ -144,20 +144,19 @@ export const generateLearningObjectives = async (topic: string, apiKey: string):
 };
 
 // 2. 產生 contentBreakdown (完整原始版本，包含英語特殊處理)
-export const generateContentBreakdown = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
-  // Detect if this is English language learning
-  const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
-
+// 2. 產生 contentBreakdown (Chunked Version)
+const generateContentBreakdownForObjective = async (topic: string, apiKey: string, objective: LearningObjectiveItem, isEnglishLearning: boolean, index: number): Promise<any[]> => {
+  const unitNumber = index + 1;
   const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Please break down the topic "${topic}" into a detailed curriculum structure.
+    Based on the topic "${topic}" and this specific learning objective (Objective ${unitNumber}): 
+    ${JSON.stringify(objective)}
+    
+    Please generate **at least 2 specific micro-units** (sub-topics) that are needed to teach this objective.
     
     CRITICAL INSTRUCTION: Focus on **CURRICULUM STRUCTURE**.
-    For EACH learning objective provided above, generate **at least 2-3 specific micro-units** (sub-topics) that are needed to teach that objective.
-    The total number of items should be (Number of Objectives x 2 or 3).
     
     For each item, provide:
-    - topic: The specific sub-topic title (e.g., "Unit 1.1: [Sub-topic Name]"). Use numbering to show which objective it belongs to.
+    - topic: The specific sub-topic title. MUST start with "Unit ${unitNumber}.[Sub-unit]" (e.g., "Unit ${unitNumber}.1: [Name]", "Unit ${unitNumber}.2: [Name]").
     - details: Explanation of the concept to be taught.
     - teachingExample: A concrete example used to explain this concept.
 
@@ -171,24 +170,24 @@ export const generateContentBreakdown = async (topic: string, apiKey: string, le
     Output format for English learning topics:
     [
       {
-        "topic": "子主題A",
+        "topic": "Unit ${unitNumber}.1: 子主題A",
         "details": "子主題A的簡要說明...",
         "teachingExample": "子主題A的教學示例...",
         "coreConcept": "此要點的核心概念...",
         "teachingSentences": ["例句1", "例句2", "例句3", "例句4", "例句5"],
         "teachingTips": "教學要點與提示說明..."
       }
-      // ... 至少3個以上的項目
+      // ... at least 2 items
     ]
     ` : `
     Output format for general topics:
     [
       {
-        "topic": "子主題A",
+        "topic": "Unit ${unitNumber}.1: 子主題A",
         "details": "子主題A的簡要說明...",
         "teachingExample": "子主題A的教學示例..."
       }
-      // ... 至少3個以上的項目
+      // ... at least 2 items
     ]
     `}
 
@@ -197,13 +196,41 @@ export const generateContentBreakdown = async (topic: string, apiKey: string, le
   return await callProviderSystem(prompt, apiKey);
 };
 
+export const generateContentBreakdown = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  // Detect if this is English language learning
+  const isEnglishLearning = /english|英語|英文|grammar|vocabulary|pronunciation|speaking|listening|reading|writing/i.test(topic);
+
+  console.log(`Starting chunked content breakdown generation for topic: ${topic}`);
+
+  try {
+    // Process objectives in parallel
+    const results = await Promise.all(
+      learningObjectives.map((objective, index) =>
+        generateContentBreakdownForObjective(topic, apiKey, objective, isEnglishLearning, index)
+          .catch(err => {
+            console.warn(`Failed to generate breakdown for objective: ${objective.objective}`, err);
+            return []; // Return empty array on failure to avoid failing the whole request
+          })
+      )
+    );
+
+    // Flatten the results
+    return results.flat();
+  } catch (error) {
+    console.error("Error generating chunked content breakdown:", error);
+    throw error;
+  }
+};
+
 // 3. 產生 confusingPoints (完整原始版本)
-export const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+// 3. 產生 confusingPoints (Chunked Version)
+const generateSingleConfusingPoint = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[], index: number): Promise<any[]> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Generate at least 3 (but more is better if appropriate) comprehensive analysis of common misconceptions or difficulties students may have with "${topic}".
+    Generate **ONE** comprehensive analysis of a common misconception or difficulty students may have with "${topic}".
+    This is request #${index + 1}, so please try to find a unique point if possible.
 
-    Output MUST be a valid JSON array with the following comprehensive structure:
+    Output MUST be a valid JSON array containing EXACTLY ONE object with the following structure:
     [
       {
         "point": "易混淆點標題",
@@ -225,16 +252,36 @@ export const generateConfusingPoints = async (topic: string, apiKey: string, lea
     ]
 
     Requirements:
-    - Each confusing point should include ALL fields above
+    - Include ALL fields above
     - commonErrors: Provide at least 3 typical student mistakes
-    - correctVsWrong: Provide at least 1 comparison (more if helpful)
+    - correctVsWrong: Provide at least 1 comparison
     - practiceActivities: Provide at least 3 targeted practice activities
     - All text should be in the primary language of the topic
-    - Focus on practical teaching guidance that educators can immediately apply
+    - Focus on practical teaching guidance
 
     Do NOT include any explanation or extra text. Only output the JSON array.
   `;
   return await callProviderSystem(prompt, apiKey);
+};
+
+export const generateConfusingPoints = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any[]> => {
+  console.log(`Starting chunked confusing points generation for topic: ${topic}`);
+
+  try {
+    // Generate 3 points in parallel
+    const results = await Promise.all([
+      generateSingleConfusingPoint(topic, apiKey, learningObjectives, 0),
+      generateSingleConfusingPoint(topic, apiKey, learningObjectives, 1),
+      generateSingleConfusingPoint(topic, apiKey, learningObjectives, 2)
+    ]);
+
+    // Flatten the results
+    return results.flat();
+  } catch (error) {
+    console.error("Error generating chunked confusing points:", error);
+    // Return whatever we managed to get, or throw if everything failed
+    throw error;
+  }
 };
 
 // 4. 產生 classroomActivities (完整原始版本)
@@ -272,55 +319,73 @@ export const generateClassroomActivities = async (topic: string, apiKey: string,
 };
 
 // 5. 產生 OnlineInteractiveQuiz (完整原始版本，包含所有題型)
-export const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+// 5. 產生 OnlineInteractiveQuiz (Chunked Version)
+const generateQuizForDifficulty = async (topic: string, difficulty: 'easy' | 'normal' | 'hard', apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Please generate quiz content for "${topic}" in the following JSON structure (no explanation, no extra text):
+    Please generate "${difficulty}" level quiz content for "${topic}".
+    
+    Output MUST be a valid JSON object with the following structure (no explanation, no extra text):
     {
-      "easy": {
-        "trueFalse": [
-          { "statement": "簡單判斷題1...", "isTrue": true, "explanation": "可選說明1" },
-          { "statement": "簡單判斷題2...", "isTrue": false, "explanation": "可選說明2" }
-          // ... 至少 5 題，若有更多更好
-        ],
-        "multipleChoice": [
-          { "question": "簡單選擇題1...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 0 },
-          { "question": "簡單選擇題2...", "options": ["選項A", "選項B", "選項C"], "correctAnswerIndex": 1 }
-          // ... 至少 5 題，若有更多更好
-        ],
-        "fillInTheBlanks": [
-          { "sentenceWithBlank": "簡單填空題1...____...", "correctAnswer": "正確答案1" },
-          { "sentenceWithBlank": "簡單填空題2...____...", "correctAnswer": "正確答案2" }
-          // ... 至少 5 題，若有更多更好
-        ],
-        "sentenceScramble": [
-          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
-          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
-          // ... 至少 5 題，若有更多更好
-        ],
-        "memoryCardGame": [
-          {
-            "pairs": [
-              { "question": "卡片1正面", "answer": "卡片1背面" },
-              { "question": "卡片2正面", "answer": "卡片2背面" },
-              { "question": "卡片3正面", "answer": "卡片3背面" },
-              { "question": "卡片4正面", "answer": "卡片4背面" },
-              { "question": "卡片5正面", "answer": "卡片5背面" }
-              // ... 至少 5 組配對，若有更多更好
-            ],
-            "instructions": "請將每個卡片正面與正確的背面配對。"
-          }
-        ]
-      },
-      "normal": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ },
-      "hard": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ }
+      "trueFalse": [
+        { "statement": "Statement...", "isTrue": true, "explanation": "Optional explanation" }
+        // ... at least 5 items
+      ],
+      "multipleChoice": [
+        { "question": "Question...", "options": ["A", "B", "C"], "correctAnswerIndex": 0 }
+        // ... at least 5 items
+      ],
+      "fillInTheBlanks": [
+        { "sentenceWithBlank": "Sentence...____...", "correctAnswer": "Answer" }
+        // ... at least 5 items
+      ],
+      "sentenceScramble": [
+        { "originalSentence": "Sentence...", "scrambledWords": ["...", "..."] }
+        // ... at least 5 items
+      ],
+      "memoryCardGame": [
+        {
+          "pairs": [
+            { "question": "Front", "answer": "Back" }
+            // ... at least 5 pairs
+          ],
+          "instructions": "Instructions..."
+        }
+        // ... exactly 1 item
+      ]
     }
-    For each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble), generate at least 5 questions per difficulty level (easy, normal, hard), but more is better if appropriate.
-    For memoryCardGame, generate ONLY 1 question per difficulty, but the "pairs" array inside must contain at least 5 pairs (each pair is a related concept, word/definition, Q&A, or translation relevant to '${topic}'), and more is better if appropriate.
-    Each memoryCardGame question should include clear "instructions" for the matching task.
-    All text must be in the primary language of the topic. Only output the JSON object, no explanation or extra text.
+
+    Requirements:
+    - Difficulty: ${difficulty}
+    - trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble: At least 5 questions each.
+    - memoryCardGame: Exactly 1 question, but with at least 5 pairs inside.
+    - All text must be in the primary language of the topic.
+    - Only output the JSON object.
   `;
   return await callProviderSystem(prompt, apiKey);
+};
+
+export const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+  console.log(`Starting chunked quiz generation for topic: ${topic}`);
+
+  try {
+    const [easy, normal, hard] = await Promise.all([
+      generateQuizForDifficulty(topic, 'easy', apiKey, learningObjectives),
+      generateQuizForDifficulty(topic, 'normal', apiKey, learningObjectives),
+      generateQuizForDifficulty(topic, 'hard', apiKey, learningObjectives)
+    ]);
+
+    return {
+      easy,
+      normal,
+      hard
+    };
+  } catch (error) {
+    console.error("Error generating chunked quiz:", error);
+    // Fallback or re-throw depending on desired behavior. 
+    // For now, re-throw to let the caller handle it, or return a partial result if possible.
+    throw error;
+  }
 };
 
 // 6. 產生 englishConversation (完整原始版本)
