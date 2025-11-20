@@ -320,7 +320,13 @@ export const generateClassroomActivities = async (topic: string, apiKey: string,
 
 // 5. 產生 OnlineInteractiveQuiz (完整原始版本，包含所有題型)
 // 5. 產生 OnlineInteractiveQuiz (Chunked Version)
-const generateQuizForDifficulty = async (topic: string, difficulty: 'easy' | 'normal' | 'hard', apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+const generateQuizForDifficulty = async (topic: string, difficulty: 'easy' | 'normal' | 'hard', apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
+  const sentenceScrambleSection = isMath ? "" : `
+      "sentenceScramble": [
+        { "originalSentence": "Sentence...", "scrambledWords": ["...", "..."] }
+        // ... at least 5 items
+      ],`;
+
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate "${difficulty}" level quiz content for "${topic}".
@@ -338,11 +344,7 @@ const generateQuizForDifficulty = async (topic: string, difficulty: 'easy' | 'no
       "fillInTheBlanks": [
         { "sentenceWithBlank": "Sentence...____...", "correctAnswer": "Answer" }
         // ... at least 5 items
-      ],
-      "sentenceScramble": [
-        { "originalSentence": "Sentence...", "scrambledWords": ["...", "..."] }
-        // ... at least 5 items
-      ],
+      ],${sentenceScrambleSection}
       "memoryCardGame": [
         {
           "pairs": [
@@ -357,7 +359,7 @@ const generateQuizForDifficulty = async (topic: string, difficulty: 'easy' | 'no
 
     Requirements:
     - Difficulty: ${difficulty}
-    - trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble: At least 5 questions each.
+    - trueFalse, multipleChoice, fillInTheBlanks${isMath ? '' : ', sentenceScramble'}: At least 5 questions each.
     - memoryCardGame: Exactly 1 question, but with at least 5 pairs inside.
     - All text must be in the primary language of the topic.
     - Only output the JSON object.
@@ -365,14 +367,14 @@ const generateQuizForDifficulty = async (topic: string, difficulty: 'easy' | 'no
   return await callProviderSystem(prompt, apiKey);
 };
 
-export const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+export const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
   console.log(`Starting chunked quiz generation for topic: ${topic}`);
 
   try {
     const [easy, normal, hard] = await Promise.all([
-      generateQuizForDifficulty(topic, 'easy', apiKey, learningObjectives),
-      generateQuizForDifficulty(topic, 'normal', apiKey, learningObjectives),
-      generateQuizForDifficulty(topic, 'hard', apiKey, learningObjectives)
+      generateQuizForDifficulty(topic, 'easy', apiKey, learningObjectives, isMath),
+      generateQuizForDifficulty(topic, 'normal', apiKey, learningObjectives, isMath),
+      generateQuizForDifficulty(topic, 'hard', apiKey, learningObjectives, isMath)
     ]);
 
     return {

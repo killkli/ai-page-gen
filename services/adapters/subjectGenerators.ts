@@ -90,7 +90,8 @@ export const generateMathContent = async (
 
     return await generateLearningPlanFromObjectives(richTopic, learningObjectives, apiKey, providerCall, {
         includeEnglishConversation: false,
-        includeWritingPractice: false
+        includeWritingPractice: false,
+        isMath: true
     });
 };
 

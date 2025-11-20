@@ -119,9 +119,23 @@ export const isEnglishRelatedTopic = (topic: string): boolean => {
   return englishKeywords.some(keyword => lowerTopic.includes(keyword));
 };
 
+// 檢查是否為數學相關主題
+export const isMathRelatedTopic = (topic: string): boolean => {
+  const mathKeywords = [
+    'math', 'algebra', 'geometry', 'calculus', 'statistics', 'probability', 'trigonometry', 'arithmetic',
+    'fraction', 'decimal', 'percentage', 'equation', 'formula', 'graph', 'function', 'matrix', 'vector',
+    '數學', '代數', '幾何', '微積分', '統計', '機率', '三角函數', '算術',
+    '分數', '小數', '百分比', '方程式', '公式', '圖表', '函數', '矩陣', '向量',
+    '加法', '減法', '乘法', '除法', '因數', '倍數', '質數', '合數', '最大公因數', '最小公倍數'
+  ];
+  const lowerTopic = topic.toLowerCase();
+  return mathKeywords.some(keyword => lowerTopic.includes(keyword));
+};
+
 export interface GenerationOptions {
   includeEnglishConversation?: boolean;
   includeWritingPractice?: boolean;
+  isMath?: boolean;
 }
 
 // 主要生成函數 - 完整版本
@@ -150,12 +164,15 @@ export const generateLearningPlanFromObjectives = async (
 ): Promise<GeneratedLearningContent> => {
   console.log(`開始從現有目標生成學習計劃 (Provider 系統): ${topic}`);
 
+  // 自動檢測是否為數學主題 (如果 options 未指定)
+  const isMath = options.isMath !== undefined ? options.isMath : isMathRelatedTopic(topic);
+
   // 2. 並行生成其他部分
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, learningLevels, writingPractice] = await Promise.all([
     generateContentBreakdown(topic, apiKey, learningObjectives),
     generateConfusingPoints(topic, apiKey, learningObjectives),
     generateClassroomActivities(topic, apiKey, learningObjectives),
-    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives),
+    generateOnlineInteractiveQuiz(topic, apiKey, learningObjectives, isMath),
     options.includeEnglishConversation !== false ? generateEnglishConversation(topic, apiKey, learningObjectives) : Promise.resolve([]),
     generateLearningLevels(topic, apiKey, learningObjectives, providerCall),
     options.includeWritingPractice !== false ? generateWritingPractice(topic, apiKey, learningObjectives) : Promise.resolve(undefined)
@@ -179,6 +196,8 @@ export const generateLearningPlanFromObjectives = async (
 export const generateLearningPlanWithLevel = async (topic: string, selectedLevel: any, apiKey: string, providerCall: (prompt: string, apiKey: string) => Promise<any>): Promise<GeneratedLearningContent> => {
   console.log(`開始生成學習計劃 (有程度設定, Provider 系統): ${topic}, 程度: ${selectedLevel?.name || '未指定'}`);
 
+  const isMath = isMathRelatedTopic(topic);
+
   // 1. 根據選定程度重新產生更精確的學習目標
   const learningObjectives = await generateLearningObjectivesForLevel(topic, selectedLevel, apiKey);
   console.log('✓ 程度特定學習目標生成完成');
@@ -188,7 +207,7 @@ export const generateLearningPlanWithLevel = async (topic: string, selectedLevel
     generateContentBreakdownForLevel(topic, selectedLevel, apiKey, learningObjectives),
     generateConfusingPointsForLevel(topic, selectedLevel, apiKey, learningObjectives),
     generateClassroomActivitiesForLevel(topic, selectedLevel, apiKey, learningObjectives),
-    generateOnlineInteractiveQuizForLevel(topic, selectedLevel, apiKey, learningObjectives),
+    generateOnlineInteractiveQuizForLevel(topic, selectedLevel, apiKey, learningObjectives, isMath),
     generateEnglishConversationForLevel(topic, selectedLevel, apiKey, learningObjectives),
     generateLearningLevels(topic, apiKey, learningObjectives, providerCall), // 基本版本，不針對特定程度
     generateWritingPractice(topic, apiKey, learningObjectives, selectedLevel)
@@ -218,6 +237,8 @@ export const generateLearningPlanWithVocabularyLevel = async (
 ): Promise<GeneratedLearningContent> => {
   console.log(`開始生成學習計劃 (有程度和詞彙設定, Provider 系統): ${topic}, 程度: ${selectedLevel?.name || '未指定'}, 詞彙: ${vocabularyLevel?.name || '未指定'}`);
 
+  const isMath = isMathRelatedTopic(topic);
+
   // 1. 根據選定程度和詞彙量重新產生更精確的學習目標
   const learningObjectives = await generateLearningObjectivesForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey);
   console.log('✓ 程度和詞彙特定學習目標生成完成');
@@ -227,7 +248,7 @@ export const generateLearningPlanWithVocabularyLevel = async (
     generateContentBreakdownForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
     generateConfusingPointsForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
     generateClassroomActivitiesForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
-    generateOnlineInteractiveQuizForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
+    generateOnlineInteractiveQuizForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives, isMath),
     generateEnglishConversationForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
     generateLearningLevels(topic, apiKey, learningObjectives, providerCall), // 基本版本
     generateWritingPractice(topic, apiKey, learningObjectives, selectedLevel, vocabularyLevel)

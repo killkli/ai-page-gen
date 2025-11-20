@@ -201,7 +201,7 @@ export const generateClassroomActivitiesForLevel = async (topic: string, selecte
 };
 
 // 針對特定程度的線上互動測驗生成函數
-export const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+export const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
   const prompt = `
     基於主題「${topic}」、選定的學習程度「${selectedLevel.name}」(${selectedLevel.description})，
     以及學習目標：${JSON.stringify(learningObjectives)}
@@ -227,11 +227,11 @@ export const generateOnlineInteractiveQuizForLevel = async (topic: string, selec
           { "sentenceWithBlank": "暖身填空題2...____...", "correctAnswer": "正確答案2" }
           // ... 至少 5 題，若有更多更好
         ],
-        "sentenceScramble": [
+        ${!isMath ? `"sentenceScramble": [
           { "originalSentence": "暖身句子1...", "scrambledWords": ["...", "...", "..."] },
           { "originalSentence": "暖身句子2...", "scrambledWords": ["...", "...", "..."] }
           // ... 至少 5 題，若有更多更好
-        ],
+        ],` : ''}
         "memoryCardGame": [
           {
             "pairs": [
@@ -250,7 +250,7 @@ export const generateOnlineInteractiveQuizForLevel = async (topic: string, selec
       "hard": { /* 此程度的挑戰題目，結構同 easy，memoryCardGame 只 1 題，pairs 至少 5 組 */ }
     }
 
-    對於每種測驗類型 (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble)，每個難度等級 (easy, normal, hard) 至少產生 5 題，若有更多更好。
+    對於每種測驗類型 (trueFalse, multipleChoice, fillInTheBlanks${!isMath ? ', sentenceScramble' : ''}), 每個難度等級 (easy, normal, hard) 至少產生 5 題，若有更多更好。
     對於 memoryCardGame，每個難度只產生 1 題，但內部的 "pairs" 陣列必須包含至少 5 組配對（每組配對是與「${topic}」相關的概念、詞彙/定義、問答或翻譯），若有更多更好。
     每個 memoryCardGame 題目都應包含清楚的 "instructions" 說明配對任務。
     所有文字使用主題的主要語言。請勿包含任何說明或額外文字，僅輸出 JSON 物件。

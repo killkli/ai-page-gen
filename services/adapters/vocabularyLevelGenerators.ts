@@ -214,7 +214,14 @@ export const generateClassroomActivitiesForLevelAndVocabulary = async (topic: st
 };
 
 // 針對特定程度和單字量的線上互動測驗生成函數
-export const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+export const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: string, selectedLevel: any, vocabularyLevel: VocabularyLevel, apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
+  const sentenceScrambleSection = isMath ? "" : `
+        "sentenceScramble": [
+          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
+          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
+          // ... 至少 5 題，若有更多更好
+        ],`;
+
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate quiz content for "${topic}" suitable for learning level "${selectedLevel.name}" (${selectedLevel.description}) and English vocabulary level "${vocabularyLevel.name}" (${vocabularyLevel.wordCount} words: ${vocabularyLevel.description}).
@@ -241,12 +248,7 @@ export const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: 
           { "sentenceWithBlank": "簡單填空題1...____...", "correctAnswer": "正確答案1" },
           { "sentenceWithBlank": "簡單填空題2...____...", "correctAnswer": "正確答案2" }
           // ... 至少 5 題，若有更多更好
-        ],
-        "sentenceScramble": [
-          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
-          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
-          // ... 至少 5 題，若有更多更好
-        ],
+        ],${sentenceScrambleSection}
         "memoryCardGame": [
           {
             "pairs": [
@@ -264,7 +266,7 @@ export const generateOnlineInteractiveQuizForLevelAndVocabulary = async (topic: 
       "normal": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ },
       "hard": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ }
     }
-    For each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble), generate at least 5 questions per difficulty level (easy, normal, hard), but more is better if appropriate.
+    For each quiz type (trueFalse, multipleChoice, fillInTheBlanks${isMath ? '' : ', sentenceScramble'}), generate at least 5 questions per difficulty level (easy, normal, hard), but more is better if appropriate.
     For memoryCardGame, generate ONLY 1 question per difficulty, but the "pairs" array inside must contain at least 5 pairs (each pair is a related concept, word/definition, Q&A, or translation relevant to '${topic}'), and more is better if appropriate.
     Each memoryCardGame question should include clear "instructions" for the matching task.
     All text must be in the primary language of the topic. For English learning topics, limit English vocabulary to ${vocabularyLevel.wordCount} most common words. Only output the JSON object, no explanation or extra text.

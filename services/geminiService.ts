@@ -206,7 +206,14 @@ const generateClassroomActivities = async (topic: string, apiKey: string, learni
 };
 
 // 5. 產生 onlineInteractiveQuiz
-const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
+  const sentenceScrambleSection = isMath ? "" : `
+        "sentenceScramble": [
+          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
+          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
+          // ... 至少 5 題，若有更多更好
+        ],`;
+
   const prompt = `
     Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
     Please generate quiz content for "${topic}" in the following JSON structure (no explanation, no extra text):
@@ -226,12 +233,7 @@ const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, lear
           { "sentenceWithBlank": "簡單填空題1...____...", "correctAnswer": "正確答案1" },
           { "sentenceWithBlank": "簡單填空題2...____...", "correctAnswer": "正確答案2" }
           // ... 至少 5 題，若有更多更好
-        ],
-        "sentenceScramble": [
-          { "originalSentence": "簡單句子1...", "scrambledWords": ["...", "...", "..."] },
-          { "originalSentence": "簡單句子2...", "scrambledWords": ["...", "...", "..."] }
-          // ... 至少 5 題，若有更多更好
-        ],
+        ],${sentenceScrambleSection}
         "memoryCardGame": [
           {
             "pairs": [
@@ -249,7 +251,7 @@ const generateOnlineInteractiveQuiz = async (topic: string, apiKey: string, lear
       "normal": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ },
       "hard": { /* same structure as easy, memoryCardGame 只 1 題，pairs 至少 5 組 */ }
     }
-    For each quiz type (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble), generate at least 5 questions per difficulty level (easy, normal, hard), but more is better if appropriate.
+    For each quiz type (trueFalse, multipleChoice, fillInTheBlanks${isMath ? '' : ', sentenceScramble'}), generate at least 5 questions per difficulty level (easy, normal, hard), but more is better if appropriate.
     For memoryCardGame, generate ONLY 1 question per difficulty, but the "pairs" array inside must contain at least 5 pairs (each pair is a related concept, word/definition, Q&A, or translation relevant to '${topic}'), and more is better if appropriate.
     Each memoryCardGame question should include clear "instructions" for the matching task.
     All text must be in the primary language of the topic. Only output the JSON object, no explanation or extra text.
@@ -417,7 +419,14 @@ const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel:
   return await callGemini(prompt, apiKey);
 };
 
-const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[]): Promise<any> => {
+const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
+  const sentenceScrambleSection = isMath ? "" : `
+        "sentenceScramble": [
+          { "originalSentence": "暖身句子1...", "scrambledWords": ["...", "...", "..."] },
+          { "originalSentence": "暖身句子2...", "scrambledWords": ["...", "...", "..."] }
+          // ... 至少 5 題，若有更多更好
+        ],`;
+
   const prompt = `
     基於主題「${topic}」、選定的學習程度「${selectedLevel.name}」(${selectedLevel.description})，
     以及學習目標：${JSON.stringify(learningObjectives)}
@@ -442,12 +451,7 @@ const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLeve
           { "sentenceWithBlank": "暖身填空題1...____...", "correctAnswer": "正確答案1" },
           { "sentenceWithBlank": "暖身填空題2...____...", "correctAnswer": "正確答案2" }
           // ... 至少 5 題，若有更多更好
-        ],
-        "sentenceScramble": [
-          { "originalSentence": "暖身句子1...", "scrambledWords": ["...", "...", "..."] },
-          { "originalSentence": "暖身句子2...", "scrambledWords": ["...", "...", "..."] }
-          // ... 至少 5 題，若有更多更好
-        ],
+        ],${sentenceScrambleSection}
         "memoryCardGame": [
           {
             "pairs": [
@@ -466,7 +470,7 @@ const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLeve
       "hard": { /* 此程度的挑戰題目，結構同 easy，memoryCardGame 只 1 題，pairs 至少 5 組 */ }
     }
     
-    對於每種測驗類型 (trueFalse, multipleChoice, fillInTheBlanks, sentenceScramble)，每個難度等級 (easy, normal, hard) 至少產生 5 題，若有更多更好。
+    對於每種測驗類型 (trueFalse, multipleChoice, fillInTheBlanks${isMath ? '' : ', sentenceScramble'})，每個難度等級 (easy, normal, hard) 至少產生 5 題，若有更多更好。
     對於 memoryCardGame，每個難度只產生 1 題，但內部的 "pairs" 陣列必須包含至少 5 組配對（每組配對是與「${topic}」相關的概念、詞彙/定義、問答或翻譯），若有更多更好。
     每個 memoryCardGame 題目都應包含清楚的 "instructions" 說明配對任務。
     所有文字使用主題的主要語言。請勿包含任何說明或額外文字，僅輸出 JSON 物件。
@@ -534,6 +538,15 @@ const generateLearningLevels = async (topic: string, apiKey: string, learningObj
   return await callGemini(prompt, apiKey);
 };
 
+export const isMathRelatedTopic = (topic: string): boolean => {
+  const mathKeywords = [
+    'math', 'algebra', 'geometry', 'calculus', 'statistics', 'probability', 'arithmetic', 'trigonometry',
+    '數學', '代數', '幾何', '微積分', '統計', '機率', '算術', '三角函數', '分數', '小數', '方程式', '函數'
+  ];
+  const topicLower = topic.toLowerCase();
+  return mathKeywords.some(keyword => topicLower.includes(keyword.toLowerCase()));
+};
+
 // 檢測主題是否為英語相關
 export const isEnglishRelatedTopic = (topic: string): boolean => {
   const englishKeywords = [
@@ -569,12 +582,14 @@ export const generateLearningPlanWithLevel = async (topic: string, selectedLevel
   // 1. 根據選定程度重新產生更精確的學習目標
   const learningObjectives = await generateLearningObjectivesForLevel(topic, selectedLevel, apiKey);
 
+  const isMath = isMathRelatedTopic(topic);
+
   // 2. 其他部分並行產生，都會考慮選定的程度
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, writingPractice] = await Promise.all([
     generateContentBreakdownForLevel(topic, selectedLevel, apiKey, learningObjectives),
     generateConfusingPointsForLevel(topic, selectedLevel, apiKey, learningObjectives),
     generateClassroomActivitiesForLevel(topic, selectedLevel, apiKey, learningObjectives),
-    generateOnlineInteractiveQuizForLevel(topic, selectedLevel, apiKey, learningObjectives),
+    generateOnlineInteractiveQuizForLevel(topic, selectedLevel, apiKey, learningObjectives, isMath),
     generateEnglishConversationForLevel(topic, selectedLevel, apiKey, learningObjectives),
     generateWritingPractice(topic, apiKey, learningObjectives, selectedLevel)
   ]);
@@ -604,12 +619,14 @@ export const generateLearningPlanWithVocabularyLevel = async (
   // 1. 根據選定程度和單字量重新產生更精確的學習目標
   const learningObjectives = await generateLearningObjectivesForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey);
 
+  const isMath = isMathRelatedTopic(topic);
+
   // 2. 其他部分並行產生，都會考慮選定的程度和單字量
   const [contentBreakdown, confusingPoints, classroomActivities, onlineInteractiveQuiz, englishConversation, writingPractice] = await Promise.all([
     generateContentBreakdownForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
     generateConfusingPointsForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
     generateClassroomActivitiesForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
-    generateOnlineInteractiveQuizForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
+    generateOnlineInteractiveQuizForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives, isMath),
     generateEnglishConversationForLevelAndVocabulary(topic, selectedLevel, vocabularyLevel, apiKey, learningObjectives),
     generateWritingPractice(topic, apiKey, learningObjectives, selectedLevel, vocabularyLevel)
   ]);
@@ -713,6 +730,8 @@ export const generateMathContent = async (params: MathGenerationParams, learning
       And context: ${contextDesc}
       Generate a quiz.
       Output JSON object (standard format): { "easy": {...}, "normal": {...}, "hard": {...} }
+      IMPORTANT: Do NOT include "sentenceScramble" type questions as this is a math lesson.
+      Include only: trueFalse, multipleChoice, fillInTheBlanks, memoryCardGame.
     `, apiKey)
   ]);
 
