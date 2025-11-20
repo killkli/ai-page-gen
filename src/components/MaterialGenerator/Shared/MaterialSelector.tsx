@@ -92,7 +92,7 @@ const MaterialSelector: React.FC<MaterialSelectorProps> = ({
             // Expand the first unit by default
             setExpandedUnits(new Set([units[0]]));
         }
-    }, [groupedMaterials]);
+    }, [groupedMaterials, expandedUnits]);
 
     const toggleUnit = (unit: string) => {
         const newExpanded = new Set(expandedUnits);

@@ -1,6 +1,5 @@
 
 import { generateLearningObjectives, generateContentBreakdown } from './basicGenerators';
-import { providerService } from '../providerService';
 
 const testHierarchicalBreakdown = async () => {
     const topic = "Present Perfect Tense";

@@ -76,21 +76,18 @@ export default defineConfig(({ mode }) => {
             },
 
             // Optimize chunk filenames
-            chunkFileNames: (chunkInfo) => {
-              const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop().replace('.tsx', '').replace('.ts', '') : 'chunk';
+            chunkFileNames: (_chunkInfo) => {
               return `assets/[name]-[hash].js`;
             },
 
             assetFileNames: (assetInfo) => {
-              const info = assetInfo.name.split('.');
-              const ext = info[info.length - 1];
-              if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name)) {
-                return `assets/images/[name]-[hash][extname]`;
+              if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name ?? '')) {
+                return `assets/images/[name]-[hash].[extname]`;
               }
-              if (/\.(css)$/i.test(assetInfo.name)) {
-                return `assets/styles/[name]-[hash][extname]`;
+              if (/\.(css)$/i.test(assetInfo.name ?? '')) {
+                return `assets/styles/[name]-[hash].[extname]`;
               }
-              return `assets/[name]-[hash][extname]`;
+              return `assets/[name]-[hash].[extname]`;
             }
           },
 
