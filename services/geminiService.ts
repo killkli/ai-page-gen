@@ -480,7 +480,7 @@ const generateClassroomActivitiesForLevel = async (topic: string, selectedLevel:
   return await callGemini(prompt, apiKey);
 };
 
-const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
+export const generateOnlineInteractiveQuizForLevel = async (topic: string, selectedLevel: any, apiKey: string, learningObjectives: LearningObjectiveItem[], isMath: boolean = false): Promise<any> => {
   const sentenceScrambleSection = isMath ? "" : `
         "sentenceScramble": [
           { "originalSentence": "暖身句子1...", "scrambledWords": ["...", "...", "..."] },
