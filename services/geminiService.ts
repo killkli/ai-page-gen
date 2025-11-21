@@ -7,7 +7,7 @@
  * 保持所有原始 prompt 的詳細度和結構，確保生成品質不降低。
  */
 
-import { callProviderSystem as _callProviderSystem } from './adapters/basicGenerators';
+import { callProviderSystem as _callProviderSystem } from './ai/basicGenerators';
 import { generateCacheKey, getCache, setCache } from './cacheService';
 
 /**
@@ -33,10 +33,10 @@ export const callProviderSystem = async (prompt: string, apiKey: string): Promis
 };
 
 // 模組化功能導入
-import * as studentContentTransformerFunctions from './adapters/studentContentTransformerFunctions';
-import * as coreGenerationFunctions from './adapters/coreGenerationFunctions';
-import * as providerManagementFunctions from './adapters/providerManagementFunctions';
-import * as subjectGenerators from './adapters/subjectGenerators';
+import * as studentContentTransformerFunctions from './ai/studentContentTransformerFunctions';
+import * as coreGenerationFunctions from './ai/coreGenerationFunctions';
+import * as providerManagementFunctions from './ai/providerManagementFunctions';
+import * as subjectGenerators from './ai/subjectGenerators';
 
 // 重新導出基礎生成函數以維持向後兼容
 export {
@@ -46,7 +46,7 @@ export {
   generateClassroomActivities,
   generateOnlineInteractiveQuiz,
   generateEnglishConversation
-} from './adapters/basicGenerators';
+} from './ai/basicGenerators';
 
 export {
   generateLearningObjectivesForLevel,
@@ -55,7 +55,7 @@ export {
   generateClassroomActivitiesForLevel,
   generateOnlineInteractiveQuizForLevel,
   generateEnglishConversationForLevel
-} from './adapters/levelSpecificGenerators';
+} from './ai/levelSpecificGenerators';
 
 export {
   generateLearningObjectivesForLevelAndVocabulary,
@@ -64,14 +64,14 @@ export {
   generateClassroomActivitiesForLevelAndVocabulary,
   generateOnlineInteractiveQuizForLevelAndVocabulary,
   generateEnglishConversationForLevelAndVocabulary
-} from './adapters/vocabularyLevelGenerators';
+} from './ai/vocabularyLevelGenerators';
 
 export {
   generateWritingPractice,
   regenerateQuizWithConfig,
   generateStepQuiz,
   getAIFeedback
-} from './adapters/studentContentTransformers';
+} from './ai/studentContentTransformers';
 
 import {
   GeneratedLearningContent,

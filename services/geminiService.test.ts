@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { callProviderSystem } from './geminiService';
-import * as basicGenerators from './adapters/basicGenerators';
+import * as basicGenerators from './ai/basicGenerators';
 import { clearAICache, generateCacheKey } from './cacheService';
 
 // Mock localStorage
@@ -25,7 +25,7 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 // Mock _callProviderSystem
-vi.mock('./adapters/basicGenerators', () => ({
+vi.mock('./ai/basicGenerators', () => ({
     callProviderSystem: vi.fn()
 }));
 

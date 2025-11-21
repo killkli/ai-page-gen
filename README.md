@@ -254,7 +254,7 @@ VITE_BASE_URL=/ai-page-gen/
 
 ### AI 提示詞調整
 
-在 `services/adapters/` (via geminiServiceAdapter.ts) 中可以：
+在 `services/ai/` (via geminiService.ts) 中可以：
 - 調整 AI 生成內容的風格
 - 修改題目數量和難度分布
 - 自訂特定科目的生成邏輯
