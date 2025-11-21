@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateLearningObjectives, generateOnlineInteractiveQuizForLevel } from '../../services/geminiService';
+import { generateLearningObjectives, generateOnlineInteractiveQuizForLevel, callGemini, clearCache } from '../../services/geminiService';
 
 // Mock the GoogleGenAI class
 const mockGenerateContent = vi.fn();
@@ -20,6 +20,7 @@ describe('geminiService', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        clearCache();
     });
 
     it('generateLearningObjectives returns parsed JSON', async () => {
@@ -59,6 +60,23 @@ describe('geminiService', () => {
 
         const result = await generateOnlineInteractiveQuizForLevel('Test Topic', mockLevel, apiKey, mockObjectives);
         expect(result).toEqual(mockQuizData);
+    });
+
+    it('uses cache for subsequent calls with same prompt', async () => {
+        const mockResponse = {
+            text: JSON.stringify({ result: 'cached' }),
+        };
+        mockGenerateContent.mockResolvedValue(mockResponse);
+
+        const prompt = 'Cached Prompt';
+
+        // First call
+        await callGemini(prompt, apiKey);
+        expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+
+        // Second call (should use cache)
+        await callGemini(prompt, apiKey);
+        expect(mockGenerateContent).toHaveBeenCalledTimes(1);
     });
 
     it('handles malformed JSON gracefully', async () => {

@@ -7,7 +7,7 @@ describe('QuizView', () => {
     const mockQuizzes: OnlineInteractiveQuiz = {
         [QuizDifficulty.Easy]: {
             trueFalse: [
-                { statement: 'Easy TF', isTrue: true, explanation: 'Exp' }
+                { statement: 'Easy TF', isTrue: true, explanation: 'Exp' } as any
             ],
             multipleChoice: [],
             fillInTheBlanks: [],
@@ -17,7 +17,7 @@ describe('QuizView', () => {
         [QuizDifficulty.Normal]: {
             trueFalse: [],
             multipleChoice: [
-                { question: 'Normal MC', options: ['A', 'B'], correctAnswerIndex: 0 }
+                { question: 'Normal MC', options: ['A', 'B'], correctAnswerIndex: 0 } as any
             ],
             fillInTheBlanks: [],
             sentenceScramble: [],

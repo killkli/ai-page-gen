@@ -8,7 +8,7 @@ interface SectionCardProps {
   className?: string;
 }
 
-const SectionCard: React.FC<SectionCardProps> = ({ title, icon, children, className }) => {
+const SectionCard: React.FC<SectionCardProps> = React.memo(({ title, icon, children, className }) => {
   return (
     <div className={`bg-white shadow-lg rounded-xl p-6 mb-6 ${className || ''}`}>
       <h2 className="text-2xl font-semibold text-sky-700 mb-4 flex items-center">
@@ -20,7 +20,6 @@ const SectionCard: React.FC<SectionCardProps> = ({ title, icon, children, classN
       </div>
     </div>
   );
-};
+});
 
 export default SectionCard;
-    

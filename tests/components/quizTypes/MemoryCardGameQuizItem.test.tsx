@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import MemoryCardGameQuizItem from '../../../components/quizTypes/MemoryCardGameQuizItem';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MemoryCardGameQuestion } from '../../../types';
 
 describe('MemoryCardGameQuizItem', () => {
