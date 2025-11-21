@@ -91,7 +91,7 @@ Deployment: GitHub Pages (base: '/ai-page-gen/')
 ### 🟢 P2 - Medium (Week 3-4)
 | 問題 | 影響 | 複雜度 | 修復時間 |
 |------|------|--------|----------|
-| 代碼重複 (geminiService.ts) | 維護成本高 | 高 | 1 週 |
+| 代碼重複 (adapters/) | 維護成本高 | 高 | 1 週 |
 | 缺乏測試 | 回歸風險 | 高 | 2 週 |
 | 文件註釋不一致 | 協作困難 | 低 | 3 天 |
 
@@ -107,7 +107,7 @@ Deployment: GitHub Pages (base: '/ai-page-gen/')
 ### 任務清單
 
 #### 1.1 修復 TypeScript 錯誤 ✅
-**文件**: `services/geminiService.ts:1118`
+**文件**: `services/adapters/` (historical TS fix)
 
 ```typescript
 // 修復前
@@ -204,7 +204,7 @@ export const generateLearningPlan = measurePerformance(
 ### 任務清單
 
 #### 2.1 實現 AI 請求緩存與去重
-**文件**: `services/aiCache.ts`, `services/geminiService.ts`
+**文件**: `services/aiCache.ts`, `services/adapters/`
 
 ```typescript
 // services/aiCache.ts
@@ -463,7 +463,7 @@ const LearningContentDisplay: React.FC<Props> = (props) => {
 #### 3.2 重構 AI 服務層
 
 **當前問題**:
-- `geminiService.ts`: 1,756 行
+- `adapters/`: Modular split (legacy geminiService.ts removed)
 - 函數重複率: 30-40%
 - 難以測試和維護
 

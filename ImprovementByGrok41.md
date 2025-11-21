@@ -9,10 +9,10 @@
 - Prompt diagnostics to protect critical AI generation.
 
 **Kimi's Plan Strengths**:
-- Specific TS error fix (`geminiService.ts:1118`).
+- Specific TS error fix (historical `geminiService.ts:1118`, resolved).
 - AI caching, bundle analysis, virtual scroll.
 - Detailed phases with code examples, risks/KPIs.
-- Heavy refactor of LearningContentDisplay and geminiService.
+- Heavy refactor of LearningContentDisplay and adapters/ (geminiService legacy).
 
 **Synthesis**:
 - Start with critical fixes + testing (combines P0 urgency + stability).
