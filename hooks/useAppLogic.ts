@@ -13,7 +13,7 @@ import {
     generateLearningLevelSuggestions,
     isEnglishRelatedTopic,
     initializeProviderSystem
-} from '../services/geminiServiceAdapter';
+} from '../services/geminiService';
 import { providerService } from '../services/providerService';
 import { lessonPlanStorage, createStoredLessonPlan } from '../services/lessonPlanStorage';
 import { ProviderSharingService } from '../services/providerSharingService';

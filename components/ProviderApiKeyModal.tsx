@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ProviderType, GeminiProviderConfig, OpenRouterProviderConfig } from '../src/core/types/providers';
-import { addProvider } from '../services/geminiServiceAdapter';
+import { addProvider } from '../services/geminiService';
 
 interface ProviderApiKeyModalProps {
   isOpen: boolean;
@@ -146,11 +146,10 @@ const ProviderApiKeyModal: React.FC<ProviderApiKeyModalProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setSelectedProvider(ProviderType.GEMINI)}
-                className={`p-4 border-2 rounded-lg text-left transition-colors ${
-                  selectedProvider === ProviderType.GEMINI
+                className={`p-4 border-2 rounded-lg text-left transition-colors ${selectedProvider === ProviderType.GEMINI
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
@@ -165,11 +164,10 @@ const ProviderApiKeyModal: React.FC<ProviderApiKeyModalProps> = ({
 
               <button
                 onClick={() => setSelectedProvider(ProviderType.OPENROUTER)}
-                className={`p-4 border-2 rounded-lg text-left transition-colors ${
-                  selectedProvider === ProviderType.OPENROUTER
+                className={`p-4 border-2 rounded-lg text-left transition-colors ${selectedProvider === ProviderType.OPENROUTER
                     ? 'border-purple-500 bg-purple-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">

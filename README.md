@@ -135,7 +135,7 @@
 - **localStorage**：用戶偏好設定和 API 密鑰存儲
 
 ### 核心服務
-- **geminiServiceAdapter.ts**：AI 內容生成服務 (adapters integration)
+- **geminiService.ts**：AI 內容生成服務 (adapters integration)
 - **jsonbinService.ts**：雲端分享服務
 - **lessonPlanStorage.ts**：本地教案管理服務
 - **diagnosticService.ts**：學習診斷分析服務

@@ -14,7 +14,7 @@ import {
     LearningObjectiveItem,
     GeneratedLearningContent
 } from '../../core/types';
-import { generateEnglishObjectives, generateEnglishContent, hasConfiguredProviders } from '../../../services/geminiServiceAdapter';
+import { generateEnglishObjectives, generateEnglishContent, hasConfiguredProviders } from '../../../services/geminiService';
 
 interface EnglishGeneratorProps {
     onComplete: (content: GeneratedLearningContent, topicSummary: string) => Promise<void>;

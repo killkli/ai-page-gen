@@ -380,7 +380,7 @@ Remember: You're building tools for educators and learners. Every decision shoul
 
 ### ⚠️ **NEVER SIMPLIFY PROMPTS - THEY ARE THE SYSTEM CORE**
 
-The AI prompts in `services/adapters/` (via geminiServiceAdapter.ts) are the **operational core** of this application. Any simplification can break content generation functionality completely.
+The AI prompts in `services/adapters/` (via geminiService.ts) are the **operational core** of this application. Any simplification can break content generation functionality completely.
 
 #### **Prompt Modification Rules**:
 1. **🚫 NEVER Remove Details**: Every example, every structure description, every "at least X (but more is better)" clause serves a purpose

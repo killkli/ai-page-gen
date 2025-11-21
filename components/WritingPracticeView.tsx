@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { WritingPracticeContent, SentencePracticePrompt, WritingPracticePrompt, AIFeedback, VocabularyLevel } from '../types';
-import { getAIFeedback } from '../services/geminiServiceAdapter';
+import { getAIFeedback } from '../services/geminiService';
 
 interface WritingPracticeViewProps {
   content: WritingPracticeContent;
@@ -61,8 +61,8 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
               <h4 className="text-lg font-semibold text-gray-800 mb-2">
                 造句練習 {index + 1}
                 <span className={`ml-2 px-2 py-1 text-xs rounded-full ${prompt.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                    prompt.difficulty === 'normal' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
+                  prompt.difficulty === 'normal' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
                   }`}>
                   {prompt.difficulty === 'easy' ? '簡單' :
                     prompt.difficulty === 'normal' ? '普通' : '困難'}
@@ -164,8 +164,8 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
             <h4 className="text-lg font-semibold text-gray-800 mb-2">
               {prompt.title}
               <span className={`ml-2 px-2 py-1 text-xs rounded-full ${prompt.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                  prompt.difficulty === 'normal' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-red-100 text-red-700'
+                prompt.difficulty === 'normal' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-red-100 text-red-700'
                 }`}>
                 {prompt.difficulty === 'easy' ? '簡單' :
                   prompt.difficulty === 'normal' ? '普通' : '困難'}
@@ -296,8 +296,8 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
         <button
           onClick={() => setSelectedTab('sentence')}
           className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${selectedTab === 'sentence'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+            ? 'border-blue-500 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
         >
           提示造句 ({content.sentencePractice.length})
@@ -305,8 +305,8 @@ const WritingPracticeView: React.FC<WritingPracticeViewProps> = ({
         <button
           onClick={() => setSelectedTab('writing')}
           className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${selectedTab === 'writing'
-              ? 'border-purple-500 text-purple-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+            ? 'border-purple-500 text-purple-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
         >
           提示寫作 ({content.writingPractice.length})
@@ -333,8 +333,8 @@ const AIFeedbackDisplay: React.FC<AIFeedbackDisplayProps> = ({ feedback }) => {
         </svg>
         AI 批改回饋
         <div className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${feedback.score >= 85 ? 'bg-green-100 text-green-800' :
-            feedback.score >= 70 ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
+          feedback.score >= 70 ? 'bg-yellow-100 text-yellow-800' :
+            'bg-red-100 text-red-800'
           }`}>
           {feedback.score} 分
         </div>

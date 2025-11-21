@@ -14,7 +14,7 @@ import {
     LearningObjectiveItem,
     GeneratedLearningContent
 } from '../../core/types';
-import { generateMathObjectives, generateMathContent, hasConfiguredProviders } from '../../../services/geminiServiceAdapter';
+import { generateMathObjectives, generateMathContent, hasConfiguredProviders } from '../../../services/geminiService';
 
 interface MathGeneratorProps {
     onComplete: (content: GeneratedLearningContent, topicSummary: string) => Promise<void>;

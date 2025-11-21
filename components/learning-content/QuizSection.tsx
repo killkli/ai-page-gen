@@ -5,7 +5,7 @@ import QuizConfigPanel from '../QuizConfigPanel';
 import QRCodeDisplay from '../QRCodeDisplay';
 import { saveQuizContent } from '../../services/jsonbinService';
 import { generateEncryptedApiKeyParam } from '../../utils/cryptoUtils';
-import { regenerateQuizWithConfig } from '../../services/geminiServiceAdapter';
+import { regenerateQuizWithConfig } from '../../services/geminiService';
 
 interface QuizSectionProps {
     content: ExtendedLearningContent;

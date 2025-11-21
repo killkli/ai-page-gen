@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ExtendedLearningContent } from '../../types';
 import { getLearningContent, saveLearningContent } from '../../services/jsonbinService';
 import { lessonPlanStorage } from '../../services/lessonPlanStorage';
-import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent, generateStepQuiz } from '../../services/geminiServiceAdapter';
+import { transformLearningObjectiveForStudent, transformContentBreakdownForStudent, transformConfusingPointForStudent, generateStepQuiz } from '../../services/geminiService';
 import { interactiveContentStorage, TransformedVersion } from '../../services/interactiveContentStorage';
 import LoadingSpinner from '../LoadingSpinner';
 import MarkdownRenderer from '../MarkdownRenderer';

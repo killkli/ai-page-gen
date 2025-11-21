@@ -142,7 +142,7 @@ The application uses comprehensive TypeScript interfaces defined in `types.ts`:
 ## Key Implementation Patterns
 
 ### 1. Service Layer Pattern
-The `geminiServiceAdapter.ts` (via adapters/) implements a modular approach to AI content generation:
+The `geminiService.ts` (via adapters/) implements a modular approach to AI content generation:
 
 ```typescript
 // Individual content generators

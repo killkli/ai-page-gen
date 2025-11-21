@@ -1,7 +1,7 @@
 /**
- * Gemini 服務適配器 - Provider 系統整合版
+ * Gemini 服務 - Provider 系統整合版
  *
- * Provider系統整合版適配器，維持完整生成功能。
+ * Provider系統整合版，維持完整生成功能。
  * 但底層使用新的 Provider 系統來支援多 AI 提供商。
  *
  * 保持所有原始 prompt 的詳細度和結構，確保生成品質不降低。
@@ -58,8 +58,8 @@ import {
   EnglishGenerationParams
 } from '../types';
 
-// 為了向後兼容，保持 callGemini 別名
-export const callGemini = callProviderSystem;
+// 導出 callProviderSystem 供外部使用
+export { callProviderSystem };
 
 // =============================================================================
 // 學生內容轉換函數群組

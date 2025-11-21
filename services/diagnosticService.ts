@@ -11,13 +11,13 @@ import {
   QuizContentKey,
   // DiagnosticReportConfig
 } from '../types';
-import { callGemini } from './geminiServiceAdapter';
+import { callProviderSystem } from './geminiService';
 
 // 內部函數：調用 Provider 系統
 const callProviderForDiagnostic = async (prompt: string): Promise<any> => {
   try {
     // 動態導入以避免循環依賴
-    const response = await callGemini(prompt);
+    const response = await callProviderSystem(prompt);
 
     // 保持原有的 JSON 解析邏輯，確保與原功能完全一致
     let content = response;

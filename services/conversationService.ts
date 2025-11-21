@@ -53,18 +53,18 @@ export interface ConversationGenerationOptions {
 }
 
 class ConversationService {
-  
+
   // 生成完整對話練習內容
   async generateConversationPractice(
     options: ConversationGenerationOptions
   ): Promise<ConversationPractice> {
-    const { callGemini } = await import('./geminiServiceAdapter');
+    const { callProviderSystem } = await import('./geminiService');
     const prompt = this.buildConversationPrompt(options);
-    const response = await callGemini(prompt);
-    
+    const response = await callProviderSystem(prompt);
+
     // 生成唯一 ID
     const practiceId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     return {
       id: practiceId,
       ...response
@@ -178,7 +178,7 @@ Focus on practical, real-world communication that students can apply.
     suggestions: string[];
     encouragement: string;
   }> {
-    const { callGemini } = await import('./geminiServiceAdapter');
+    const { callProviderSystem } = await import('./geminiService');
     const prompt = `
 Evaluate this English conversation practice response:
 
@@ -220,7 +220,7 @@ Evaluation criteria:
 - Consider the difficulty level when scoring (more lenient for easy level)
 `;
 
-    return await callGemini(prompt);
+    return await callProviderSystem(prompt);
   }
 
   // 預定義對話場景模板
@@ -342,7 +342,7 @@ Evaluation criteria:
         ]
       },
       {
-        level: "normal", 
+        level: "normal",
         description: "中級 - 適合有一定英文基礎的學習者",
         characteristics: [
           "混合使用多種時態",
@@ -354,7 +354,7 @@ Evaluation criteria:
       },
       {
         level: "hard",
-        description: "高級 - 適合英文程度較好的學習者", 
+        description: "高級 - 適合英文程度較好的學習者",
         characteristics: [
           "高級詞彙和慣用語",
           "複雜的語法結構",
