@@ -29,7 +29,7 @@ ai-page-gen/
 │   ├── quizTypes/       # Quiz-specific components following consistent interface
 │   └── [UI components]  # InputBar, LoadingSpinner, LearningContentDisplay, etc.
 ├── services/            # Business logic and external API integration
-│   ├── geminiServiceAdapter.ts # AI content generation with parallel processing via adapters/
+│   ├── geminiService.ts            # AI content generation with parallel processing via adapters/
 │   └── jsonbinService.ts# Content sharing functionality
 ├── types.ts            # Comprehensive TypeScript definitions
 ├── App.tsx             # Main application with routing and state management

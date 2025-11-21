@@ -66,7 +66,7 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
       //   reportFormat: 'standard'
       // };
 
-      const result = await generateLearningDiagnostic(diagnosticSession);
+      const result = await generateLearningDiagnostic(diagnosticSession, apiKey);
 
       // 添加生成時間和結果 binId
       const enhancedResult = {
@@ -237,8 +237,8 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
                   <button
                     onClick={() => setCurrentView('student')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentView === 'student'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
                       }`}
                   >
                     學生版
@@ -246,8 +246,8 @@ const LearningDiagnosticReport: React.FC<LearningDiagnosticReportProps> = ({
                   <button
                     onClick={() => setCurrentView('teacher')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${currentView === 'teacher'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
                       }`}
                   >
                     教師版

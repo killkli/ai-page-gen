@@ -63,7 +63,8 @@ const ConversationPracticeSection: React.FC<ConversationPracticeSectionProps> = 
 
             // 生成對話練習
             const conversationPractice = await conversationService.generateConversationPractice(
-                conversationOptions
+                conversationOptions,
+                apiKey
             );
 
             // 儲存到分享系統

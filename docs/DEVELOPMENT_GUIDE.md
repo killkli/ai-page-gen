@@ -48,7 +48,7 @@ ai-page-gen/
 │   ├── Tabs.tsx              # Tab navigation component
 │   └── icons.tsx             # SVG icon components
 ├── services/                  # Business logic and API calls
-│   ├── geminiServiceAdapter.ts      # Gemini AI integration
+│   ├── geminiService.ts             # Gemini AI integration
 │   └── jsonbinService.ts     # Content sharing service
 ├── utils/                    # Utility functions
 ├── dist/                     # Build output
@@ -74,7 +74,7 @@ ai-page-gen/
 ### Data Flow
 
 1. User inputs learning topic → InputBar
-2. App.tsx calls geminiServiceAdapter.generateLearningPlan()
+2. App.tsx calls geminiService.generateLearningPlan()
 3. Service makes parallel API calls to generate different content sections
 4. Generated content is displayed through LearningContentDisplay
 5. Users can interact with quizzes and share content

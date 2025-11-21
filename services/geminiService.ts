@@ -7,7 +7,30 @@
  * 保持所有原始 prompt 的詳細度和結構，確保生成品質不降低。
  */
 
-import { callProviderSystem } from './adapters/basicGenerators';
+import { callProviderSystem as _callProviderSystem } from './adapters/basicGenerators';
+import { generateCacheKey, getCache, setCache } from './cacheService';
+
+/**
+ * Wrapper for callProviderSystem with caching support.
+ */
+export const callProviderSystem = async (prompt: string, apiKey: string): Promise<any> => {
+  const cacheKey = generateCacheKey(prompt);
+  const cachedResponse = getCache<any>(cacheKey);
+
+  if (cachedResponse) {
+    console.log('Returning cached response for prompt:', prompt.substring(0, 50) + '...');
+    return cachedResponse;
+  }
+
+  console.log('Cache miss, calling provider system...');
+  const response = await _callProviderSystem(prompt, apiKey);
+
+  if (response) {
+    setCache(cacheKey, response);
+  }
+
+  return response;
+};
 
 // 模組化功能導入
 import * as studentContentTransformerFunctions from './adapters/studentContentTransformerFunctions';
@@ -59,7 +82,7 @@ import {
 } from '../types';
 
 // 導出 callProviderSystem 供外部使用
-export { callProviderSystem };
+// export { callProviderSystem }; // Removed duplicate export
 
 // =============================================================================
 // 學生內容轉換函數群組

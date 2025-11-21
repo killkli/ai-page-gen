@@ -69,7 +69,8 @@ const ConversationPrepPage: React.FC = () => {
       localStorage.setItem('gemini_api_key', apiKey);
 
       const conversation = await conversationService.generateConversationPractice(
-        generationOptions
+        generationOptions,
+        apiKey
       );
 
       setGeneratedConversation(conversation);
@@ -127,7 +128,7 @@ const ConversationPrepPage: React.FC = () => {
                 Create interactive English conversation practices for your students
               </p>
             </div>
-            <a 
+            <a
               href={`${import.meta.env.BASE_URL}`}
               className="flex items-center gap-2 px-4 py-2 text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors shadow-sm"
             >
@@ -199,7 +200,7 @@ const ConversationPrepPage: React.FC = () => {
                   <input
                     type="text"
                     value={generationOptions.topic}
-                    onChange={(e) => setGenerationOptions({...generationOptions, topic: e.target.value})}
+                    onChange={(e) => setGenerationOptions({ ...generationOptions, topic: e.target.value })}
                     placeholder="e.g., Ordering food at a restaurant"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -212,7 +213,7 @@ const ConversationPrepPage: React.FC = () => {
                   </label>
                   <textarea
                     value={generationOptions.scenario}
-                    onChange={(e) => setGenerationOptions({...generationOptions, scenario: e.target.value})}
+                    onChange={(e) => setGenerationOptions({ ...generationOptions, scenario: e.target.value })}
                     placeholder="Detailed description of the conversation context"
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -228,12 +229,11 @@ const ConversationPrepPage: React.FC = () => {
                     {difficultyLevels.map((level) => (
                       <button
                         key={level.level}
-                        onClick={() => setGenerationOptions({...generationOptions, difficulty: level.level as any})}
-                        className={`p-3 rounded-lg border text-sm transition-colors ${
-                          generationOptions.difficulty === level.level
+                        onClick={() => setGenerationOptions({ ...generationOptions, difficulty: level.level as any })}
+                        className={`p-3 rounded-lg border text-sm transition-colors ${generationOptions.difficulty === level.level
                             ? 'border-blue-500 bg-blue-50 text-blue-700'
                             : 'border-gray-200 bg-white hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         <div className="font-medium">{level.level}</div>
                         <div className="text-xs opacity-75 mt-1">
@@ -251,22 +251,20 @@ const ConversationPrepPage: React.FC = () => {
                   </label>
                   <div className="flex space-x-4">
                     <button
-                      onClick={() => setGenerationOptions({...generationOptions, participantCount: 2})}
-                      className={`px-4 py-2 rounded-lg border transition-colors ${
-                        generationOptions.participantCount === 2
+                      onClick={() => setGenerationOptions({ ...generationOptions, participantCount: 2 })}
+                      className={`px-4 py-2 rounded-lg border transition-colors ${generationOptions.participantCount === 2
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-200 bg-white hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       2 People
                     </button>
                     <button
-                      onClick={() => setGenerationOptions({...generationOptions, participantCount: 3})}
-                      className={`px-4 py-2 rounded-lg border transition-colors ${
-                        generationOptions.participantCount === 3
+                      onClick={() => setGenerationOptions({ ...generationOptions, participantCount: 3 })}
+                      className={`px-4 py-2 rounded-lg border transition-colors ${generationOptions.participantCount === 3
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-200 bg-white hover:bg-gray-50'
-                      }`}
+                        }`}
                     >
                       3 People
                     </button>
@@ -283,7 +281,7 @@ const ConversationPrepPage: React.FC = () => {
                     min="5"
                     max="30"
                     value={generationOptions.duration}
-                    onChange={(e) => setGenerationOptions({...generationOptions, duration: parseInt(e.target.value)})}
+                    onChange={(e) => setGenerationOptions({ ...generationOptions, duration: parseInt(e.target.value) })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -297,7 +295,7 @@ const ConversationPrepPage: React.FC = () => {
                     type="text"
                     value={generationOptions.focusAreas?.join(', ') || ''}
                     onChange={(e) => setGenerationOptions({
-                      ...generationOptions, 
+                      ...generationOptions,
                       focusAreas: e.target.value.split(',').map(s => s.trim()).filter(s => s)
                     })}
                     placeholder="e.g., pronunciation, grammar, vocabulary"
@@ -315,13 +313,13 @@ const ConversationPrepPage: React.FC = () => {
                 >
                   {loading ? (
                     <>
-                      <LoadingSpinner/>
+                      <LoadingSpinner />
                       <span>Generating...</span>
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                       </svg>
                       <span>Generate Conversation</span>
                     </>
@@ -335,7 +333,7 @@ const ConversationPrepPage: React.FC = () => {
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex">
                   <svg className="w-5 h-5 text-red-400 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                   </svg>
                   <div className="ml-3">
                     <div className="text-sm font-medium text-red-800">Error</div>
@@ -355,7 +353,7 @@ const ConversationPrepPage: React.FC = () => {
                   <h2 className="text-lg font-semibold text-gray-900 mb-4">
                     Generated Conversation
                   </h2>
-                  
+
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                       <div className="text-sm font-medium text-blue-800">Title</div>
@@ -403,7 +401,7 @@ const ConversationPrepPage: React.FC = () => {
                         className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
                         </svg>
                       </button>
                       <span className="text-sm text-gray-600">
@@ -415,7 +413,7 @@ const ConversationPrepPage: React.FC = () => {
                         className="p-2 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                          <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
                         </svg>
                       </button>
                     </div>
@@ -433,7 +431,7 @@ const ConversationPrepPage: React.FC = () => {
                 {/* 分享區域 */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Share with Students</h3>
-                  
+
                   {shareUrl ? (
                     <div>
                       <div className="text-sm font-medium text-gray-700 mb-2">Shareable Link</div>
@@ -463,13 +461,13 @@ const ConversationPrepPage: React.FC = () => {
                     >
                       {sharing ? (
                         <>
-                          <LoadingSpinner/>
+                          <LoadingSpinner />
                           <span>Creating Share Link...</span>
                         </>
                       ) : (
                         <>
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.50-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92S19.61 16.08 18 16.08z"/>
+                            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.50-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92S19.61 16.08 18 16.08z" />
                           </svg>
                           <span>Create Share Link</span>
                         </>

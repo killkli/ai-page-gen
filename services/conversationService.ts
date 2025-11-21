@@ -1,4 +1,4 @@
-// ConversationService uses provider-based system via geminiServiceAdapter
+// ConversationService uses provider-based system via geminiService
 
 // 對話練習相關類型定義
 export interface ConversationTurn {
@@ -56,11 +56,12 @@ class ConversationService {
 
   // 生成完整對話練習內容
   async generateConversationPractice(
-    options: ConversationGenerationOptions
+    options: ConversationGenerationOptions,
+    apiKey: string
   ): Promise<ConversationPractice> {
     const { callProviderSystem } = await import('./geminiService');
     const prompt = this.buildConversationPrompt(options);
-    const response = await callProviderSystem(prompt);
+    const response = await callProviderSystem(prompt, apiKey);
 
     // 生成唯一 ID
     const practiceId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -167,7 +168,8 @@ Focus on practical, real-world communication that students can apply.
       expectedHints: string[];
       practicePoint: string;
       difficulty: string;
-    }
+    },
+    apiKey: string
   ): Promise<{
     overallScore: number;
     pronunciationScore: number;
@@ -220,7 +222,7 @@ Evaluation criteria:
 - Consider the difficulty level when scoring (more lenient for easy level)
 `;
 
-    return await callProviderSystem(prompt);
+    return await callProviderSystem(prompt, apiKey);
   }
 
   // 預定義對話場景模板

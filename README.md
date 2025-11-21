@@ -156,7 +156,7 @@ ai-page-gen/
 │   │   ├── LessonPlanManager.tsx
 │   │   └── ...
 │   ├── services/           # 業務邏輯服務
-│   │   ├── geminiServiceAdapter.ts
+│   │   ├── geminiService.ts
 │   │   ├── jsonbinService.ts
 │   │   ├── lessonPlanStorage.ts
 │   │   ├── diagnosticService.ts

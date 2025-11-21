@@ -14,10 +14,10 @@ import {
 import { callProviderSystem } from './geminiService';
 
 // 內部函數：調用 Provider 系統
-const callProviderForDiagnostic = async (prompt: string): Promise<any> => {
+const callProviderForDiagnostic = async (prompt: string, apiKey: string): Promise<any> => {
   try {
     // 動態導入以避免循環依賴
-    const response = await callProviderSystem(prompt);
+    const response = await callProviderSystem(prompt, apiKey);
 
     // 保持原有的 JSON 解析邏輯，確保與原功能完全一致
     let content = response;
@@ -146,6 +146,7 @@ export const determineLearningLevel = (overallScore: number): 'beginner' | 'inte
 export const generateLearningAnalysisWithAI = async (
   topic: string,
   responses: QuestionResponse[],
+  apiKey: string
   // performances: QuestionTypePerformance[]
 ): Promise<{ strengths: LearningStrength[], weaknesses: LearningWeakness[], learningStyle?: string, cognitivePattern?: string }> => {
 
@@ -209,7 +210,7 @@ export const generateLearningAnalysisWithAI = async (
   `;
 
   try {
-    return await callProviderForDiagnostic(prompt);
+    return await callProviderForDiagnostic(prompt, apiKey);
   } catch (error) {
     console.error('AI 學習分析生成失敗:', error);
     // 提供預設分析作為備案
@@ -228,7 +229,8 @@ export const generatePersonalizedRecommendations = async (
   overallScore: number,
   learningLevel: string,
   strengths: LearningStrength[],
-  weaknesses: LearningWeakness[]
+  weaknesses: LearningWeakness[],
+  apiKey: string
 ): Promise<PersonalizedRecommendation[]> => {
   const prompt = `
     Generate personalized learning recommendations for a student based on their performance analysis.
@@ -261,7 +263,7 @@ export const generatePersonalizedRecommendations = async (
   `;
 
   try {
-    const result = await callProviderForDiagnostic(prompt);
+    const result = await callProviderForDiagnostic(prompt, apiKey);
     return result.recommendations || [];
   } catch (error) {
     console.error('AI 個人化建議生成失敗:', error);
@@ -276,6 +278,7 @@ export const generateStudentFeedback = async (
   overallLevel: string,
   strengths: LearningStrength[],
   weaknesses: LearningWeakness[],
+  apiKey: string,
   studentId?: string,
   responses?: QuestionResponse[]
 ): Promise<StudentLearningFeedback> => {
@@ -311,7 +314,7 @@ export const generateStudentFeedback = async (
   `;
 
   try {
-    const result = await callProviderForDiagnostic(prompt);
+    const result = await callProviderForDiagnostic(prompt, apiKey);
     return {
       studentId,
       overallScore,
@@ -347,6 +350,7 @@ export const generateTeachingRecommendations = async (
   performances: QuestionTypePerformance[],
   strengths: LearningStrength[],
   weaknesses: LearningWeakness[],
+  apiKey: string,
   responses?: QuestionResponse[]
 ): Promise<{
   immediateInterventions: string[];
@@ -387,7 +391,7 @@ export const generateTeachingRecommendations = async (
   `;
 
   try {
-    const result = await callProviderForDiagnostic(prompt);
+    const result = await callProviderForDiagnostic(prompt, apiKey);
     return {
       immediateInterventions: result.immediateInterventions || [],
       instructionalStrategies: result.instructionalStrategies || [],
@@ -408,6 +412,7 @@ export const generateTeachingRecommendations = async (
 // 主要診斷函數 - 生成完整的學習診斷結果
 export const generateLearningDiagnostic = async (
   session: DiagnosticSession,
+  apiKey: string
   // config: DiagnosticReportConfig = {
   //   includeDetailedAnalysis: true,
   //   includeComparativeData: false,
@@ -426,6 +431,7 @@ export const generateLearningDiagnostic = async (
     const learningAnalysis = await generateLearningAnalysisWithAI(
       session.topic,
       session.responses,
+      apiKey
       // performanceStats
     );
 
@@ -435,7 +441,8 @@ export const generateLearningDiagnostic = async (
       overallScore,
       learningLevel,
       learningAnalysis.strengths,
-      learningAnalysis.weaknesses
+      learningAnalysis.weaknesses,
+      apiKey
     );
 
     // 4. 生成學生版回饋
@@ -445,6 +452,7 @@ export const generateLearningDiagnostic = async (
       learningLevel,
       learningAnalysis.strengths,
       learningAnalysis.weaknesses,
+      apiKey,
       session.studentId,
       session.responses
     );
@@ -456,6 +464,7 @@ export const generateLearningDiagnostic = async (
       performanceStats,
       learningAnalysis.strengths,
       learningAnalysis.weaknesses,
+      apiKey,
       session.responses
     );
 
