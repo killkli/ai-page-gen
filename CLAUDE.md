@@ -29,7 +29,7 @@ ai-page-gen/
 │   ├── quizTypes/       # Quiz-specific components following consistent interface
 │   └── [UI components]  # InputBar, LoadingSpinner, LearningContentDisplay, etc.
 ├── services/            # Business logic and external API integration
-│   ├── geminiService.ts # AI content generation with parallel processing
+│   ├── geminiServiceAdapter.ts # AI content generation with parallel processing via adapters/
 │   └── jsonbinService.ts# Content sharing functionality
 ├── types.ts            # Comprehensive TypeScript definitions
 ├── App.tsx             # Main application with routing and state management
@@ -135,7 +135,7 @@ const generateNewContent = async (topic: string, apiKey: string, context?: any[]
 5. **Test** with various topics and difficulties
 
 ### Extending Content Generation
-1. **Add Generation Function** in `geminiService.ts`
+1. **Add Generation Function** in `services/adapters/` (export via geminiServiceAdapter.ts)
 2. **Update Main Interface** in `types.ts`
 3. **Modify Display Component** to handle new content
 4. **Include in Parallel Processing** chain
@@ -380,7 +380,7 @@ Remember: You're building tools for educators and learners. Every decision shoul
 
 ### ⚠️ **NEVER SIMPLIFY PROMPTS - THEY ARE THE SYSTEM CORE**
 
-The AI prompts in `geminiService.ts` are the **operational core** of this application. Any simplification can break content generation functionality completely.
+The AI prompts in `services/adapters/` (via geminiServiceAdapter.ts) are the **operational core** of this application. Any simplification can break content generation functionality completely.
 
 #### **Prompt Modification Rules**:
 1. **🚫 NEVER Remove Details**: Every example, every structure description, every "at least X (but more is better)" clause serves a purpose
@@ -435,14 +435,14 @@ const prompt = `
 
 #### **When Modifying Prompts**:
 
-1. **Compare with Working Versions**: Always check `git show f83808d:services/geminiService.ts` for reference
+1. **Compare with Working Versions**: Always check `git log -- services/adapters/` (check specific adapters) for reference
 2. **Test Immediately**: Generate content after any prompt change to verify functionality
 3. **Maintain Structure**: Keep all examples, field descriptions, and quantity requirements
 4. **Add, Don't Remove**: If adding features (like vocabulary levels), add constraints but keep existing structure
 
 #### **Emergency Recovery**:
 If prompts are accidentally simplified and functionality breaks:
-1. `git show f83808d:services/geminiService.ts > working_version.ts`
+1. `git log -p -- services/adapters/ > working_adapters.txt`
 2. Compare current prompts with working version
 3. Restore missing details, examples, and structure requirements
 4. Test all quiz types and content generation

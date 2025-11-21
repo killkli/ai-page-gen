@@ -1,4 +1,4 @@
-// ConversationService now uses the provider-based system via geminiServiceAdapter
+// ConversationService uses provider-based system via geminiServiceAdapter
 
 // 對話練習相關類型定義
 export interface ConversationTurn {

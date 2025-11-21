@@ -48,7 +48,7 @@ ai-page-gen/
 │   ├── Tabs.tsx              # Tab navigation component
 │   └── icons.tsx             # SVG icon components
 ├── services/                  # Business logic and API calls
-│   ├── geminiService.ts      # Gemini AI integration
+│   ├── geminiServiceAdapter.ts      # Gemini AI integration
 │   └── jsonbinService.ts     # Content sharing service
 ├── utils/                    # Utility functions
 ├── dist/                     # Build output
@@ -74,7 +74,7 @@ ai-page-gen/
 ### Data Flow
 
 1. User inputs learning topic → InputBar
-2. App.tsx calls geminiService.generateLearningPlan()
+2. App.tsx calls geminiServiceAdapter.generateLearningPlan()
 3. Service makes parallel API calls to generate different content sections
 4. Generated content is displayed through LearningContentDisplay
 5. Users can interact with quizzes and share content
@@ -142,7 +142,7 @@ The application uses comprehensive TypeScript interfaces defined in `types.ts`:
 ## Key Implementation Patterns
 
 ### 1. Service Layer Pattern
-The `geminiService.ts` implements a modular approach to AI content generation:
+The `geminiServiceAdapter.ts` (via adapters/) implements a modular approach to AI content generation:
 
 ```typescript
 // Individual content generators

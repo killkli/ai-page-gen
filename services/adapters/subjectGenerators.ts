@@ -82,7 +82,7 @@ export const generateMathContent = async (
     // 暫時方案：我們修改 coreGenerationFunctions.ts 來支持傳入 objectives，
     // 或者我們在這裡導入 basicGenerators 的函數。
     // 讓我們看看 basicGenerators.ts 是否可用。
-    // 根據 geminiServiceAdapter.ts，basicGenerators 導出了所有基礎函數。
+    // basicGenerators exports all base generation functions via geminiServiceAdapter.ts
 
     // 為了正確實現，我們應該在 coreGenerationFunctions 中添加 generateLearningPlanFromObjectives。
     // 但我無法輕易修改 coreGenerationFunctions (它可能很複雜)。

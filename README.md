@@ -135,7 +135,7 @@
 - **localStorage**：用戶偏好設定和 API 密鑰存儲
 
 ### 核心服務
-- **geminiService.ts**：AI 內容生成服務
+- **geminiServiceAdapter.ts**：AI 內容生成服務 (adapters integration)
 - **jsonbinService.ts**：雲端分享服務
 - **lessonPlanStorage.ts**：本地教案管理服務
 - **diagnosticService.ts**：學習診斷分析服務
@@ -156,7 +156,7 @@ ai-page-gen/
 │   │   ├── LessonPlanManager.tsx
 │   │   └── ...
 │   ├── services/           # 業務邏輯服務
-│   │   ├── geminiService.ts
+│   │   ├── geminiServiceAdapter.ts
 │   │   ├── jsonbinService.ts
 │   │   ├── lessonPlanStorage.ts
 │   │   ├── diagnosticService.ts
@@ -254,7 +254,7 @@ VITE_BASE_URL=/ai-page-gen/
 
 ### AI 提示詞調整
 
-在 `src/services/geminiService.ts` 中可以：
+在 `services/adapters/` (via geminiServiceAdapter.ts) 中可以：
 - 調整 AI 生成內容的風格
 - 修改題目數量和難度分布
 - 自訂特定科目的生成邏輯

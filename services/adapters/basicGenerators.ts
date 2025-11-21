@@ -1,7 +1,7 @@
 /**
  * 基礎生成函數模組 - Provider 系統版本
  *
- * 包含基本的內容生成函數，對應原始 geminiService.ts 的基礎功能
+ * Provider系統版本的基礎內容生成函數
  * 所有 prompt 完全保持原始不變
  */
 
@@ -92,14 +92,7 @@ export const callProviderSystem = async (prompt: string, apiKey: string = 'provi
   } catch (error) {
     console.error('Provider 系統錯誤:', error);
 
-    // 只有當 API Key 是 Gemini 格式時才回退到原始實現
-    if (apiKey && apiKey.startsWith('AIza')) {
-      console.log('回退到原始 Gemini 服務');
-      const { callGemini: originalCallGemini } = await import('../geminiService');
-      return await originalCallGemini(prompt, apiKey);
-    } else {
-      throw error;
-    }
+    throw error;
   }
 };
 
