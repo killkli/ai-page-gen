@@ -1,7 +1,7 @@
 /**
  * Gemini 服務適配器 - Provider 系統整合版
  *
- * 這個適配器將原始 geminiService.ts 的完整功能重新實現，
+ * Provider系統整合版適配器，維持完整生成功能。
  * 但底層使用新的 Provider 系統來支援多 AI 提供商。
  *
  * 保持所有原始 prompt 的詳細度和結構，確保生成品質不降低。

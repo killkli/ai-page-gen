@@ -56,13 +56,8 @@ export default defineConfig(({ mode }) => {
               }
 
               // Service layer
-              if (id.includes('/services/') && !id.includes('geminiService')) {
+              if (id.includes('/services/')) {
                 return 'app-services';
-              }
-
-              // Gemini service separate for better caching
-              if (id.includes('geminiService') || id.includes('geminiServiceAdapter')) {
-                return 'gemini-service';
               }
 
               // Large node_modules libraries
