@@ -1,0 +1,101 @@
+{
+  "trueFalse": [
+    {
+      "statement": "光合作用發生在植物的葉綠體中",
+      "isTrue": true,
+      "explanation": "葉綠體是光合作用的主要場所"
+    },
+    {
+      "statement": "植物只在白天進行呼吸作用",
+      "isTrue": false,
+      "explanation": "植物全天都進行呼吸作用"
+    },
+    { "statement": "光合作用需要水和二氧化碳", "isTrue": true },
+    {
+      "statement": "光合作用會釋放二氧化碳",
+      "isTrue": false,
+      "explanation": "光合作用釋放氧氣，不是二氧化碳"
+    },
+    { "statement": "所有植物都能進行光合作用", "isTrue": true }
+  ],
+  "multipleChoice": [
+    {
+      "question": "光合作用的主要產物是什麼？",
+      "options": ["氧氣和葡萄糖", "二氧化碳和水", "氮氣和蛋白質", "氫氣和脂肪"],
+      "correctAnswerIndex": 0
+    },
+    {
+      "question": "光合作用發生在植物細胞的哪個部位？",
+      "options": ["細胞核", "葉綠體", "線粒體", "細胞膜"],
+      "correctAnswerIndex": 1
+    },
+    {
+      "question": "哪種光對光合作用最有效？",
+      "options": ["綠光", "紅光和藍光", "黃光", "紫外光"],
+      "correctAnswerIndex": 1
+    },
+    {
+      "question": "光合作用需要的能量來源是什麼？",
+      "options": ["熱能", "化學能", "光能", "電能"],
+      "correctAnswerIndex": 2
+    },
+    {
+      "question": "光合作用的主要原料之一是什麼？",
+      "options": ["氧氣", "氮氣", "二氧化碳", "氫氣"],
+      "correctAnswerIndex": 2
+    }
+  ],
+  "fillInTheBlanks": [
+    {
+      "sentenceWithBlank": "光合作用發生在植物細胞的____中",
+      "correctAnswer": "葉綠體"
+    },
+    {
+      "sentenceWithBlank": "光合作用需要____作為能量來源",
+      "correctAnswer": "光能"
+    },
+    { "sentenceWithBlank": "光合作用會釋放____氣體", "correctAnswer": "氧" },
+    {
+      "sentenceWithBlank": "植物透過____吸收二氧化碳",
+      "correctAnswer": "氣孔"
+    },
+    {
+      "sentenceWithBlank": "光合作用產生的主要養分是____",
+      "correctAnswer": "葡萄糖"
+    }
+  ],
+  "sentenceScramble": [
+    {
+      "originalSentence": "光合作用需要陽光",
+      "scrambledWords": ["陽光", "光合作用", "需要"]
+    },
+    {
+      "originalSentence": "植物在白天進行光合作用",
+      "scrambledWords": ["白天", "植物", "光合作用", "在", "進行"]
+    },
+    {
+      "originalSentence": "葉綠素吸收光能",
+      "scrambledWords": ["光能", "吸收", "葉綠素"]
+    },
+    {
+      "originalSentence": "氧氣是光合作用的產物",
+      "scrambledWords": ["產物", "氧氣", "是", "的", "光合作用"]
+    },
+    {
+      "originalSentence": "二氧化碳進入葉片",
+      "scrambledWords": ["進入", "葉片", "二氧化碳"]
+    }
+  ],
+  "memoryCardGame": [
+    {
+      "pairs": [
+        { "question": "光合作用場所", "answer": "葉綠體" },
+        { "question": "能量來源", "answer": "陽光" },
+        { "question": "產生的氣體", "answer": "氧氣" },
+        { "question": "需要的氣體", "answer": "二氧化碳" },
+        { "question": "產生的養分", "answer": "葡萄糖" }
+      ],
+      "instructions": "配對光合作用相關的概念"
+    }
+  ]
+}
