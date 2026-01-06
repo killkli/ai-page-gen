@@ -9,13 +9,16 @@ import {
   SharedProviderConfig,
   ProviderType,
   GeminiProviderConfig,
-  OpenRouterProviderConfig
+  OpenRouterProviderConfig,
 } from '../src/core/types/providers';
 import { ProviderManager } from '../src/core/providers/ProviderManager';
 
 // JSONBin 服務用於分享配置
 const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3';
-const JSONBIN_KEY = (import.meta && import.meta.env && import.meta.env.VITE_JSONBIN_API_KEY) || process.env.VITE_JSONBIN_API_KEY || '';
+const JSONBIN_KEY =
+  (import.meta && import.meta.env && import.meta.env.VITE_JSONBIN_API_KEY) ||
+  process.env.VITE_JSONBIN_API_KEY ||
+  '';
 
 export class ProviderService {
   private manager: ProviderManager | null = null;
@@ -45,7 +48,7 @@ export class ProviderService {
         providers: [],
         fallbackEnabled: true,
         timeout: 30000,
-        retryAttempts: 3
+        retryAttempts: 3,
       };
       this.manager = ProviderManager.reloadWithConfig(defaultConfig);
     }
@@ -78,20 +81,21 @@ export class ProviderService {
         settings: {
           responseMimeType: 'application/json',
           temperature: 0.7,
-          maxOutputTokens: 8192
+          maxOutputTokens: 8192,
         },
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
       defaultProviders.push(geminiConfig);
     }
 
     return {
       providers: defaultProviders,
-      defaultProviderId: defaultProviders.length > 0 ? defaultProviders[0].id : undefined,
+      defaultProviderId:
+        defaultProviders.length > 0 ? defaultProviders[0].id : undefined,
       fallbackEnabled: true,
       timeout: 30000,
-      retryAttempts: 3
+      retryAttempts: 3,
     };
   }
 
@@ -109,28 +113,31 @@ export class ProviderService {
     return manager.getProviders();
   }
 
-  // 添加新 Provider
+  private dispatchConfigUpdateEvent(): void {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('providerConfigUpdated'));
+    }
+  }
+
   public async addProvider(config: ProviderConfig): Promise<void> {
     const manager = await this.getManager();
     await manager.addProvider(config);
-    // 重新初始化以確保配置同步
     await this.initializeManager();
+    this.dispatchConfigUpdateEvent();
   }
 
-  // 更新 Provider
   public async updateProvider(config: ProviderConfig): Promise<void> {
     const manager = await this.getManager();
     await manager.updateProvider(config);
-    // 重新初始化以確保配置同步
     await this.initializeManager();
+    this.dispatchConfigUpdateEvent();
   }
 
-  // 刪除 Provider
   public async removeProvider(providerId: string): Promise<void> {
     const manager = await this.getManager();
     manager.removeProvider(providerId);
-    // 重新初始化以確保配置同步
     await this.initializeManager();
+    this.dispatchConfigUpdateEvent();
   }
 
   // 測試 Provider 連接
@@ -192,11 +199,11 @@ export class ProviderService {
           apiKey: '', // 移除 API Key
           id: '',
           createdAt: '',
-          updatedAt: ''
+          updatedAt: '',
         })),
         isPublic,
         createdAt: new Date().toISOString(),
-        tags: this.extractTagsFromConfigs(configs)
+        tags: this.extractTagsFromConfigs(configs),
       };
 
       const response = await fetch(`${JSONBIN_BASE_URL}/b`, {
@@ -205,7 +212,7 @@ export class ProviderService {
           'Content-Type': 'application/json',
           'X-Master-Key': JSONBIN_KEY,
         },
-        body: JSON.stringify(sharedConfig)
+        body: JSON.stringify(sharedConfig),
       });
 
       if (!response.ok) {
@@ -221,12 +228,14 @@ export class ProviderService {
   }
 
   // 從 JSONBin 載入分享的配置
-  public async loadSharedProviderConfig(binId: string): Promise<SharedProviderConfig> {
+  public async loadSharedProviderConfig(
+    binId: string
+  ): Promise<SharedProviderConfig> {
     try {
       const response = await fetch(`${JSONBIN_BASE_URL}/b/${binId}/latest`, {
         headers: {
           'X-Master-Key': JSONBIN_KEY,
-        }
+        },
       });
 
       if (!response.ok) {
@@ -261,7 +270,7 @@ export class ProviderService {
         apiKey,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        name: `${config.name} (已匯入)`
+        name: `${config.name} (已匯入)`,
       } as ProviderConfig;
 
       await this.addProvider(fullConfig);
@@ -323,7 +332,9 @@ export class ProviderService {
     if (!legacyApiKey) return;
 
     const existingProviders = await this.getProviders();
-    const hasGeminiProvider = existingProviders.some(p => p.type === ProviderType.GEMINI);
+    const hasGeminiProvider = existingProviders.some(
+      p => p.type === ProviderType.GEMINI
+    );
 
     if (!hasGeminiProvider) {
       const geminiConfig: GeminiProviderConfig = {
@@ -336,10 +347,10 @@ export class ProviderService {
         settings: {
           responseMimeType: 'application/json',
           temperature: 0.7,
-          maxOutputTokens: 8192
+          maxOutputTokens: 8192,
         },
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       try {
