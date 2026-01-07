@@ -1,5 +1,29 @@
 import { z } from 'zod';
-import { callProviderSystem } from './basicGenerators';
+import {
+  generateLearningObjectives as _generateLearningObjectives,
+  generateContentBreakdown as _generateContentBreakdown,
+  generateConfusingPoints as _generateConfusingPoints,
+  generateClassroomActivities as _generateClassroomActivities,
+  generateOnlineInteractiveQuiz as _generateOnlineInteractiveQuiz,
+  generateEnglishConversation as _generateEnglishConversation,
+  generateLearningLevels as _generateLearningLevels,
+} from './basicGenerators';
+import {
+  generateLearningObjectivesForLevel as _generateLearningObjectivesForLevel,
+  generateContentBreakdownForLevel as _generateContentBreakdownForLevel,
+  generateConfusingPointsForLevel as _generateConfusingPointsForLevel,
+  generateClassroomActivitiesForLevel as _generateClassroomActivitiesForLevel,
+  generateOnlineInteractiveQuizForLevel as _generateOnlineInteractiveQuizForLevel,
+  generateEnglishConversationForLevel as _generateEnglishConversationForLevel,
+} from './levelSpecificGenerators';
+import {
+  generateLearningObjectivesForLevelAndVocabulary as _generateLearningObjectivesForLevelAndVocabulary,
+  generateContentBreakdownForLevelAndVocabulary as _generateContentBreakdownForLevelAndVocabulary,
+  generateConfusingPointsForLevelAndVocabulary as _generateConfusingPointsForLevelAndVocabulary,
+  generateClassroomActivitiesForLevelAndVocabulary as _generateClassroomActivitiesForLevelAndVocabulary,
+  generateOnlineInteractiveQuizForLevelAndVocabulary as _generateOnlineInteractiveQuizForLevelAndVocabulary,
+  generateEnglishConversationForLevelAndVocabulary as _generateEnglishConversationForLevelAndVocabulary,
+} from './vocabularyLevelGenerators';
 import {
   LearningObjectivesArraySchema,
   ContentBreakdownArraySchema,
@@ -8,14 +32,22 @@ import {
   LearningLevelSuggestionsSchema,
   DialogueArraySchema,
   type LearningObjectiveItem,
+  type ContentBreakdownItem,
+  type ConfusingPointItem,
+  type ClassroomActivity,
+  type LearningLevelSuggestions,
+  type DialogueLine,
 } from './schemas';
 import {
   OnlineInteractiveQuizSchema,
-  QuizDifficultyContentSchema,
   type OnlineInteractiveQuiz,
-  type QuizDifficultyContent,
 } from './schemas/quiz';
-import { parseAndValidate } from './validation';
+import {
+  parseAndValidate,
+  logValidationSuccess,
+  type ValidationResult,
+} from './validation';
+import type { VocabularyLevel } from '../../types';
 
 type PromptType =
   | 'learningObjectives'
@@ -23,9 +55,14 @@ type PromptType =
   | 'confusingPoints'
   | 'classroomActivities'
   | 'onlineInteractiveQuiz'
-  | 'quizDifficulty'
   | 'learningLevels'
   | 'dialogue';
+
+interface LearningLevelSelection {
+  id: string;
+  name: string;
+  description: string;
+}
 
 const schemaMap = {
   learningObjectives: LearningObjectivesArraySchema,
@@ -33,162 +70,341 @@ const schemaMap = {
   confusingPoints: ConfusingPointsArraySchema,
   classroomActivities: ClassroomActivitiesArraySchema,
   onlineInteractiveQuiz: OnlineInteractiveQuizSchema,
-  quizDifficulty: QuizDifficultyContentSchema,
   learningLevels: LearningLevelSuggestionsSchema,
   dialogue: DialogueArraySchema,
 } as const;
 
-async function callAndValidate<T>(
-  prompt: string,
-  apiKey: string,
+function validateAndReturn<T>(
+  rawResult: unknown,
   promptType: PromptType,
   schema: z.ZodSchema<T>
-): Promise<T> {
-  const rawContent = await callProviderSystem(prompt, apiKey);
-  const result = parseAndValidate(schema, rawContent, promptType);
+): T {
+  const result = parseAndValidate(schema, rawResult, promptType);
 
   if (!result.success) {
     throw result.error;
   }
 
+  logValidationSuccess(promptType);
   return result.data!;
 }
 
-export async function generateLearningObjectivesValidated(
+export async function generateLearningObjectives(
   topic: string,
   apiKey: string
 ): Promise<LearningObjectiveItem[]> {
-  const prompt = `
-    Please generate at least 3 (but more is better if appropriate) clear and distinct learning objectives for the topic: "${topic}".
-    The objectives should be written in the primary language of the topic.
-    
-    CRITICAL INSTRUCTION: Focus on **LEARNING OUTCOMES** (what the student will be able to DO after the lesson), NOT just what will be taught.
-    Use Bloom's Taxonomy verbs (e.g., Analyze, Create, Evaluate, Understand, Apply).
-    Format: "Student will be able to [Action] [Content]..."
-    
-    Use any provided context (e.g., grade level, teaching method) to guide the difficulty and style, but do NOT explicitly mention the context settings (like 'Based on CPA method...') in the objective text.
-    
-    For each objective, provide:
-    - objective: The competency statement (e.g., "Able to distinguish between...")
-    - description: Why this competency is important and what it entails.
-    - teachingExample: A concrete scenario where this competency is applied.
-    Output MUST be a valid JSON array of objects, e.g.:
-    [
-      {
-        "objective": "能夠理解${topic}的基本概念",
-        "description": "此目標幫助學習者建立對${topic}的基礎理解和認知框架...",
-        "teachingExample": "透過具體例子展示${topic}的核心概念，例如..."
-      },
-      {
-        "objective": "能夠應用${topic}於實際情境",
-        "description": "培養學習者將理論知識轉化為實際應用的能力...",
-        "teachingExample": "提供真實情境讓學習者練習應用${topic}，如..."
-      },
-      {
-        "objective": "能夠辨識${topic}常見的誤區",
-        "description": "幫助學習者識別和避免${topic}學習中的常見錯誤...",
-        "teachingExample": "展示常見誤區的具體例子和正確理解方式..."
-      }
-    ]
-    Do NOT include any explanation or extra text. Only output the JSON array.
-  `;
-
-  return callAndValidate(
-    prompt,
-    apiKey,
+  const raw = await _generateLearningObjectives(topic, apiKey);
+  return validateAndReturn(
+    raw,
     'learningObjectives',
     LearningObjectivesArraySchema
   );
 }
 
-export async function generateQuizForDifficultyValidated(
+export async function generateContentBreakdown(
   topic: string,
-  difficulty: 'easy' | 'normal' | 'hard',
   apiKey: string,
-  learningObjectives: LearningObjectiveItem[],
-  isMath: boolean = false
-): Promise<QuizDifficultyContent> {
-  const sentenceScrambleSection = isMath
-    ? ''
-    : `
-      "sentenceScramble": [
-        { "originalSentence": "Sentence...", "scrambledWords": ["...", "..."] }
-      ],`;
-
-  const prompt = `
-    Based on the following learning objectives: ${JSON.stringify(learningObjectives)}
-    Please generate "${difficulty}" level quiz content for "${topic}".
-    
-    Output MUST be a valid JSON object with the following structure (no explanation, no extra text):
-    {
-      "trueFalse": [
-        { "statement": "Statement...", "isTrue": true, "explanation": "Optional explanation" }
-      ],
-      "multipleChoice": [
-        { "question": "Question...", "options": ["A", "B", "C"], "correctAnswerIndex": 0 }
-      ],
-      "fillInTheBlanks": [
-        { "sentenceWithBlank": "Sentence...____...", "correctAnswer": "Answer" }
-      ],${sentenceScrambleSection}
-      "memoryCardGame": [
-        {
-          "pairs": [
-            { "question": "Front", "answer": "Back" }
-          ],
-          "instructions": "Instructions..."
-        }
-      ]
-    }
-
-    Requirements:
-    - Difficulty: ${difficulty}
-    - trueFalse, multipleChoice, fillInTheBlanks${isMath ? '' : ', sentenceScramble'}: At least 5 questions each.
-    - memoryCardGame: Exactly 1 question, but with at least 5 pairs inside.
-    - All text must be in the primary language of the topic.
-    - Only output the JSON object.
-  `;
-
-  return callAndValidate(
-    prompt,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ContentBreakdownItem[]> {
+  const raw = await _generateContentBreakdown(
+    topic,
     apiKey,
-    'quizDifficulty',
-    QuizDifficultyContentSchema
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'contentBreakdown',
+    ContentBreakdownArraySchema
   );
 }
 
-export async function generateOnlineInteractiveQuizValidated(
+export async function generateConfusingPoints(
   topic: string,
   apiKey: string,
-  learningObjectives: LearningObjectiveItem[],
-  isMath: boolean = false
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ConfusingPointItem[]> {
+  const raw = await _generateConfusingPoints(topic, apiKey, learningObjectives);
+  return validateAndReturn(raw, 'confusingPoints', ConfusingPointsArraySchema);
+}
+
+export async function generateClassroomActivities(
+  topic: string,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ClassroomActivity[]> {
+  const raw = await _generateClassroomActivities(
+    topic,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'classroomActivities',
+    ClassroomActivitiesArraySchema
+  );
+}
+
+export async function generateOnlineInteractiveQuiz(
+  topic: string,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
 ): Promise<OnlineInteractiveQuiz> {
-  console.log(`[Validated] Starting quiz generation for topic: ${topic}`);
+  const raw = await _generateOnlineInteractiveQuiz(
+    topic,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'onlineInteractiveQuiz',
+    OnlineInteractiveQuizSchema
+  );
+}
 
-  const [easy, normal, hard] = await Promise.all([
-    generateQuizForDifficultyValidated(
-      topic,
-      'easy',
-      apiKey,
-      learningObjectives,
-      isMath
-    ),
-    generateQuizForDifficultyValidated(
-      topic,
-      'normal',
-      apiKey,
-      learningObjectives,
-      isMath
-    ),
-    generateQuizForDifficultyValidated(
-      topic,
-      'hard',
-      apiKey,
-      learningObjectives,
-      isMath
-    ),
-  ]);
+export async function generateEnglishConversation(
+  topic: string,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<DialogueLine[]> {
+  const raw = await _generateEnglishConversation(
+    topic,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(raw, 'dialogue', DialogueArraySchema);
+}
 
-  return { easy, normal, hard };
+export async function generateLearningLevels(
+  topic: string,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<LearningLevelSuggestions> {
+  const raw = await _generateLearningLevels(topic, apiKey, learningObjectives);
+  return validateAndReturn(
+    raw,
+    'learningLevels',
+    LearningLevelSuggestionsSchema
+  );
+}
+
+export async function generateLearningObjectivesForLevel(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  apiKey: string
+): Promise<LearningObjectiveItem[]> {
+  const raw = await _generateLearningObjectivesForLevel(
+    topic,
+    selectedLevel,
+    apiKey
+  );
+  return validateAndReturn(
+    raw,
+    'learningObjectives',
+    LearningObjectivesArraySchema
+  );
+}
+
+export async function generateContentBreakdownForLevel(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ContentBreakdownItem[]> {
+  const raw = await _generateContentBreakdownForLevel(
+    topic,
+    selectedLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'contentBreakdown',
+    ContentBreakdownArraySchema
+  );
+}
+
+export async function generateConfusingPointsForLevel(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ConfusingPointItem[]> {
+  const raw = await _generateConfusingPointsForLevel(
+    topic,
+    selectedLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(raw, 'confusingPoints', ConfusingPointsArraySchema);
+}
+
+export async function generateClassroomActivitiesForLevel(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ClassroomActivity[]> {
+  const raw = await _generateClassroomActivitiesForLevel(
+    topic,
+    selectedLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'classroomActivities',
+    ClassroomActivitiesArraySchema
+  );
+}
+
+export async function generateOnlineInteractiveQuizForLevel(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<OnlineInteractiveQuiz> {
+  const raw = await _generateOnlineInteractiveQuizForLevel(
+    topic,
+    selectedLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'onlineInteractiveQuiz',
+    OnlineInteractiveQuizSchema
+  );
+}
+
+export async function generateEnglishConversationForLevel(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<DialogueLine[]> {
+  const raw = await _generateEnglishConversationForLevel(
+    topic,
+    selectedLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(raw, 'dialogue', DialogueArraySchema);
+}
+
+export async function generateLearningObjectivesForLevelAndVocabulary(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  vocabularyLevel: VocabularyLevel,
+  apiKey: string
+): Promise<LearningObjectiveItem[]> {
+  const raw = await _generateLearningObjectivesForLevelAndVocabulary(
+    topic,
+    selectedLevel,
+    vocabularyLevel,
+    apiKey
+  );
+  return validateAndReturn(
+    raw,
+    'learningObjectives',
+    LearningObjectivesArraySchema
+  );
+}
+
+export async function generateContentBreakdownForLevelAndVocabulary(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  vocabularyLevel: VocabularyLevel,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ContentBreakdownItem[]> {
+  const raw = await _generateContentBreakdownForLevelAndVocabulary(
+    topic,
+    selectedLevel,
+    vocabularyLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'contentBreakdown',
+    ContentBreakdownArraySchema
+  );
+}
+
+export async function generateConfusingPointsForLevelAndVocabulary(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  vocabularyLevel: VocabularyLevel,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ConfusingPointItem[]> {
+  const raw = await _generateConfusingPointsForLevelAndVocabulary(
+    topic,
+    selectedLevel,
+    vocabularyLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(raw, 'confusingPoints', ConfusingPointsArraySchema);
+}
+
+export async function generateClassroomActivitiesForLevelAndVocabulary(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  vocabularyLevel: VocabularyLevel,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<ClassroomActivity[]> {
+  const raw = await _generateClassroomActivitiesForLevelAndVocabulary(
+    topic,
+    selectedLevel,
+    vocabularyLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'classroomActivities',
+    ClassroomActivitiesArraySchema
+  );
+}
+
+export async function generateOnlineInteractiveQuizForLevelAndVocabulary(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  vocabularyLevel: VocabularyLevel,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<OnlineInteractiveQuiz> {
+  const raw = await _generateOnlineInteractiveQuizForLevelAndVocabulary(
+    topic,
+    selectedLevel,
+    vocabularyLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(
+    raw,
+    'onlineInteractiveQuiz',
+    OnlineInteractiveQuizSchema
+  );
+}
+
+export async function generateEnglishConversationForLevelAndVocabulary(
+  topic: string,
+  selectedLevel: LearningLevelSelection,
+  vocabularyLevel: VocabularyLevel,
+  apiKey: string,
+  learningObjectives: LearningObjectiveItem[]
+): Promise<DialogueLine[]> {
+  const raw = await _generateEnglishConversationForLevelAndVocabulary(
+    topic,
+    selectedLevel,
+    vocabularyLevel,
+    apiKey,
+    learningObjectives
+  );
+  return validateAndReturn(raw, 'dialogue', DialogueArraySchema);
 }
 
 export function wrapWithValidation<TArgs extends unknown[], TResult>(
@@ -198,14 +414,20 @@ export function wrapWithValidation<TArgs extends unknown[], TResult>(
 ): (...args: TArgs) => Promise<TResult> {
   return async (...args: TArgs): Promise<TResult> => {
     const rawResult = await generatorFn(...args);
-    const validation = parseAndValidate(schema, rawResult, promptType);
-
-    if (!validation.success) {
-      throw validation.error;
-    }
-
-    return validation.data!;
+    return validateAndReturn(rawResult, promptType, schema);
   };
 }
 
 export { schemaMap, type PromptType };
+
+export type {
+  LearningObjectiveItem,
+  ContentBreakdownItem,
+  ConfusingPointItem,
+  ClassroomActivity,
+  LearningLevelSuggestions,
+  DialogueLine,
+  OnlineInteractiveQuiz,
+  ValidationResult,
+  LearningLevelSelection,
+};

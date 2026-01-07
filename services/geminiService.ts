@@ -13,12 +13,18 @@ import { generateCacheKey, getCache, setCache } from './cacheService';
 /**
  * Wrapper for callProviderSystem with caching support.
  */
-export const callProviderSystem = async (prompt: string, apiKey: string): Promise<any> => {
+export const callProviderSystem = async (
+  prompt: string,
+  apiKey: string
+): Promise<any> => {
   const cacheKey = generateCacheKey(prompt);
   const cachedResponse = getCache<any>(cacheKey);
 
   if (cachedResponse) {
-    console.log('Returning cached response for prompt:', prompt.substring(0, 50) + '...');
+    console.log(
+      'Returning cached response for prompt:',
+      prompt.substring(0, 50) + '...'
+    );
     return cachedResponse;
   }
 
@@ -38,15 +44,16 @@ import * as coreGenerationFunctions from './ai/coreGenerationFunctions';
 import * as providerManagementFunctions from './ai/providerManagementFunctions';
 import * as subjectGenerators from './ai/subjectGenerators';
 
-// 重新導出基礎生成函數以維持向後兼容
+// 重新導出基礎生成函數 - 使用 Zod 驗證版本
 export {
   generateLearningObjectives,
   generateContentBreakdown,
   generateConfusingPoints,
   generateClassroomActivities,
   generateOnlineInteractiveQuiz,
-  generateEnglishConversation
-} from './ai/basicGenerators';
+  generateEnglishConversation,
+  generateLearningLevels,
+} from './ai/validatedGenerators';
 
 export {
   generateLearningObjectivesForLevel,
@@ -54,8 +61,8 @@ export {
   generateConfusingPointsForLevel,
   generateClassroomActivitiesForLevel,
   generateOnlineInteractiveQuizForLevel,
-  generateEnglishConversationForLevel
-} from './ai/levelSpecificGenerators';
+  generateEnglishConversationForLevel,
+} from './ai/validatedGenerators';
 
 export {
   generateLearningObjectivesForLevelAndVocabulary,
@@ -63,14 +70,14 @@ export {
   generateConfusingPointsForLevelAndVocabulary,
   generateClassroomActivitiesForLevelAndVocabulary,
   generateOnlineInteractiveQuizForLevelAndVocabulary,
-  generateEnglishConversationForLevelAndVocabulary
-} from './ai/vocabularyLevelGenerators';
+  generateEnglishConversationForLevelAndVocabulary,
+} from './ai/validatedGenerators';
 
 export {
   generateWritingPractice,
   regenerateQuizWithConfig,
   generateStepQuiz,
-  getAIFeedback
+  getAIFeedback,
 } from './ai/studentContentTransformers';
 
 import {
@@ -78,7 +85,7 @@ import {
   LearningObjectiveItem,
   VocabularyLevel,
   MathGenerationParams,
-  EnglishGenerationParams
+  EnglishGenerationParams,
 } from '../types';
 
 // 導出 callProviderSystem 供外部使用
@@ -92,31 +99,49 @@ export const transformLearningObjectiveForStudent = async (
   objective: LearningObjectiveItem,
   apiKey: string
 ): Promise<any> => {
-  return await studentContentTransformerFunctions.transformLearningObjectiveForStudent(objective, apiKey, callProviderSystem);
+  return await studentContentTransformerFunctions.transformLearningObjectiveForStudent(
+    objective,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 export const transformContentBreakdownForStudent = async (
   breakdown: any[],
   apiKey: string
 ): Promise<any> => {
-  return await studentContentTransformerFunctions.transformContentBreakdownForStudent(breakdown, apiKey, callProviderSystem);
+  return await studentContentTransformerFunctions.transformContentBreakdownForStudent(
+    breakdown,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 export const transformConfusingPointForStudent = async (
   confusingPoint: any,
   apiKey: string
 ): Promise<any> => {
-  return await studentContentTransformerFunctions.transformConfusingPointForStudent(confusingPoint, apiKey, callProviderSystem);
+  return await studentContentTransformerFunctions.transformConfusingPointForStudent(
+    confusingPoint,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 // =============================================================================
 // 學習程度建議和主要生成函數
 // =============================================================================
 
-
 // 生成學習程度建議函數
-export const generateLearningLevelSuggestions = async (topic: string, apiKey: string): Promise<any> => {
-  return await coreGenerationFunctions.generateLearningLevelSuggestions(topic, apiKey, callProviderSystem);
+export const generateLearningLevelSuggestions = async (
+  topic: string,
+  apiKey: string
+): Promise<any> => {
+  return await coreGenerationFunctions.generateLearningLevelSuggestions(
+    topic,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 // 檢查是否為英語相關主題
@@ -125,17 +150,42 @@ export const isEnglishRelatedTopic = (topic: string): boolean => {
 };
 
 // 主要生成函數 - 完整版本
-export const generateLearningPlan = async (topic: string, apiKey: string): Promise<GeneratedLearningContent> => {
-  return await coreGenerationFunctions.generateLearningPlan(topic, apiKey, callProviderSystem);
+export const generateLearningPlan = async (
+  topic: string,
+  apiKey: string
+): Promise<GeneratedLearningContent> => {
+  return await coreGenerationFunctions.generateLearningPlan(
+    topic,
+    apiKey,
+    callProviderSystem
+  );
 };
 
-export const generateLearningPlanFromObjectives = async (topic: string, learningObjectives: LearningObjectiveItem[], apiKey: string): Promise<GeneratedLearningContent> => {
-  return await coreGenerationFunctions.generateLearningPlanFromObjectives(topic, learningObjectives, apiKey, callProviderSystem);
+export const generateLearningPlanFromObjectives = async (
+  topic: string,
+  learningObjectives: LearningObjectiveItem[],
+  apiKey: string
+): Promise<GeneratedLearningContent> => {
+  return await coreGenerationFunctions.generateLearningPlanFromObjectives(
+    topic,
+    learningObjectives,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 // 帶程度的生成函數
-export const generateLearningPlanWithLevel = async (topic: string, selectedLevel: any, apiKey: string): Promise<GeneratedLearningContent> => {
-  return await coreGenerationFunctions.generateLearningPlanWithLevel(topic, selectedLevel, apiKey, callProviderSystem);
+export const generateLearningPlanWithLevel = async (
+  topic: string,
+  selectedLevel: any,
+  apiKey: string
+): Promise<GeneratedLearningContent> => {
+  return await coreGenerationFunctions.generateLearningPlanWithLevel(
+    topic,
+    selectedLevel,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 // 帶程度和詞彙量的生成函數
@@ -145,33 +195,77 @@ export const generateLearningPlanWithVocabularyLevel = async (
   vocabularyLevel: VocabularyLevel,
   apiKey: string
 ): Promise<GeneratedLearningContent> => {
-  return await coreGenerationFunctions.generateLearningPlanWithVocabularyLevel(topic, selectedLevel, vocabularyLevel, apiKey, callProviderSystem);
+  return await coreGenerationFunctions.generateLearningPlanWithVocabularyLevel(
+    topic,
+    selectedLevel,
+    vocabularyLevel,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 // 數學學習計畫生成
-export const generateMathLearningPlan = async (params: MathGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
-  return await subjectGenerators.generateMathLearningPlan(params, apiKey, callProviderSystem);
+export const generateMathLearningPlan = async (
+  params: MathGenerationParams,
+  apiKey: string
+): Promise<GeneratedLearningContent> => {
+  return await subjectGenerators.generateMathLearningPlan(
+    params,
+    apiKey,
+    callProviderSystem
+  );
 };
 
-export const generateMathObjectives = async (params: MathGenerationParams, apiKey: string): Promise<{ topic: string, learningObjectives: LearningObjectiveItem[] }> => {
+export const generateMathObjectives = async (
+  params: MathGenerationParams,
+  apiKey: string
+): Promise<{ topic: string; learningObjectives: LearningObjectiveItem[] }> => {
   return await subjectGenerators.generateMathObjectives(params, apiKey);
 };
 
-export const generateMathContent = async (topic: string, learningObjectives: LearningObjectiveItem[], apiKey: string): Promise<GeneratedLearningContent> => {
-  return await subjectGenerators.generateMathContent(topic, learningObjectives, apiKey, callProviderSystem);
+export const generateMathContent = async (
+  topic: string,
+  learningObjectives: LearningObjectiveItem[],
+  apiKey: string
+): Promise<GeneratedLearningContent> => {
+  return await subjectGenerators.generateMathContent(
+    topic,
+    learningObjectives,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 // 英語學習計畫生成
-export const generateEnglishLearningPlan = async (params: EnglishGenerationParams, apiKey: string): Promise<GeneratedLearningContent> => {
-  return await subjectGenerators.generateEnglishLearningPlan(params, apiKey, callProviderSystem);
+export const generateEnglishLearningPlan = async (
+  params: EnglishGenerationParams,
+  apiKey: string
+): Promise<GeneratedLearningContent> => {
+  return await subjectGenerators.generateEnglishLearningPlan(
+    params,
+    apiKey,
+    callProviderSystem
+  );
 };
 
-export const generateEnglishObjectives = async (params: EnglishGenerationParams, apiKey: string): Promise<{ topic: string, learningObjectives: LearningObjectiveItem[] }> => {
+export const generateEnglishObjectives = async (
+  params: EnglishGenerationParams,
+  apiKey: string
+): Promise<{ topic: string; learningObjectives: LearningObjectiveItem[] }> => {
   return await subjectGenerators.generateEnglishObjectives(params, apiKey);
 };
 
-export const generateEnglishContent = async (topic: string, learningObjectives: LearningObjectiveItem[], apiKey: string): Promise<GeneratedLearningContent> => {
-  return await subjectGenerators.generateEnglishContent(topic, learningObjectives, apiKey, callProviderSystem);
+export const generateEnglishContent = async (
+  topic: string,
+  learningObjectives: LearningObjectiveItem[],
+  apiKey: string
+): Promise<GeneratedLearningContent> => {
+  return await subjectGenerators.generateEnglishContent(
+    topic,
+    learningObjectives,
+    apiKey,
+    callProviderSystem
+  );
 };
 
 // =============================================================================
