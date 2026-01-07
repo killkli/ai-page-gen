@@ -1,12 +1,20 @@
-import React from 'react';
-import { ExtendedLearningContent, LearningLevel, VocabularyLevel } from '../types';
-import { ClipboardIcon, LightbulbIcon, AcademicCapIcon, BookOpenIcon } from './icons';
+import React, { useRef, useEffect } from 'react';
+import {
+  ExtendedLearningContent,
+  LearningLevel,
+  VocabularyLevel,
+} from '../types';
+import {
+  ClipboardIcon,
+  LightbulbIcon,
+  AcademicCapIcon,
+  BookOpenIcon,
+} from './icons';
 import { exportLearningContentToHtml } from '../utils/exportHtmlUtil';
 import Tabs from './Tabs';
 import { saveLearningContent } from '../services/jsonbinService';
 import QRCodeDisplay from './QRCodeDisplay';
 
-// Sub-components
 import LearningObjectivesSection from './learning-content/LearningObjectivesSection';
 import ContentBreakdownSection from './learning-content/ContentBreakdownSection';
 import ConfusingPointsSection from './learning-content/ConfusingPointsSection';
@@ -40,7 +48,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
   selectedLevel,
   selectedVocabularyLevel,
   apiKey,
-  onContentUpdate
+  onContentUpdate,
 }) => {
   const [copySuccess, setCopySuccess] = React.useState('');
   const [exportMessage, setExportMessage] = React.useState('');
@@ -49,14 +57,27 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
   const [shareError, setShareError] = React.useState('');
   const [shareUrl, setShareUrl] = React.useState('');
 
+  const topicHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (content && topicHeadingRef.current) {
+      topicHeadingRef.current.focus();
+    }
+  }, [content]);
+
   // Interactive learning sharing states
-  const [interactiveLearningShareLoading, setInteractiveLearningShareLoading] = React.useState(false);
-  const [interactiveLearningShareError, setInteractiveLearningShareError] = React.useState('');
-  const [interactiveLearningShareUrl, setInteractiveLearningShareUrl] = React.useState('');
-  const [showInteractiveLearningQRCode, setShowInteractiveLearningQRCode] = React.useState(false);
+  const [interactiveLearningShareLoading, setInteractiveLearningShareLoading] =
+    React.useState(false);
+  const [interactiveLearningShareError, setInteractiveLearningShareError] =
+    React.useState('');
+  const [interactiveLearningShareUrl, setInteractiveLearningShareUrl] =
+    React.useState('');
+  const [showInteractiveLearningQRCode, setShowInteractiveLearningQRCode] =
+    React.useState(false);
 
   const copyToClipboard = React.useCallback(() => {
-    navigator.clipboard.writeText(JSON.stringify(content, null, 2))
+    navigator.clipboard
+      .writeText(JSON.stringify(content, null, 2))
       .then(() => {
         setCopySuccess('JSON 已複製到剪貼簿！');
         setTimeout(() => setCopySuccess(''), 2000);
@@ -90,7 +111,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
         topic: topic,
         selectedLevel: selectedLevel,
         selectedVocabularyLevel: selectedVocabularyLevel,
-        sharedAt: new Date().toISOString()
+        sharedAt: new Date().toISOString(),
       };
       const binId = await saveLearningContent(shareData);
       const url = `${window.location.origin}${import.meta.env.BASE_URL}share?binId=${binId}`;
@@ -113,7 +134,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
         topic: topic,
         selectedLevel: selectedLevel,
         selectedVocabularyLevel: selectedVocabularyLevel,
-        sharedAt: new Date().toISOString()
+        sharedAt: new Date().toISOString(),
       };
       const binId = await saveLearningContent(shareData);
       const url = `${window.location.origin}${import.meta.env.BASE_URL}teacher-interactive-prep?binId=${binId}`;
@@ -140,8 +161,19 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
           className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center text-sm"
           aria-label="將學習內容匯出為 HTML 檔案"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-4 h-4 mr-2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+            />
           </svg>
           匯出為 HTML
         </button>
@@ -152,7 +184,9 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
           disabled={shareLoading}
         >
           {shareLoading ? (
-            <span className="flex items-center"><span className="animate-spin mr-2">⏳</span> 分享中...</span>
+            <span className="flex items-center">
+              <span className="animate-spin mr-2">⏳</span> 分享中...
+            </span>
           ) : (
             <span>分享方案</span>
           )}
@@ -164,20 +198,43 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
           disabled={interactiveLearningShareLoading}
         >
           {interactiveLearningShareLoading ? (
-            <span className="flex items-center"><span className="animate-spin mr-2">⏳</span> 分享中...</span>
+            <span className="flex items-center">
+              <span className="animate-spin mr-2">⏳</span> 分享中...
+            </span>
           ) : (
             <span className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-4 h-4 mr-2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                />
               </svg>
               教材準備
             </span>
           )}
         </button>
-        {copySuccess && <span className="text-sm text-green-600">{copySuccess}</span>}
-        {exportMessage && <span className="text-sm text-blue-600">{exportMessage}</span>}
-        {shareError && <span className="text-sm text-red-600">{shareError}</span>}
-        {interactiveLearningShareError && <span className="text-sm text-red-600">{interactiveLearningShareError}</span>}
+        {copySuccess && (
+          <span className="text-sm text-green-600">{copySuccess}</span>
+        )}
+        {exportMessage && (
+          <span className="text-sm text-blue-600">{exportMessage}</span>
+        )}
+        {shareError && (
+          <span className="text-sm text-red-600">{shareError}</span>
+        )}
+        {interactiveLearningShareError && (
+          <span className="text-sm text-red-600">
+            {interactiveLearningShareError}
+          </span>
+        )}
       </div>
 
       {/* Unified Share URL Display - Learning Plan */}
@@ -212,21 +269,41 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
               value={interactiveLearningShareUrl}
               readOnly
               className="flex-1 px-3 py-2 bg-white border border-emerald-300 rounded text-sm"
-              onClick={() => navigator.clipboard.writeText(interactiveLearningShareUrl)}
+              onClick={() =>
+                navigator.clipboard.writeText(interactiveLearningShareUrl)
+              }
             />
             <button
-              onClick={() => navigator.clipboard.writeText(interactiveLearningShareUrl)}
+              onClick={() =>
+                navigator.clipboard.writeText(interactiveLearningShareUrl)
+              }
               className="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm"
             >
               複製
             </button>
             <button
-              onClick={() => setShowInteractiveLearningQRCode(!showInteractiveLearningQRCode)}
+              onClick={() =>
+                setShowInteractiveLearningQRCode(!showInteractiveLearningQRCode)
+              }
               className="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm flex items-center gap-1"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z"
+                />
               </svg>
               QR
             </button>
@@ -255,9 +332,17 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <LightbulbIcon className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-              <span className="text-sm font-medium text-indigo-600">學習主題</span>
+              <span className="text-sm font-medium text-indigo-600">
+                學習主題
+              </span>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-0 truncate">{topic}</h2>
+            <h2
+              ref={topicHeadingRef}
+              tabIndex={-1}
+              className="text-3xl font-bold text-gray-900 mb-0 truncate focus:outline-none"
+            >
+              {topic}
+            </h2>
           </div>
 
           {(selectedLevel || selectedVocabularyLevel) && (
@@ -266,10 +351,17 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
                 <div className="bg-white px-3 py-2 rounded-lg shadow-sm border border-indigo-100">
                   <div className="flex items-center gap-2 mb-1">
                     <AcademicCapIcon className="w-4 h-4 text-indigo-500" />
-                    <span className="text-xs font-medium text-indigo-600">學習程度</span>
+                    <span className="text-xs font-medium text-indigo-600">
+                      學習程度
+                    </span>
                   </div>
-                  <div className="text-sm font-semibold text-gray-900">{selectedLevel.name}</div>
-                  <div className="text-xs text-gray-500 truncate max-w-32" title={selectedLevel.description}>
+                  <div className="text-sm font-semibold text-gray-900">
+                    {selectedLevel.name}
+                  </div>
+                  <div
+                    className="text-xs text-gray-500 truncate max-w-32"
+                    title={selectedLevel.description}
+                  >
                     {selectedLevel.description.length > 20
                       ? selectedLevel.description.substring(0, 20) + '...'
                       : selectedLevel.description}
@@ -281,10 +373,16 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
                 <div className="bg-white px-3 py-2 rounded-lg shadow-sm border border-blue-100">
                   <div className="flex items-center gap-2 mb-1">
                     <BookOpenIcon className="w-4 h-4 text-blue-500" />
-                    <span className="text-xs font-medium text-blue-600">詞彙程度</span>
+                    <span className="text-xs font-medium text-blue-600">
+                      詞彙程度
+                    </span>
                   </div>
-                  <div className="text-sm font-semibold text-gray-900">{selectedVocabularyLevel.name}</div>
-                  <div className="text-xs text-gray-500">{selectedVocabularyLevel.wordCount} 詞彙</div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    {selectedVocabularyLevel.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {selectedVocabularyLevel.wordCount} 詞彙
+                  </div>
                 </div>
               )}
             </div>
@@ -292,11 +390,7 @@ const LearningContentDisplay: React.FC<LearningContentDisplayProps> = ({
         </div>
       </div>
 
-      <Tabs
-        tabs={tabDefs}
-        current={currentTab}
-        onChange={setCurrentTab}
-      >
+      <Tabs tabs={tabDefs} current={currentTab} onChange={setCurrentTab}>
         <LearningObjectivesSection objectives={content.learningObjectives} />
         <ContentBreakdownSection breakdown={content.contentBreakdown} />
         <ConfusingPointsSection points={content.confusingPoints} />

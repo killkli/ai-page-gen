@@ -93,6 +93,58 @@
         opacity: 0.8;
       }
 
+      /* Print styles */
+      @media print {
+        body {
+          background: white !important;
+          color: black !important;
+          font-size: 12pt;
+        }
+
+        .no-print,
+        button,
+        nav,
+        .fixed,
+        .sticky {
+          display: none !important;
+        }
+
+        .print-break-before {
+          page-break-before: always;
+        }
+
+        .print-break-after {
+          page-break-after: always;
+        }
+
+        .print-avoid-break {
+          page-break-inside: avoid;
+        }
+
+        a {
+          text-decoration: none;
+          color: inherit;
+        }
+
+        a[href]::after {
+          content: ' (' attr(href) ')';
+          font-size: 0.8em;
+          color: #666;
+        }
+
+        h1,
+        h2,
+        h3 {
+          page-break-after: avoid;
+        }
+
+        img,
+        table,
+        figure {
+          page-break-inside: avoid;
+        }
+      }
+
       .theme-loading body {
         visibility: hidden;
         opacity: 0;

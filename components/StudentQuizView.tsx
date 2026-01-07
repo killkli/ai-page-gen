@@ -1,15 +1,28 @@
-import React, { useState, useCallback } from 'react';
-import { OnlineInteractiveQuiz, QuizDifficulty, QuizDifficultyContent, QuizContentKey, QuestionResponse } from '../types';
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  OnlineInteractiveQuiz,
+  QuizDifficulty,
+  QuizDifficultyContent,
+  QuizContentKey,
+  QuestionResponse,
+} from '../types';
 import TrueFalseQuizItem from './quizTypes/TrueFalseQuizItem';
 import MultipleChoiceQuizItem from './quizTypes/MultipleChoiceQuizItem';
 import FillBlankQuizItem from './quizTypes/FillBlankQuizItem';
 import SentenceScrambleQuizItem from './quizTypes/SentenceScrambleQuizItem';
 import MemoryCardGameQuizItem from './quizTypes/MemoryCardGameQuizItem';
 import LearningDiagnosticReport from './LearningDiagnosticReport';
-import { PuzzlePieceIcon, AcademicCapIcon, ChartBarIcon, HomeIcon } from './icons';
+import {
+  PuzzlePieceIcon,
+  AcademicCapIcon,
+  ChartBarIcon,
+  HomeIcon,
+} from './icons';
 import { saveStudentResults } from '../services/jsonbinService';
 import { calculateOverallScore } from '../services/diagnosticService';
 import QRCodeDisplay from './QRCodeDisplay';
+
+const DIFFICULTY_STORAGE_KEY = 'quiz-difficulty-preference';
 
 interface StudentQuizViewProps {
   quiz: OnlineInteractiveQuiz;
@@ -19,53 +32,93 @@ interface StudentQuizViewProps {
   quizBinId?: string; // 原始測驗的 binId
 }
 
-const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, supportsDiagnostic = false, quizBinId }) => {
-  const [selectedDifficulty, setSelectedDifficulty] = useState<QuizDifficulty>(QuizDifficulty.Easy);
+const StudentQuizView: React.FC<StudentQuizViewProps> = ({
+  quiz,
+  topic,
+  apiKey,
+  supportsDiagnostic = false,
+  quizBinId,
+}) => {
+  const [selectedDifficulty, setSelectedDifficulty] = useState<QuizDifficulty>(
+    () => {
+      const saved = localStorage.getItem(DIFFICULTY_STORAGE_KEY);
+      if (
+        saved &&
+        Object.values(QuizDifficulty).includes(saved as QuizDifficulty)
+      ) {
+        return saved as QuizDifficulty;
+      }
+      return QuizDifficulty.Easy;
+    }
+  );
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [studentName, setStudentName] = useState('');
   const [sharing, setSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [showNameInput, setShowNameInput] = useState(false);
-  const [showQRCode, setShowQRCode] = useState(false);
 
-  const handleQuestionResponse = useCallback((
-    questionType: QuizContentKey,
-    questionIndex: number,
-    userAnswer: any,
-    correctAnswer: any,
-    isCorrect: boolean,
-    responseTime?: number
-  ) => {
-    if (!supportsDiagnostic) return;
+  useEffect(() => {
+    localStorage.setItem(DIFFICULTY_STORAGE_KEY, selectedDifficulty);
+  }, [selectedDifficulty]);
 
-    const questionId = `${selectedDifficulty}-${questionType}-${questionIndex}`;
-    const response: QuestionResponse = {
-      questionId,
-      questionType,
-      difficulty: selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard',
-      userAnswer,
-      correctAnswer,
-      isCorrect,
-      responseTime,
-      attempts: 1
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (responses.length > 0 && !shareUrl) {
+        e.preventDefault();
+        e.returnValue = '您有未完成的測驗，確定要離開嗎？';
+        return e.returnValue;
+      }
     };
 
-    setResponses(prev => {
-      const existingIndex = prev.findIndex(r => r.questionId === questionId);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          userAnswer,
-          isCorrect,
-          attempts: (updated[existingIndex].attempts || 1) + 1
-        };
-        return updated;
-      }
-      return [...prev, response];
-    });
-  }, [selectedDifficulty, supportsDiagnostic]);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [responses.length, shareUrl]);
+  const [showQRCode, setShowQRCode] = useState(false);
+
+  const handleQuestionResponse = useCallback(
+    (
+      questionType: QuizContentKey,
+      questionIndex: number,
+      userAnswer: any,
+      correctAnswer: any,
+      isCorrect: boolean,
+      responseTime?: number
+    ) => {
+      if (!supportsDiagnostic) return;
+
+      const questionId = `${selectedDifficulty}-${questionType}-${questionIndex}`;
+      const response: QuestionResponse = {
+        questionId,
+        questionType,
+        difficulty: selectedDifficulty.toLowerCase() as
+          | 'easy'
+          | 'normal'
+          | 'hard',
+        userAnswer,
+        correctAnswer,
+        isCorrect,
+        responseTime,
+        attempts: 1,
+      };
+
+      setResponses(prev => {
+        const existingIndex = prev.findIndex(r => r.questionId === questionId);
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            userAnswer,
+            isCorrect,
+            attempts: (updated[existingIndex].attempts || 1) + 1,
+          };
+          return updated;
+        }
+        return [...prev, response];
+      });
+    },
+    [selectedDifficulty, supportsDiagnostic]
+  );
 
   const getCorrectAnswer = (type: QuizContentKey, question: any) => {
     switch (type) {
@@ -86,16 +139,26 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
 
   // 取得當前難度的回答記錄
   const getCurrentDifficultyResponses = () => {
-    const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
-    return responses.filter(response => response.difficulty === currentDifficultyString);
+    const currentDifficultyString = selectedDifficulty.toLowerCase() as
+      | 'easy'
+      | 'normal'
+      | 'hard';
+    return responses.filter(
+      response => response.difficulty === currentDifficultyString
+    );
   };
 
   // 分享作答結果給老師
   const handleShareResults = useCallback(async () => {
     // 取得當前難度的回答記錄
     const getCurrentDifficultyResponses = () => {
-      const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
-      return responses.filter(response => response.difficulty === currentDifficultyString);
+      const currentDifficultyString = selectedDifficulty.toLowerCase() as
+        | 'easy'
+        | 'normal'
+        | 'hard';
+      return responses.filter(
+        response => response.difficulty === currentDifficultyString
+      );
     };
     const currentResponses = getCurrentDifficultyResponses();
     if (currentResponses.length === 0) {
@@ -111,8 +174,12 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
     setSharing(true);
     try {
       const overallScore = calculateOverallScore(currentResponses);
-      const difficultyLabel = selectedDifficulty === QuizDifficulty.Easy ? '簡單' :
-        selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難';
+      const difficultyLabel =
+        selectedDifficulty === QuizDifficulty.Easy
+          ? '簡單'
+          : selectedDifficulty === QuizDifficulty.Normal
+            ? '普通'
+            : '困難';
 
       // 獲取當前難度的完整測驗內容，供老師查看題目
       const currentQuizContent = quiz?.[selectedDifficulty] || {};
@@ -129,8 +196,8 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         metadata: {
           totalQuestions: currentResponses.length,
           correctAnswers: currentResponses.filter(r => r.isCorrect).length,
-          selectedDifficulty // 保存難度選擇
-        }
+          selectedDifficulty, // 保存難度選擇
+        },
       });
 
       const baseUrl = import.meta.env.BASE_URL || '/';
@@ -152,7 +219,12 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
     }
   }, [responses, studentName, topic, selectedDifficulty, quizBinId, quiz]);
 
-  if (showDiagnostic && supportsDiagnostic && apiKey && getCurrentDifficultyResponses().length > 0) {
+  if (
+    showDiagnostic &&
+    supportsDiagnostic &&
+    apiKey &&
+    getCurrentDifficultyResponses().length > 0
+  ) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         <div className="bg-white shadow-sm border-b">
@@ -161,8 +233,12 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
               <ChartBarIcon className="w-8 h-8 text-indigo-600" />
               <h1 className="text-2xl font-bold text-gray-900">學習診斷報告</h1>
               <span className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm font-medium rounded-full">
-                {selectedDifficulty === QuizDifficulty.Easy ? '簡單' :
-                  selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'} 難度
+                {selectedDifficulty === QuizDifficulty.Easy
+                  ? '簡單'
+                  : selectedDifficulty === QuizDifficulty.Normal
+                    ? '普通'
+                    : '困難'}{' '}
+                難度
               </span>
             </div>
             <div className="flex items-center gap-2 text-gray-600">
@@ -173,16 +249,24 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         </div>
         <div className="max-w-4xl mx-auto px-4 py-8">
           <LearningDiagnosticReport
-            topic={`${topic} (${selectedDifficulty === QuizDifficulty.Easy ? '簡單' :
-              selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'}難度)`}
+            topic={`${topic} (${
+              selectedDifficulty === QuizDifficulty.Easy
+                ? '簡單'
+                : selectedDifficulty === QuizDifficulty.Normal
+                  ? '普通'
+                  : '困難'
+            }難度)`}
             apiKey={apiKey}
             mode="student"
             initialResponses={getCurrentDifficultyResponses()}
             onClose={() => setShowDiagnostic(false)}
             onRetakeQuiz={() => {
               // 只清除當前難度的回答
-              const currentDifficultyString = selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
-              setResponses(prev => prev.filter(r => r.difficulty !== currentDifficultyString));
+              const currentDifficultyString =
+                selectedDifficulty.toLowerCase() as 'easy' | 'normal' | 'hard';
+              setResponses(prev =>
+                prev.filter(r => r.difficulty !== currentDifficultyString)
+              );
               setShowDiagnostic(false);
             }}
             onContinueLearning={() => setShowDiagnostic(false)}
@@ -201,31 +285,60 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
     );
   }
 
-  const currentQuizSet: QuizDifficultyContent | undefined = quiz[selectedDifficulty];
+  const currentQuizSet: QuizDifficultyContent | undefined =
+    quiz[selectedDifficulty];
 
-  const difficultyLevels: { key: QuizDifficulty; label: string; color: string }[] = [
-    { key: QuizDifficulty.Easy, label: '簡單', color: 'bg-green-500 hover:bg-green-600' },
-    { key: QuizDifficulty.Normal, label: '普通', color: 'bg-yellow-500 hover:bg-yellow-600' },
-    { key: QuizDifficulty.Hard, label: '困難', color: 'bg-red-500 hover:bg-red-600' },
+  const difficultyLevels: {
+    key: QuizDifficulty;
+    label: string;
+    color: string;
+  }[] = [
+    {
+      key: QuizDifficulty.Easy,
+      label: '簡單',
+      color: 'bg-green-500 hover:bg-green-600',
+    },
+    {
+      key: QuizDifficulty.Normal,
+      label: '普通',
+      color: 'bg-yellow-500 hover:bg-yellow-600',
+    },
+    {
+      key: QuizDifficulty.Hard,
+      label: '困難',
+      color: 'bg-red-500 hover:bg-red-600',
+    },
   ];
 
   const quizTypeLabels: Record<QuizContentKey, string> = {
-    trueFalse: "是非題",
-    multipleChoice: "選擇題",
-    fillInTheBlanks: "填空題",
-    sentenceScramble: "句子重組",
-    memoryCardGame: "翻卡牌記憶遊戲",
+    trueFalse: '是非題',
+    multipleChoice: '選擇題',
+    fillInTheBlanks: '填空題',
+    sentenceScramble: '句子重組',
+    memoryCardGame: '翻卡牌記憶遊戲',
   };
 
   const getQuizComponent = (type: QuizContentKey, questions: any[]) => {
-    if (!questions || !Array.isArray(questions) || questions.length === 0) return null;
+    if (!questions || !Array.isArray(questions) || questions.length === 0)
+      return null;
 
-    const createAnswerCallback = (questionIndex: number) => supportsDiagnostic
-      ? (userAnswer: any, isCorrect: boolean, responseTime?: number) => {
-        const correctAnswer = getCorrectAnswer(type, questions[questionIndex]);
-        handleQuestionResponse(type, questionIndex, userAnswer, correctAnswer, isCorrect, responseTime);
-      }
-      : undefined;
+    const createAnswerCallback = (questionIndex: number) =>
+      supportsDiagnostic
+        ? (userAnswer: any, isCorrect: boolean, responseTime?: number) => {
+            const correctAnswer = getCorrectAnswer(
+              type,
+              questions[questionIndex]
+            );
+            handleQuestionResponse(
+              type,
+              questionIndex,
+              userAnswer,
+              correctAnswer,
+              isCorrect,
+              responseTime
+            );
+          }
+        : undefined;
 
     switch (type) {
       case 'trueFalse':
@@ -327,15 +440,16 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
               )}
             </div>
             <div className="flex items-center gap-3">
-              {supportsDiagnostic && getCurrentDifficultyResponses().length > 0 && (
-                <button
-                  onClick={() => setShowDiagnostic(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  <ChartBarIcon className="w-5 h-5" />
-                  查看學習診斷 ({getCurrentDifficultyResponses().length})
-                </button>
-              )}
+              {supportsDiagnostic &&
+                getCurrentDifficultyResponses().length > 0 && (
+                  <button
+                    onClick={() => setShowDiagnostic(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    <ChartBarIcon className="w-5 h-5" />
+                    查看學習診斷 ({getCurrentDifficultyResponses().length})
+                  </button>
+                )}
 
               {getCurrentDifficultyResponses().length > 0 && (
                 <button
@@ -343,10 +457,23 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                   disabled={sharing}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-11.314a2.25 2.25 0 1 0 3.935-2.186 2.25 2.25 0 0 0-3.935 2.186Z"
+                    />
                   </svg>
-                  {sharing ? '分享中...' : `分享結果給老師 (${getCurrentDifficultyResponses().length})`}
+                  {sharing
+                    ? '分享中...'
+                    : `分享結果給老師 (${getCurrentDifficultyResponses().length})`}
                 </button>
               )}
             </div>
@@ -376,16 +503,19 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
 
         {/* Difficulty Selector */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">選擇難度等級</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            選擇難度等級
+          </h2>
           <div className="flex flex-wrap gap-3">
             {difficultyLevels.map(({ key, label, color }) => (
               <button
                 key={key}
                 onClick={() => setSelectedDifficulty(key)}
                 className={`px-6 py-3 rounded-lg text-white font-medium transition-all transform hover:scale-105 shadow-md
-                  ${selectedDifficulty === key
-                    ? `${color} ring-4 ring-opacity-50`
-                    : 'bg-gray-400 hover:bg-gray-500'
+                  ${
+                    selectedDifficulty === key
+                      ? `${color} ring-4 ring-opacity-50`
+                      : 'bg-gray-400 hover:bg-gray-500'
                   }
                 `}
               >
@@ -398,7 +528,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         {/* Quiz Content */}
         {currentQuizSet && (
           <div className="space-y-8">
-            {(Object.keys(quizTypeLabels) as QuizContentKey[]).map((type) => {
+            {(Object.keys(quizTypeLabels) as QuizContentKey[]).map(type => {
               const questions = currentQuizSet[type];
               const component = getQuizComponent(type, questions ?? []);
 
@@ -419,7 +549,10 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
           </div>
         )}
 
-        {(!currentQuizSet || Object.values(currentQuizSet).every(arr => !arr || arr.length === 0)) && (
+        {(!currentQuizSet ||
+          Object.values(currentQuizSet).every(
+            arr => !arr || arr.length === 0
+          )) && (
           <div className="text-center py-12">
             <div className="bg-white rounded-xl shadow-lg p-8">
               <PuzzlePieceIcon className="w-16 h-16 text-slate-400 mx-auto mb-4" />
@@ -434,7 +567,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
       {showNameInput && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          onClick={(e) => {
+          onClick={e => {
             if (e.target === e.currentTarget) {
               setShowNameInput(false);
             }
@@ -442,25 +575,40 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         >
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">分享作答結果給老師</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                分享作答結果給老師
+              </h3>
               <button
                 onClick={() => setShowNameInput(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 aria-label="關閉"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
-            <p className="text-gray-600 mb-4">請輸入您的姓名，讓老師知道這是誰的作答結果：</p>
+            <p className="text-gray-600 mb-4">
+              請輸入您的姓名，讓老師知道這是誰的作答結果：
+            </p>
             <input
               type="text"
               value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
+              onChange={e => setStudentName(e.target.value)}
               placeholder="請輸入姓名"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
-              onKeyPress={(e) => e.key === 'Enter' && handleShareResults()}
+              onKeyPress={e => e.key === 'Enter' && handleShareResults()}
             />
             <div className="flex gap-3 justify-end">
               <button
@@ -485,7 +633,7 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
       {shareUrl && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-          onClick={(e) => {
+          onClick={e => {
             if (e.target === e.currentTarget) {
               setShareUrl('');
               setShowQRCode(false);
@@ -494,7 +642,9 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
         >
           <div className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">✅ 作答結果已分享成功！</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                ✅ 作答結果已分享成功！
+              </h3>
               <button
                 onClick={() => {
                   setShareUrl('');
@@ -503,12 +653,25 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 aria-label="關閉"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
-            <p className="text-gray-600 mb-4">請將下方連結傳送給您的老師，老師可以查看您的作答結果並提供學習建議：</p>
+            <p className="text-gray-600 mb-4">
+              請將下方連結傳送給您的老師，老師可以查看您的作答結果並提供學習建議：
+            </p>
             <div className="bg-gray-50 p-3 rounded-lg mb-4">
               <div className="space-y-3">
                 <input
@@ -533,9 +696,24 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
                     onClick={() => setShowQRCode(!showQRCode)}
                     className="flex-1 px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5H8.25v1.5H13.5V13.5ZM13.5 16.5H8.25V18H13.5v-1.5ZM16.5 16.5h1.5V18h-1.5v-1.5ZM16.5 13.5h1.5v1.5h-1.5v-1.5Z" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5H8.25v1.5H13.5V13.5ZM13.5 16.5H8.25V18H13.5v-1.5ZM16.5 16.5h1.5V18h-1.5v-1.5ZM16.5 13.5h1.5v1.5h-1.5v-1.5Z"
+                      />
                     </svg>
                     顯示 QR Code
                   </button>
@@ -557,8 +735,15 @@ const StudentQuizView: React.FC<StudentQuizViewProps> = ({ quiz, topic, apiKey, 
 
             <div className="bg-blue-50 p-3 rounded-lg mb-4">
               <p className="text-sm text-blue-700">
-                💡 <strong>給老師的說明：</strong><br />
-                老師打開連結後可以看到 {studentName} 在「{topic}」({selectedDifficulty === QuizDifficulty.Easy ? '簡單' : selectedDifficulty === QuizDifficulty.Normal ? '普通' : '困難'}難度) 的作答結果，並可使用 AI 進行詳細的學習分析。
+                💡 <strong>給老師的說明：</strong>
+                <br />
+                老師打開連結後可以看到 {studentName} 在「{topic}」(
+                {selectedDifficulty === QuizDifficulty.Easy
+                  ? '簡單'
+                  : selectedDifficulty === QuizDifficulty.Normal
+                    ? '普通'
+                    : '困難'}
+                難度) 的作答結果，並可使用 AI 進行詳細的學習分析。
               </p>
             </div>
             <div className="flex justify-end">
