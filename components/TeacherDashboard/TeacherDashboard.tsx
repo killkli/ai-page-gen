@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Tabs from '../Tabs';
 import ClassManager from './ClassManager';
+import AnalyticsView from './AnalyticsView';
 import LessonPlanManager from '../LessonPlanManager';
 import { classService } from '../../services/class/classService';
 import type { TeacherIdentity } from '../../src/core/types/class';
@@ -75,7 +76,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         <Tabs tabs={TABS} current={activeTab} onChange={setActiveTab}>
           <LessonPlanManager />
           <ClassManager />
-          <AnalyticsPlaceholder />
+          <AnalyticsView />
         </Tabs>
       </main>
 
@@ -106,17 +107,5 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
     </div>
   );
 };
-
-const AnalyticsPlaceholder: React.FC = () => (
-  <div className="bg-white rounded-xl p-8 text-center">
-    <div className="text-6xl mb-4">📊</div>
-    <h2 className="text-xl font-semibold text-slate-800 mb-2">
-      學習分析功能即將推出
-    </h2>
-    <p className="text-slate-600">
-      此功能正在開發中，將提供班級學習成效分析、學生進度追蹤等功能。
-    </p>
-  </div>
-);
 
 export default TeacherDashboard;
