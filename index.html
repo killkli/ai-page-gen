@@ -1,94 +1,226 @@
+<!doctype html>
+<html lang="en" class="theme-loading">
+  <head>
+    <meta charset="UTF-R-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Learning Page Generator</title>
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta
+      name="description"
+      content="AI-powered educational content generator supporting multiple learning domains"
+    />
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-R-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Learning Page Generator</title>
-  <meta name="theme-color" content="#0ea5e9" />
-  <meta name="description" content="AI-powered educational content generator supporting multiple learning domains" />
-  
-  <!-- 預載入字體 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- 主題系統樣式 -->
-  <style>
-    /* 基礎變量設定 - 將被主題管理器覆蓋 */
-    :root {
-      --color-primary: #0ea5e9;
-      --color-secondary: #64748b;
-      --color-accent: #f59e0b;
-      --color-background: #f8fafc;
-      --color-surface: #ffffff;
-      --color-text-primary: #0f172a;
-      --color-text-secondary: #334155;
-      --color-text-muted: #64748b;
-    }
-    
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background-color: var(--color-background);
-      color: var(--color-text-primary);
-      transition: background-color 300ms ease, color 300ms ease;
-    }
-    
-    /* 自訂滾動條樣式 */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: var(--color-background);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: var(--color-text-muted);
-      border-radius: 4px;
-      opacity: 0.6;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--color-secondary);
-      opacity: 0.8;
-    }
-    
-    /* 預防無樣式內容閃爍 */
-    .theme-loading {
-      visibility: hidden;
-    }
-    
-    /* 主題過渡動畫 */
-    * {
-      transition-property: background-color, border-color, color, fill, stroke;
-      transition-duration: 200ms;
-      transition-timing-function: ease-out;
-    }
-  </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
 
-<script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.6.0"
-  }
-}
-</script>
-  <script type="module" crossorigin src="/ai-page-gen/assets/index-BPrdf4XG.js"></script>
-  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/vendor-D_G8XHYM.js">
-  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/react-vendor-CKBOTALK.js">
-  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/ai-vendor-DJy2VIy7.js">
-  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/app-services-Cu0omW9W.js">
-  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/interactive-components-KenSvHOs.js">
-  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/ui-utilities-SaSpuDSU.js">
-  <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/teacher-components-rNDJYygQ.js">
-</head>
-<body class="bg-slate-50 text-slate-800">
-  <div id="root"></div>
-</body>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: 'var(--color-primary)',
+              secondary: 'var(--color-secondary)',
+              accent: 'var(--color-accent)',
+              surface: 'var(--color-surface)',
+              border: 'var(--color-border)',
+            },
+            textColor: {
+              primary: 'var(--color-text-primary)',
+              secondary: 'var(--color-text-secondary)',
+              muted: 'var(--color-text-muted)',
+              inverse: 'var(--color-text-inverse)',
+            },
+            backgroundColor: {
+              primary: 'var(--color-primary)',
+              secondary: 'var(--color-secondary)',
+              surface: 'var(--color-surface)',
+              page: 'var(--color-background)',
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      :root {
+        --color-primary: #4f46e5;
+        --color-secondary: #0284c7;
+        --color-accent: #f59e0b;
+        --color-background: #f8fafc;
+        --color-surface: #ffffff;
+        --color-text-primary: #0f172a;
+        --color-text-secondary: #334155;
+        --color-text-muted: #64748b;
+        --color-text-inverse: #ffffff;
+        --color-border: #e2e8f0;
+      }
+
+      body {
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        background-color: var(--color-background);
+        color: var(--color-text-primary);
+        transition:
+          background-color 300ms ease,
+          color 300ms ease;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--color-background);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--color-text-muted);
+        border-radius: 4px;
+        opacity: 0.6;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--color-secondary);
+        opacity: 0.8;
+      }
+
+      /* Print styles */
+      @media print {
+        body {
+          background: white !important;
+          color: black !important;
+          font-size: 12pt;
+        }
+
+        .no-print,
+        button,
+        nav,
+        .fixed,
+        .sticky {
+          display: none !important;
+        }
+
+        .print-break-before {
+          page-break-before: always;
+        }
+
+        .print-break-after {
+          page-break-after: always;
+        }
+
+        .print-avoid-break {
+          page-break-inside: avoid;
+        }
+
+        a {
+          text-decoration: none;
+          color: inherit;
+        }
+
+        a[href]::after {
+          content: ' (' attr(href) ')';
+          font-size: 0.8em;
+          color: #666;
+        }
+
+        h1,
+        h2,
+        h3 {
+          page-break-after: avoid;
+        }
+
+        img,
+        table,
+        figure {
+          page-break-inside: avoid;
+        }
+      }
+
+      .theme-loading body {
+        visibility: hidden;
+        opacity: 0;
+      }
+
+      body,
+      div,
+      nav,
+      header,
+      footer,
+      button,
+      input,
+      textarea,
+      select,
+      span,
+      p,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        transition-property:
+          background-color, border-color, color, fill, stroke, opacity,
+          box-shadow;
+        transition-duration: 200ms;
+        transition-timing-function: ease-out;
+      }
+    </style>
+
+    <script>
+      (function () {
+        try {
+          const savedTheme = localStorage.getItem('app-theme');
+          const prefersDark =
+            window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+          if (savedTheme === 'midnight' || (!savedTheme && prefersDark)) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.setProperty(
+              '--color-background',
+              '#0f172a'
+            );
+            document.documentElement.style.setProperty(
+              '--color-text-primary',
+              '#f8fafc'
+            );
+          }
+        } catch (e) {
+          console.error('Theme initialization error', e);
+        }
+      })();
+    </script>
+
+
+    <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://esm.sh/react@^19.1.0/",
+          "react": "https://esm.sh/react@^19.1.0",
+          "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+          "@google/genai": "https://esm.sh/@google/genai@^1.6.0"
+        }
+      }
+    </script>
+    <script type="module" crossorigin src="/ai-page-gen/assets/index-C3TG8Xrl.js"></script>
+    <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/vendor-D_G8XHYM.js">
+    <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/react-vendor-CKBOTALK.js">
+    <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/ai-vendor-DJy2VIy7.js">
+    <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/app-services-2y2dLhqm.js">
+    <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/interactive-components-Bz66s04f.js">
+    <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/ui-utilities-SaSpuDSU.js">
+    <link rel="modulepreload" crossorigin href="/ai-page-gen/assets/teacher-components-h4c49MD4.js">
+  <link rel="manifest" href="/ai-page-gen/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/ai-page-gen/registerSW.js"></script></head>
+  <body class="bg-page text-primary antialiased">
+    <div id="root"></div>
+  </body>
 </html>
-    
