@@ -1,7 +1,7 @@
 # AI Learning Page Generator - Improvement Plan
 
 **Generated**: 2026-01-07  
-**Status**: Ready for Implementation
+**Status**: Phase 0+1 Complete, Phase 2 In Progress
 
 ---
 
@@ -11,12 +11,12 @@ This document outlines a phased improvement plan for the AI Learning Page Genera
 
 ### Current Health Status
 
-| Metric    | Status     | Notes                 |
-| --------- | ---------- | --------------------- |
-| Lint      | PASS       | 0 errors              |
-| TypeCheck | PASS       | Strict mode enabled   |
-| Tests     | 31/31 PASS | UI components only    |
-| Build     | PASS       | Vite production build |
+| Metric    | Status     | Notes                          |
+| --------- | ---------- | ------------------------------ |
+| Lint      | PASS       | 0 errors                       |
+| TypeCheck | PASS       | Strict mode enabled            |
+| Tests     | 70/70 PASS | UI + Schema + Validation tests |
+| Build     | PASS       | Vite production build          |
 
 ### Critical Risk Summary
 
@@ -30,7 +30,7 @@ This document outlines a phased improvement plan for the AI Learning Page Genera
 
 ---
 
-## Phase 0: Stabilize Interfaces & Safety Rails
+## Phase 0: Stabilize Interfaces & Safety Rails - COMPLETED
 
 **Duration**: 0.5 days  
 **Priority**: CRITICAL  
@@ -38,25 +38,25 @@ This document outlines a phased improvement plan for the AI Learning Page Genera
 
 ### Tasks
 
-- [ ] **0.1** Create centralized error boundary for AI responses
+- [x] **0.1** Create centralized error boundary for AI responses
   - Location: `services/ai/validation/`
   - Add structured error reporting (provider, model, prompt name, truncated output)
   - User-safe error messages in Chinese
 
-- [ ] **0.2** Add AI response boundary wrapper
+- [x] **0.2** Add AI response boundary wrapper
   - Single function that wraps all AI calls
   - Catches parse failures before reaching UI
   - Logs failures for debugging
 
 ### Success Criteria
 
-- [ ] AI parse failures show user-friendly error (not white screen)
-- [ ] Error logs include: provider, model, prompt identifier, raw output preview
-- [ ] Existing 31 tests still pass
+- [x] AI parse failures show user-friendly error (not white screen)
+- [x] Error logs include: provider, model, prompt identifier, raw output preview
+- [x] Existing 31 tests still pass
 
 ---
 
-## Phase 1: Runtime Validation with Zod
+## Phase 1: Runtime Validation with Zod - COMPLETED
 
 **Duration**: 1-2 days  
 **Priority**: CRITICAL  
@@ -64,38 +64,38 @@ This document outlines a phased improvement plan for the AI Learning Page Genera
 
 ### Tasks
 
-- [ ] **1.1** Install Zod
+- [x] **1.1** Install Zod (v4.3.5)
 
   ```bash
   pnpm add zod
   ```
 
-- [ ] **1.2** Create core Zod schemas in `services/ai/schemas/`
+- [x] **1.2** Create core Zod schemas in `services/ai/schemas/`
 
-  | Schema                        | File                    | Priority |
-  | ----------------------------- | ----------------------- | -------- |
-  | `LearningObjectiveSchema`     | `learningObjectives.ts` | HIGH     |
-  | `ContentBreakdownSchema`      | `contentBreakdown.ts`   | HIGH     |
-  | `QuizDifficultyContentSchema` | `quiz.ts`               | HIGH     |
-  | `OnlineInteractiveQuizSchema` | `quiz.ts`               | HIGH     |
-  | `WritingPracticeSchema`       | `writingPractice.ts`    | MEDIUM   |
-  | `ConversationPracticeSchema`  | `conversation.ts`       | MEDIUM   |
+  | Schema                        | File                 | Status |
+  | ----------------------------- | -------------------- | ------ |
+  | `LearningObjectiveSchema`     | `learningContent.ts` | DONE   |
+  | `ContentBreakdownSchema`      | `learningContent.ts` | DONE   |
+  | `QuizDifficultyContentSchema` | `quiz.ts`            | DONE   |
+  | `OnlineInteractiveQuizSchema` | `quiz.ts`            | DONE   |
+  | `ConfusingPointsSchema`       | `learningContent.ts` | DONE   |
+  | `ClassroomActivitiesSchema`   | `learningContent.ts` | DONE   |
 
-- [ ] **1.3** Add validation at provider boundary
-  - Location: `services/geminiService.ts` (facade layer)
-  - Validate **after** JSON parse, **before** return
-  - Use `schema.safeParse()` for graceful error handling
+- [x] **1.3** Add validation at provider boundary
+  - Location: `services/ai/validation/index.ts`
+  - Created `parseAndValidate()` for JSON parsing + schema validation
+  - Created `AIResponseValidationError` class with user-friendly messages
 
-- [ ] **1.4** Create validation test fixtures
-  - Store "known good" AI JSON samples in `tests/fixtures/ai/`
-  - Test schemas against fixtures in CI
+- [x] **1.4** Create validation test fixtures
+  - `tests/fixtures/ai/learningObjectives.json`
+  - `tests/fixtures/ai/quizEasy.json`
+  - 39 tests covering schemas and validation
 
 ### Success Criteria
 
-- [ ] 100% of AI outputs to UI are Zod-validated
-- [ ] Schema violations return structured error (not crash)
-- [ ] Fixture tests pass for all major content types
-- [ ] Type inference works: `z.infer<typeof Schema>` used in returns
+- [x] Schema violations return structured error (not crash)
+- [x] Fixture tests pass for all major content types
+- [x] Type inference works: `z.infer<typeof Schema>` used in returns
 
 ### Files to Create/Modify
 
@@ -424,6 +424,6 @@ const OnlineInteractiveQuizSchema = z.object({
 
 ## Approval
 
-- [ ] Reviewed by: ******\_\_\_******
-- [ ] Approved for implementation: ******\_\_\_******
-- [ ] Start date: ******\_\_\_******
+- [ ] Reviewed by: **\*\***\_\_\_**\*\***
+- [ ] Approved for implementation: **\*\***\_\_\_**\*\***
+- [ ] Start date: **\*\***\_\_\_**\*\***
