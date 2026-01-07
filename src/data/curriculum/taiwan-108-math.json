@@ -1,0 +1,206 @@
+{
+  "framework": "taiwan-108",
+  "subject": "math",
+  "version": "2024.1",
+  "lastUpdated": "2024-01-01",
+  "standards": [
+    {
+      "id": "TW108-M-E1-n-01",
+      "subject": "math",
+      "gradeRange": { "min": 1, "max": 2 },
+      "stage": "E1",
+      "competency": "數-E-A1",
+      "indicator": "n-Ⅰ-1",
+      "content": "數與量",
+      "description": "認識 100 以內的數及其表示法，並進行個位數的加減運算",
+      "keywords": ["數字", "加法", "減法", "個位數", "百以內"]
+    },
+    {
+      "id": "TW108-M-E1-n-02",
+      "subject": "math",
+      "gradeRange": { "min": 1, "max": 2 },
+      "stage": "E1",
+      "competency": "數-E-A2",
+      "indicator": "n-Ⅰ-2",
+      "content": "數與量",
+      "description": "認識錢幣的幣值及其換算",
+      "keywords": ["錢幣", "幣值", "換算", "金錢"]
+    },
+    {
+      "id": "TW108-M-E1-s-01",
+      "subject": "math",
+      "gradeRange": { "min": 1, "max": 2 },
+      "stage": "E1",
+      "competency": "數-E-B1",
+      "indicator": "s-Ⅰ-1",
+      "content": "空間與形狀",
+      "description": "認識簡單幾何形狀（圓形、三角形、正方形、長方形）",
+      "keywords": ["幾何", "圖形", "圓形", "三角形", "正方形", "長方形"]
+    },
+    {
+      "id": "TW108-M-E2-n-01",
+      "subject": "math",
+      "gradeRange": { "min": 3, "max": 4 },
+      "stage": "E2",
+      "competency": "數-E-A1",
+      "indicator": "n-Ⅱ-1",
+      "content": "數與量",
+      "description": "認識 10000 以內的數及其表示法，進行多位數的加減運算",
+      "keywords": ["多位數", "加法", "減法", "萬以內"]
+    },
+    {
+      "id": "TW108-M-E2-n-02",
+      "subject": "math",
+      "gradeRange": { "min": 3, "max": 4 },
+      "stage": "E2",
+      "competency": "數-E-A2",
+      "indicator": "n-Ⅱ-2",
+      "content": "數與量",
+      "description": "認識乘法與除法的意義，並進行基本運算",
+      "keywords": ["乘法", "除法", "九九乘法表", "倍數"]
+    },
+    {
+      "id": "TW108-M-E2-n-03",
+      "subject": "math",
+      "gradeRange": { "min": 3, "max": 4 },
+      "stage": "E2",
+      "competency": "數-E-A3",
+      "indicator": "n-Ⅱ-3",
+      "content": "數與量",
+      "description": "認識分數的意義（真分數、假分數、帶分數）及簡單運算",
+      "keywords": ["分數", "真分數", "假分數", "帶分數"]
+    },
+    {
+      "id": "TW108-M-E3-n-01",
+      "subject": "math",
+      "gradeRange": { "min": 5, "max": 6 },
+      "stage": "E3",
+      "competency": "數-E-A1",
+      "indicator": "n-Ⅲ-1",
+      "content": "數與量",
+      "description": "認識因數與倍數，並能進行質因數分解",
+      "keywords": ["因數", "倍數", "質數", "合數", "質因數分解"]
+    },
+    {
+      "id": "TW108-M-E3-n-02",
+      "subject": "math",
+      "gradeRange": { "min": 5, "max": 6 },
+      "stage": "E3",
+      "competency": "數-E-A2",
+      "indicator": "n-Ⅲ-2",
+      "content": "數與量",
+      "description": "認識小數的意義及四則運算",
+      "keywords": ["小數", "四則運算", "小數點"]
+    },
+    {
+      "id": "TW108-M-E3-n-03",
+      "subject": "math",
+      "gradeRange": { "min": 5, "max": 6 },
+      "stage": "E3",
+      "competency": "數-E-A3",
+      "indicator": "n-Ⅲ-3",
+      "content": "數與量",
+      "description": "認識比與比值，並能解決相關問題",
+      "keywords": ["比", "比值", "比例", "比較"]
+    },
+    {
+      "id": "TW108-M-J-n-01",
+      "subject": "math",
+      "gradeRange": { "min": 7, "max": 7 },
+      "stage": "J",
+      "competency": "數-J-A1",
+      "indicator": "n-Ⅳ-1",
+      "content": "數與量",
+      "description": "能理解負數之意義、負數的四則運算",
+      "keywords": ["負數", "正負數", "四則運算", "整數", "有理數"]
+    },
+    {
+      "id": "TW108-M-J-n-02",
+      "subject": "math",
+      "gradeRange": { "min": 7, "max": 7 },
+      "stage": "J",
+      "competency": "數-J-A2",
+      "indicator": "n-Ⅳ-2",
+      "content": "數與量",
+      "description": "能理解絕對值的意義及其運算",
+      "keywords": ["絕對值", "數線", "距離"]
+    },
+    {
+      "id": "TW108-M-J-n-03",
+      "subject": "math",
+      "gradeRange": { "min": 7, "max": 8 },
+      "stage": "J",
+      "competency": "數-J-A3",
+      "indicator": "n-Ⅳ-3",
+      "content": "數與量",
+      "description": "能理解指數的意義與運算規則",
+      "keywords": ["指數", "次方", "冪", "指數律"]
+    },
+    {
+      "id": "TW108-M-J-a-01",
+      "subject": "math",
+      "gradeRange": { "min": 7, "max": 8 },
+      "stage": "J",
+      "competency": "數-J-B1",
+      "indicator": "a-Ⅳ-1",
+      "content": "代數",
+      "description": "能以符號表示數學式，並理解一元一次方程式",
+      "keywords": ["方程式", "一元一次", "代數", "未知數", "等式"]
+    },
+    {
+      "id": "TW108-M-J-a-02",
+      "subject": "math",
+      "gradeRange": { "min": 8, "max": 9 },
+      "stage": "J",
+      "competency": "數-J-B2",
+      "indicator": "a-Ⅳ-2",
+      "content": "代數",
+      "description": "能理解一元二次方程式及其解法",
+      "keywords": ["一元二次", "方程式", "因式分解", "配方法", "公式解"]
+    },
+    {
+      "id": "TW108-M-J-g-01",
+      "subject": "math",
+      "gradeRange": { "min": 8, "max": 9 },
+      "stage": "J",
+      "competency": "數-J-C1",
+      "indicator": "g-Ⅳ-1",
+      "content": "幾何",
+      "description": "能理解畢氏定理及其應用",
+      "keywords": ["畢氏定理", "直角三角形", "斜邊", "勾股"]
+    },
+    {
+      "id": "TW108-M-S-n-01",
+      "subject": "math",
+      "gradeRange": { "min": 10, "max": 10 },
+      "stage": "S",
+      "competency": "數-S-A1",
+      "indicator": "n-Ⅴ-1",
+      "content": "數與量",
+      "description": "能理解實數的性質及其在數線上的表示",
+      "keywords": ["實數", "有理數", "無理數", "數線"]
+    },
+    {
+      "id": "TW108-M-S-a-01",
+      "subject": "math",
+      "gradeRange": { "min": 10, "max": 11 },
+      "stage": "S",
+      "competency": "數-S-B1",
+      "indicator": "a-Ⅴ-1",
+      "content": "代數",
+      "description": "能理解多項式的運算與因式分解",
+      "keywords": ["多項式", "因式分解", "餘式定理", "因式定理"]
+    },
+    {
+      "id": "TW108-M-S-f-01",
+      "subject": "math",
+      "gradeRange": { "min": 10, "max": 11 },
+      "stage": "S",
+      "competency": "數-S-B2",
+      "indicator": "f-Ⅴ-1",
+      "content": "函數",
+      "description": "能理解函數的概念與各類函數的圖形",
+      "keywords": ["函數", "對應", "定義域", "值域", "圖形"]
+    }
+  ]
+}

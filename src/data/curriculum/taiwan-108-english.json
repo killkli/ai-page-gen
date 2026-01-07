@@ -1,0 +1,225 @@
+{
+  "framework": "taiwan-108",
+  "subject": "english",
+  "version": "2024.1",
+  "lastUpdated": "2024-01-01",
+  "standards": [
+    {
+      "id": "TW108-E-E1-L-01",
+      "subject": "english",
+      "gradeRange": { "min": 1, "max": 2 },
+      "stage": "E1",
+      "competency": "英-E-A1",
+      "indicator": "L-Ⅰ-1",
+      "content": "聽力",
+      "description": "能聽辨 26 個字母的發音",
+      "keywords": ["字母", "發音", "ABC", "聽辨"]
+    },
+    {
+      "id": "TW108-E-E1-L-02",
+      "subject": "english",
+      "gradeRange": { "min": 1, "max": 2 },
+      "stage": "E1",
+      "competency": "英-E-A2",
+      "indicator": "L-Ⅰ-2",
+      "content": "聽力",
+      "description": "能聽懂簡單的課堂用語",
+      "keywords": ["課堂用語", "指令", "classroom language"]
+    },
+    {
+      "id": "TW108-E-E2-L-01",
+      "subject": "english",
+      "gradeRange": { "min": 3, "max": 4 },
+      "stage": "E2",
+      "competency": "英-E-A1",
+      "indicator": "L-Ⅱ-1",
+      "content": "聽力",
+      "description": "能聽懂低年級所習得的字詞和句型",
+      "keywords": ["字詞", "句型", "vocabulary", "sentence pattern"]
+    },
+    {
+      "id": "TW108-E-E2-S-01",
+      "subject": "english",
+      "gradeRange": { "min": 3, "max": 4 },
+      "stage": "E2",
+      "competency": "英-E-B1",
+      "indicator": "S-Ⅱ-1",
+      "content": "口說",
+      "description": "能使用簡單的問候語和日常生活用語",
+      "keywords": ["問候語", "日常用語", "greeting", "daily expressions"]
+    },
+    {
+      "id": "TW108-E-E2-R-01",
+      "subject": "english",
+      "gradeRange": { "min": 3, "max": 4 },
+      "stage": "E2",
+      "competency": "英-E-B2",
+      "indicator": "R-Ⅱ-1",
+      "content": "閱讀",
+      "description": "能辨識印刷體大小寫字母",
+      "keywords": ["字母", "大小寫", "印刷體", "letter recognition"]
+    },
+    {
+      "id": "TW108-E-E3-L-01",
+      "subject": "english",
+      "gradeRange": { "min": 5, "max": 6 },
+      "stage": "E3",
+      "competency": "英-E-A1",
+      "indicator": "L-Ⅲ-1",
+      "content": "聽力",
+      "description": "能聽懂中年級所習得的字詞和句型",
+      "keywords": ["字詞", "句型", "vocabulary", "sentence pattern"]
+    },
+    {
+      "id": "TW108-E-E3-S-01",
+      "subject": "english",
+      "gradeRange": { "min": 5, "max": 6 },
+      "stage": "E3",
+      "competency": "英-E-B1",
+      "indicator": "S-Ⅲ-1",
+      "content": "口說",
+      "description": "能使用所習得的字詞和句型進行簡易對話",
+      "keywords": ["對話", "口說", "conversation", "speaking"]
+    },
+    {
+      "id": "TW108-E-E3-R-01",
+      "subject": "english",
+      "gradeRange": { "min": 5, "max": 6 },
+      "stage": "E3",
+      "competency": "英-E-B2",
+      "indicator": "R-Ⅲ-1",
+      "content": "閱讀",
+      "description": "能讀懂簡單故事及短文的大意",
+      "keywords": ["閱讀", "故事", "短文", "reading", "story"]
+    },
+    {
+      "id": "TW108-E-E3-W-01",
+      "subject": "english",
+      "gradeRange": { "min": 5, "max": 6 },
+      "stage": "E3",
+      "competency": "英-E-C1",
+      "indicator": "W-Ⅲ-1",
+      "content": "寫作",
+      "description": "能書寫簡單的句子",
+      "keywords": ["書寫", "句子", "writing", "sentence"]
+    },
+    {
+      "id": "TW108-E-J-L-01",
+      "subject": "english",
+      "gradeRange": { "min": 7, "max": 9 },
+      "stage": "J",
+      "competency": "英-J-A1",
+      "indicator": "L-Ⅳ-1",
+      "content": "聽力",
+      "description": "能聽懂日常生活相關的簡易對話和短文",
+      "keywords": ["聽力", "對話", "短文", "listening", "dialogue"]
+    },
+    {
+      "id": "TW108-E-J-S-01",
+      "subject": "english",
+      "gradeRange": { "min": 7, "max": 9 },
+      "stage": "J",
+      "competency": "英-J-B1",
+      "indicator": "S-Ⅳ-1",
+      "content": "口說",
+      "description": "能進行日常生活相關的簡易會話",
+      "keywords": ["會話", "口說", "日常對話", "speaking", "conversation"]
+    },
+    {
+      "id": "TW108-E-J-R-01",
+      "subject": "english",
+      "gradeRange": { "min": 7, "max": 9 },
+      "stage": "J",
+      "competency": "英-J-B2",
+      "indicator": "R-Ⅳ-1",
+      "content": "閱讀",
+      "description": "能閱讀不同體裁、不同主題的簡易文章",
+      "keywords": ["閱讀", "文章", "體裁", "reading", "article"]
+    },
+    {
+      "id": "TW108-E-J-W-01",
+      "subject": "english",
+      "gradeRange": { "min": 7, "max": 9 },
+      "stage": "J",
+      "competency": "英-J-C1",
+      "indicator": "W-Ⅳ-1",
+      "content": "寫作",
+      "description": "能書寫簡單的段落文章",
+      "keywords": ["寫作", "段落", "文章", "writing", "paragraph"]
+    },
+    {
+      "id": "TW108-E-J-G-01",
+      "subject": "english",
+      "gradeRange": { "min": 7, "max": 9 },
+      "stage": "J",
+      "competency": "英-J-A2",
+      "indicator": "G-Ⅳ-1",
+      "content": "文法",
+      "description": "能理解並運用基本句型結構",
+      "keywords": ["文法", "句型", "grammar", "sentence structure"]
+    },
+    {
+      "id": "TW108-E-J-G-02",
+      "subject": "english",
+      "gradeRange": { "min": 7, "max": 9 },
+      "stage": "J",
+      "competency": "英-J-A3",
+      "indicator": "G-Ⅳ-2",
+      "content": "文法",
+      "description": "能理解並運用動詞時態",
+      "keywords": [
+        "時態",
+        "動詞",
+        "tense",
+        "verb",
+        "過去式",
+        "現在式",
+        "未來式"
+      ]
+    },
+    {
+      "id": "TW108-E-S-L-01",
+      "subject": "english",
+      "gradeRange": { "min": 10, "max": 12 },
+      "stage": "S",
+      "competency": "英-S-A1",
+      "indicator": "L-Ⅴ-1",
+      "content": "聽力",
+      "description": "能聽懂多元主題的討論與報導",
+      "keywords": ["聽力", "討論", "報導", "listening", "discussion", "report"]
+    },
+    {
+      "id": "TW108-E-S-S-01",
+      "subject": "english",
+      "gradeRange": { "min": 10, "max": 12 },
+      "stage": "S",
+      "competency": "英-S-B1",
+      "indicator": "S-Ⅴ-1",
+      "content": "口說",
+      "description": "能參與多元主題的討論並表達意見",
+      "keywords": ["口說", "討論", "表達", "speaking", "discussion", "opinion"]
+    },
+    {
+      "id": "TW108-E-S-R-01",
+      "subject": "english",
+      "gradeRange": { "min": 10, "max": 12 },
+      "stage": "S",
+      "competency": "英-S-B2",
+      "indicator": "R-Ⅴ-1",
+      "content": "閱讀",
+      "description": "能閱讀不同文類的文章，並理解作者觀點",
+      "keywords": ["閱讀", "文章", "觀點", "reading", "article", "viewpoint"]
+    },
+    {
+      "id": "TW108-E-S-W-01",
+      "subject": "english",
+      "gradeRange": { "min": 10, "max": 12 },
+      "stage": "S",
+      "competency": "英-S-C1",
+      "indicator": "W-Ⅴ-1",
+      "content": "寫作",
+      "description": "能寫作組織完整、表達清楚的文章",
+      "keywords": ["寫作", "文章", "組織", "writing", "article", "organization"]
+    }
+  ]
+}
